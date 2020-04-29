@@ -112,8 +112,9 @@ func (rr *AAAA) parse(c *zlexer, o string) *ParseError {
 	rr.AAAA = net.ParseIP(l.token)
 	// IPv6 addresses must include ":", and IPv4
 	// addresses cannot include ":".
-	isIPv6 := strings.Contains(l.token, ":")
-	if rr.AAAA == nil || !isIPv6 || l.err {
+	//isIPv6 t:= strings.Contains(l.token, ":")
+	//f rr.AAAA == nil || !isIPv6 || l.err {
+	if rr.AAAA == nil || l.err {
 		return &ParseError{"", "bad AAAA AAAA", l}
 	}
 	return slurpRemainder(c)
