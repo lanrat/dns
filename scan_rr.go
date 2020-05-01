@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -844,6 +845,7 @@ func (rr *CSYNC) parse(c *zlexer, o string) *ParseError {
 		}
 		l, _ = c.Next()
 	}
+	sort.Slice(rr.TypeBitMap, func(i, j int) bool { return rr.TypeBitMap[i] < rr.TypeBitMap[j] })
 	return nil
 }
 
@@ -973,6 +975,7 @@ func (rr *NSEC) parse(c *zlexer, o string) *ParseError {
 		}
 		l, _ = c.Next()
 	}
+	sort.Slice(rr.TypeBitMap, func(i, j int) bool { return rr.TypeBitMap[i] < rr.TypeBitMap[j] })
 	return nil
 }
 
@@ -1038,6 +1041,7 @@ func (rr *NSEC3) parse(c *zlexer, o string) *ParseError {
 		}
 		l, _ = c.Next()
 	}
+	sort.Slice(rr.TypeBitMap, func(i, j int) bool { return rr.TypeBitMap[i] < rr.TypeBitMap[j] })
 	return nil
 }
 
