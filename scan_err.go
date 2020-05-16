@@ -5,6 +5,7 @@ import "log"
 func (zp *ZoneParser) ResetErr() error {
 	if zp.parseErr != nil {
 		nextLine := false
+		// TODO testing keeping a record of all skipped tokens
 		tokens := make([]string, 0)
 		for !nextLine {
 			l, _ := zp.c.Next()
