@@ -628,7 +628,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 // according to RFC 3597 because they lack a presentation format.
 func canParseAsRR(rrtype uint16) bool {
 	switch rrtype {
-	case TypeANY, TypeNULL, TypeOPT, TypeTSIG:
+	case TypeANY, TypeNULL, TypeOPT:
 		return false
 	default:
 		return true
