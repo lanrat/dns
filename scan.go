@@ -824,10 +824,12 @@ func (zl *zlexer) Next() (lex, bool) {
 				if !zl.rrtype {
 					tokenUpper := strings.ToUpper(l.token)
 					if t, ok := StringToType[tokenUpper]; ok {
-						l.value = zRrtpe
-						l.torc = t
+						if t != TypeANY { // ANY is a class in this case
+							l.value = zRrtpe
+							l.torc = t
 
-						zl.rrtype = true
+							zl.rrtype = true
+						}
 					} else if strings.HasPrefix(tokenUpper, "TYPE") {
 						t, ok := typeToInt(l.token)
 						if !ok {
