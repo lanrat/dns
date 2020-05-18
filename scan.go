@@ -628,7 +628,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 // according to RFC 3597 because they lack a presentation format.
 func canParseAsRR(rrtype uint16) bool {
 	switch rrtype {
-	case TypeANY, TypeNULL, TypeOPT:
+	case TypeANY, TypeNULL, TypeOPT, TypeTSIG:
 		return false
 	default:
 		return true
@@ -824,12 +824,10 @@ func (zl *zlexer) Next() (lex, bool) {
 				if !zl.rrtype {
 					tokenUpper := strings.ToUpper(l.token)
 					if t, ok := StringToType[tokenUpper]; ok {
-						if t != TypeANY { // ANY is a class in this case
-							l.value = zRrtpe
-							l.torc = t
+						l.value = zRrtpe
+						l.torc = t
 
-							zl.rrtype = true
-						}
+						zl.rrtype = true
 					} else if strings.HasPrefix(tokenUpper, "TYPE") {
 						t, ok := typeToInt(l.token)
 						if !ok {

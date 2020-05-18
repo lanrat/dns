@@ -8,7 +8,6 @@ import (
 	"crypto/sha512"
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"hash"
 	"strconv"
 	"strings"
@@ -41,101 +40,22 @@ type TSIG struct {
 // TSIG has no official presentation format, but this will suffice.
 
 func (rr *TSIG) String() string {
-	s := rr.Hdr.String() +
+	s := "\n;; TSIG PSEUDOSECTION:\n; " // add another semi-colon to signify TSIG does not have a presentation format
+	s += rr.Hdr.String() +
 		" " + rr.Algorithm +
 		" " + tsigTimeToString(rr.TimeSigned) +
 		" " + strconv.Itoa(int(rr.Fudge)) +
 		" " + strconv.Itoa(int(rr.MACSize)) +
 		" " + strings.ToUpper(rr.MAC) +
 		" " + strconv.Itoa(int(rr.OrigId)) +
-		" " + tsigErrorToString(rr.Error) + // BIND prints NOERROR
+		" " + strconv.Itoa(int(rr.Error)) + // BIND prints NOERROR
 		" " + strconv.Itoa(int(rr.OtherLen)) +
 		" " + rr.OtherData
 	return s
 }
 
 func (rr *TSIG) parse(c *zlexer, origin string) *ParseError {
-	var e error
-	//log.Printf("TSIG PARSE!")
-	// Algorithm
-	l, _ := c.Next()
-	rr.Algorithm = CanonicalName(l.token)
-
-	// TimeSigned
-	c.Next() // zBlank
-	l, _ = c.Next()
-	rr.TimeSigned, e = strconv.ParseUint(l.token, 10, 48)
-	if e != nil || l.err {
-		return &ParseError{"", "bad TSIG TimeSigned", l}
-	}
-
-	// Fudge
-	c.Next() // zBlank
-	l, _ = c.Next()
-	fudge, e := strconv.ParseUint(l.token, 10, 16)
-	if e != nil || l.err {
-		return &ParseError{"", "bad TSIG Fudge", l}
-	}
-	rr.Fudge = uint16(fudge)
-
-	// MACSize
-	c.Next() // zBlank
-	l, _ = c.Next()
-	macsize, e := strconv.ParseUint(l.token, 10, 16)
-	if e != nil || l.err {
-		return &ParseError{"", "bad TSIG MACSize", l}
-	}
-	rr.MACSize = uint16(macsize)
-
-	// MAC
-	c.Next() // zBlank
-	l, _ = c.Next()
-	rr.MAC = strings.ToUpper(l.token)
-
-	// OrigId
-	c.Next() // zBlank
-	l, _ = c.Next()
-	origID, e := strconv.ParseUint(l.token, 10, 16)
-	if e != nil || l.err {
-		return &ParseError{"", "bad TSIG OrigId", l}
-	}
-	rr.OrigId = uint16(origID)
-
-	// Error
-	c.Next() // zBlank
-	l, _ = c.Next()
-	rr.Error, e = parseTsigError(l.token)
-	if e != nil || l.err {
-		return &ParseError{"", "bad TSIG Error", l}
-	}
-
-	// OtherLen
-	c.Next() // zBlank
-	l, _ = c.Next()
-	otherLen, e := strconv.ParseUint(l.token, 10, 16)
-	if e != nil || l.err {
-		return &ParseError{"", "bad TSIG OtherLen", l}
-	}
-	rr.OtherLen = uint16(otherLen)
-
-	if rr.OtherLen > 0 {
-		c.Next() // zBlank
-		l, _ = c.Next()
-		rr.OtherData = l.token
-	}
-
-	return slurpRemainder(c)
-}
-
-func parseTsigError(errString string) (uint16, error) {
-	if errCode, ok := StringToRcode[errString]; ok {
-		return uint16(errCode), nil
-	}
-	code, e := strconv.ParseUint(errString, 10, 16)
-	if e != nil {
-		return 0, fmt.Errorf("dns: cant parse TSIG err %s %w", errString, e)
-	}
-	return uint16(code), nil
+	panic("dns: internal error: parse should never be called on TSIG")
 }
 
 // The following values must be put in wireformat, so that the MAC can be calculated.
@@ -393,15 +313,11 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	return msg[:tsigoff], rr, nil
 }
 
+// Translate the TSIG time signed into a date. There is no
+// need for RFC1982 calculations as this date is 48 bits.
 func tsigTimeToString(t uint64) string {
-	return strconv.FormatUint(t, 10)
-}
-
-func tsigErrorToString(t uint16) string {
-	if errStr, ok := RcodeToString[int(t)]; ok {
-		return errStr
-	}
-	return strconv.Itoa(int(t))
+	ti := time.Unix(int64(t), 0).UTC()
+	return ti.Format("20060102150405")
 }
 
 func packTsigWire(tw *tsigWireFmt, msg []byte) (int, error) {
