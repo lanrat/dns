@@ -278,11 +278,7 @@ func IsFqdn(s string) bool {
 
 	// Test whether we have an even number of escape sequences before
 	// the dot or none.
-	s2RuneLen := len([]rune(s2))
-	if i >= 0 {
-		i = len([]rune(s2[:i]))
-	}
-	return (s2RuneLen-i)%2 != 0
+	return (len(s2)-i)%2 != 0
 }
 
 // IsRRset checks if a set of RRs is a valid RRset as defined by RFC 2181.
