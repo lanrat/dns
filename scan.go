@@ -174,6 +174,16 @@ type ZoneParser struct {
 	generateDisallowed bool
 }
 
+// DomainFunc is an optional function that can be sued to sanitize domain or convert between encodings, case, punycode, etc...
+type DomainFunc func(string) string
+
+var domainFunc DomainFunc
+
+// SetDomainFunc sets the internal DomainFunc used by the zone scanner
+func SetDomainFunc(df DomainFunc) {
+	domainFunc = df
+}
+
 // NewZoneParser returns an RFC 1035 style zonefile parser that reads
 // from r.
 //
@@ -183,6 +193,9 @@ type ZoneParser struct {
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	var pe *ParseError
 	if origin != "" {
+		if domainFunc != nil {
+			origin = domainFunc(origin)
+		}
 		origin = Fqdn(origin)
 		if _, ok := IsDomainName(origin); !ok {
 			pe = &ParseError{file, "bad initial origin name", lex{}}
@@ -1246,6 +1259,11 @@ func toAbsoluteName(name, origin string) (absolute string, ok bool) {
 			return "", false
 		}
 		return origin, true
+	}
+
+	// run the domain through domainFunc if set
+	if domainFunc != nil {
+		name = domainFunc(name)
 	}
 
 	// require a valid domain name
