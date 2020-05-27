@@ -1,7 +1,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lanrat/dns)](https://goreportcard.com/report/lanrat/dns)
 [![Go Doc](https://godoc.org/github.com/lanrat/dns?status.svg)](https://pkg.go.dev/github.com/lanrat/dns?tab=doc)
 
-# A more forgiving form of [miekg/dns](https://github.com/miekg/dns)
+# A more forgiving fork of [miekg/dns](https://github.com/miekg/dns)
 
 This is a fork of [miekg's wonderful dns library](https://github.com/miekg/dns) `github.com/miekg/dns`
 
@@ -18,3 +18,4 @@ Some features may be sent as a pull request upstream. If they are accepted then 
  * `ResetErr()` added to the ZoneParser, allowing the parser to recover from errors
  * `TypeBitMap` is automatically sorted when packing `CSYNC`, `NSEC`, and `NSEC3` types
  * `AAAA.String()` method converts IPv4 addresses to IPv6 notation
+
