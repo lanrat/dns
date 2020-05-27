@@ -18,4 +18,4 @@ Some features may be sent as a pull request upstream. If they are accepted then 
  * `ResetErr()` added to the ZoneParser, allowing the parser to recover from errors
  * `TypeBitMap` is automatically sorted when packing `CSYNC`, `NSEC`, and `NSEC3` types
  * `AAAA.String()` method converts IPv4 addresses to IPv6 notation
-
+ * `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
