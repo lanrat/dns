@@ -174,7 +174,7 @@ type ZoneParser struct {
 	generateDisallowed bool
 }
 
-// DomainFunc is an optional function that can be sued to sanitize domain or convert between encodings, case, punycode, etc...
+// DomainFunc is an optional function that can be used to sanitize domain or convert between encodings, case, punycode, etc...
 type DomainFunc func(string) string
 
 var domainFunc DomainFunc
