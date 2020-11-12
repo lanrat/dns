@@ -718,11 +718,17 @@ func (rr *AAAA) String() string {
 	if rr.AAAA == nil {
 		return rr.Hdr.String()
 	}
-	ipStr := rr.AAAA.String()
-	if rr.AAAA.To4() != nil {
+	ipStr := IPv6String(rr.AAAA)
+	return rr.Hdr.String() + ipStr
+}
+
+// IPv6String prints IPv6 strings, forcing IPv4 notation into IPv6
+func IPv6String(ip net.IP) string {
+	ipStr := ip.String()
+	if ip.To4() != nil {
 		ipStr = fmt.Sprintf("::ffff:%s", ipStr)
 	}
-	return rr.Hdr.String() + ipStr
+	return ipStr
 }
 
 // PX RR. See RFC 2163.
