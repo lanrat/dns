@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lanrat/dns)](https://goreportcard.com/report/lanrat/dns)
-[![Go Doc](https://godoc.org/github.com/lanrat/dns?status.svg)](https://pkg.go.dev/github.com/lanrat/dns?tab=doc)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/lanrat/dns)](https://pkg.go.dev/github.com/lanrat/dns)
 
 # A more forgiving fork of [miekg/dns](https://github.com/miekg/dns)
 
