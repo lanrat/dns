@@ -1,7 +1,9 @@
+# dns
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/lanrat/dns)](https://goreportcard.com/report/lanrat/dns)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/lanrat/dns)](https://pkg.go.dev/github.com/lanrat/dns)
 
-# A more forgiving fork of [miekg/dns](https://github.com/miekg/dns)
+## A more forgiving fork of [miekg/dns](https://github.com/miekg/dns)
 
 This is a fork of [miekg's wonderful dns library](https://github.com/miekg/dns) `github.com/miekg/dns`
 
@@ -13,9 +15,9 @@ Individual feature branches of this repository are used to test single features 
 
 Some features may be sent as a pull request upstream. If they are accepted then they are removed from the differences listed below.
 
-# Differences from miekg/dns
+### Differences from miekg/dns
 
- * `ResetErr()` added to the ZoneParser, allowing the parser to recover from errors
- * `TypeBitMap` is automatically sorted when packing `CSYNC`, `NSEC`, and `NSEC3` types
- * `AAAA.String()` method converts IPv4 addresses to IPv6 notation
- * `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
+* `ResetErr()` added to the ZoneParser, allowing the parser to recover from errors
+* `TypeBitMap` is automatically sorted when packing `CSYNC`, `NSEC`, and `NSEC3` types
+* `AAAA.String()` method converts IPv4 addresses to IPv6 notation
+* `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
