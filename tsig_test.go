@@ -55,6 +55,62 @@ func TestTsigCase(t *testing.T) {
 	}
 }
 
+func TestTsigErrorResponse(t *testing.T) {
+	for _, rcode := range []uint16{RcodeBadSig, RcodeBadKey} {
+		m := newTsig(strings.ToUpper(HmacSHA256))
+		m.IsTsig().Error = rcode
+		buf, _, err := TsigGenerate(m, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = m.Unpack(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		mTsig := m.IsTsig()
+		if mTsig.MAC != "" {
+			t.Error("Expected empty MAC")
+		}
+		if mTsig.MACSize != 0 {
+			t.Error("Expected 0 MACSize")
+		}
+		if mTsig.TimeSigned != 0 {
+			t.Errorf("Expected TimeSigned to be 0, got %v", mTsig.TimeSigned)
+		}
+	}
+}
+
+func TestTsigBadTimeResponse(t *testing.T) {
+	clientTime := uint64(time.Now().Unix()) - 3600
+	m := newTsig(strings.ToUpper(HmacSHA256))
+	m.IsTsig().Error = RcodeBadTime
+	m.IsTsig().TimeSigned = clientTime
+
+	buf, _, err := TsigGenerate(m, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = m.Unpack(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mTsig := m.IsTsig()
+	if mTsig.MAC == "" {
+		t.Error("Expected non-empty MAC")
+	}
+	if int(mTsig.MACSize) != len(mTsig.MAC)/2 {
+		t.Errorf("Expected MACSize %v, got %v", len(mTsig.MAC)/2, mTsig.MACSize)
+	}
+
+	if mTsig.TimeSigned != clientTime {
+		t.Errorf("Expected TimeSigned %v to be retained, got %v", clientTime, mTsig.TimeSigned)
+	}
+}
+
 const (
 	// A template wire-format DNS message (in hex form) containing a TSIG RR.
 	// Its time signed field will be filled by tests.
@@ -242,8 +298,8 @@ func TestTSIGHMAC224And384(t *testing.T) {
 const testGoodKeyName = "goodkey."
 
 var (
-	testErrBadKey = errors.New("this is an intentional error")
-	testGoodMAC   = []byte{0, 1, 2, 3}
+	errBadKey   = errors.New("this is an intentional error")
+	testGoodMAC = []byte{0, 1, 2, 3}
 )
 
 // testProvider always generates the same MAC and only accepts the one signature
@@ -255,14 +311,14 @@ func (provider *testProvider) Generate(_ []byte, t *TSIG) ([]byte, error) {
 	if t.Hdr.Name == testGoodKeyName || provider.GenerateAllKeys {
 		return testGoodMAC, nil
 	}
-	return nil, testErrBadKey
+	return nil, errBadKey
 }
 
 func (*testProvider) Verify(_ []byte, t *TSIG) error {
 	if t.Hdr.Name == testGoodKeyName {
 		return nil
 	}
-	return testErrBadKey
+	return errBadKey
 }
 
 func TestTsigGenerateProvider(t *testing.T) {
@@ -279,7 +335,7 @@ func TestTsigGenerateProvider(t *testing.T) {
 		{
 			"badkey.",
 			nil,
-			testErrBadKey,
+			errBadKey,
 		},
 	}
 
@@ -321,7 +377,7 @@ func TestTsigVerifyProvider(t *testing.T) {
 		},
 		{
 			"badkey.",
-			testErrBadKey,
+			errBadKey,
 		},
 	}
 
