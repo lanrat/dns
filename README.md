@@ -21,3 +21,25 @@ Some features may be sent as a pull request upstream. If they are accepted then 
 * `TypeBitMap` is automatically sorted when packing `CSYNC`, `NSEC`, and `NSEC3` types
 * `AAAA.String()` method converts IPv4 addresses to IPv6 notation
 * `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
+
+
+## Updateing from upstream
+
+```shell
+# setup
+git remote add upstream git@github.com:miekg/dns.git
+git pull origin master
+git pull origin miekg
+
+# upate miekg branch from upstream
+git checkout miekg
+git pull upstream master
+git push origin miekg
+
+# merge into master
+git checkout master
+git merge miekg
+# fix any merge conflicts
+git commit
+git push origin master
+```
