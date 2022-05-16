@@ -39,7 +39,8 @@ git push origin miekg
 # merge into master
 git checkout master
 git merge miekg
-# fix any merge conflicts
+# fix any merge conflicts and failing tests
+CGO_ENABLED=0 go test
 git commit
 git push origin master
 ```
