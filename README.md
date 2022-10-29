@@ -31,7 +31,7 @@ git remote add upstream git@github.com:miekg/dns.git
 git pull origin master
 git pull origin miekg
 
-# upate miekg branch from upstream
+# update miekg branch from upstream
 git checkout miekg
 git pull upstream master
 git push origin miekg
