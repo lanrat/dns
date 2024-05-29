@@ -22,7 +22,7 @@ Some features may be sent as a pull request upstream. If they are accepted then 
 * `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
 
 
-## Updateing from upstream
+## Updating from upstream
 
 ```shell
 # setup
