@@ -1098,18 +1098,41 @@ func TestTXT(t *testing.T) {
 		}
 	}
 
-	// Test TXT record with chunk larger than 255 bytes, they should be split up, by the parser
-	s := ""
-	for i := 0; i < 255; i++ {
-		s += "a"
-	}
-	s += "b"
-	rr, err = NewRR(`test.local. 60 IN TXT "` + s + `"`)
+	// Test TXT record with string larger than 255 bytes that should be split
+	// up by the parser. Add some escape sequences too to ensure their length
+	// is counted correctly.
+	s := `"\;\\\120` + strings.Repeat("a", 255) + `b"`
+	rr, err = NewRR(`test.local. 60 IN TXT ` + s)
 	if err != nil {
 		t.Error("failed to parse empty-string TXT record", err)
 	}
-	if rr.(*TXT).Txt[1] != "b" {
-		t.Errorf("Txt should have two chunk, last one my be 'b', but is %s", rr.(*TXT).Txt[1])
+	if rr.(*TXT).Txt[1] != "aaab" {
+		t.Errorf("Txt should have two strings, last one must be 'aaab', but is %s", rr.(*TXT).Txt[1])
+	}
+	rrContent := strings.Replace(rr.String(), rr.Header().String(), "", 1)
+	expectedRRContent := `";\\x` + strings.Repeat("a", 252) + `" "aaab"`
+	if expectedRRContent != rrContent {
+		t.Errorf("Expected TXT RR content to be %#q but got %#q", expectedRRContent, rrContent)
+	}
+
+	// Test TXT record that is already split up into strings of len <= 255.
+	s = fmt.Sprintf(
+		"%q %q %q %q %q %q",
+		strings.Repeat(`a`, 255),
+		strings.Repeat("b", 255),
+		strings.Repeat("c", 255),
+		strings.Repeat("d", 0),
+		strings.Repeat("e", 1),
+		strings.Repeat("f", 123),
+	)
+	rr, err = NewRR(`test.local. 60 IN TXT ` + s)
+	if err != nil {
+		t.Error("failed to parse empty-string TXT record", err)
+	}
+	rrContent = strings.Replace(rr.String(), rr.Header().String(), "", 1)
+	expectedRRContent = s // same as input
+	if expectedRRContent != rrContent {
+		t.Errorf("Expected TXT RR content to be %#q but got %#q", expectedRRContent, rrContent)
 	}
 }
 
@@ -1437,6 +1460,23 @@ func TestParseHINFO(t *testing.T) {
 		// This one is recommended in Pro Bind book http://www.zytrax.com/books/dns/ch8/hinfo.html
 		// but effectively, even Bind would replace it to correctly formed text when you AXFR
 		// TODO: remove this set of comments or figure support for quoted/unquoted combinations in endingToTxtSlice function
+	}
+	for i, o := range dt {
+		rr, err := NewRR(i)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
+		}
+	}
+}
+
+func TestParseISDN(t *testing.T) {
+	dt := map[string]string{
+		"example.net. ISDN A B":         "example.net.	3600	IN	ISDN	\"A\" \"B\"",
+		"example.net. ISDN \"A\" \"B\"": "example.net.	3600	IN	ISDN	\"A\" \"B\"",
 	}
 	for i, o := range dt {
 		rr, err := NewRR(i)
