@@ -21,7 +21,6 @@ Some features may be sent as a pull request upstream. If they are accepted then 
 * `TypeBitMap` is automatically sorted when packing `CSYNC`, `NSEC`, and `NSEC3` types
 * `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
 
-
 ## Updating from upstream
 
 ```shell
@@ -38,9 +37,10 @@ git push origin miekg
 # merge into master
 git checkout master
 git merge miekg
+git checkout --ours README.md
 # fix any merge conflicts and failing tests
-CGO_ENABLED=0 go test
+git add .
+go test ./...
 git commit
 git push origin master
 ```
-
