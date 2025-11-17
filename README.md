@@ -38,9 +38,11 @@ git push origin miekg
 git checkout master
 git merge miekg
 git checkout --ours README.md
+git add README.md
 # fix any merge conflicts and failing tests
 git add .
 go test ./...
 git commit
 git push origin master
 ```
+
