@@ -40,8 +40,8 @@ const (
 	ECDSAP384SHA384
 	ED25519
 	ED448
-	SM2SM3 // See RFC 9563.
-	MLDSA44
+	SM2SM3                // See RFC 9563.
+	MLDSA44               // See draft-westerbaan-dnssec-mldsa.
 	ECCGOST12  uint8 = 23 // See RFC 9558
 	INDIRECT   uint8 = 252
 	PRIVATEDNS uint8 = 253 // Private (experimental keys).
@@ -64,8 +64,8 @@ var AlgorithmToString = map[uint8]string{
 	ED25519:          "ED25519",
 	ED448:            "ED448",
 	SM2SM3:           "SM2SM3",
-	MLDSA44:          "ML-DSA-44",
-	ECCGOST12:        "ECC-GOST-12",
+	MLDSA44:          "MLDSA44",
+	ECCGOST12:        "ECC-GOST12",
 	INDIRECT:         "INDIRECT",
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",
