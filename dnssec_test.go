@@ -4,8 +4,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
+	"maps"
 	"testing"
 
+	"codeberg.org/miekg/dns/internal/dnsstring"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -162,5 +164,42 @@ func TestDNSSECVerify(t *testing.T) {
 				t.Fatalf("failure to verify: %s", err)
 			}
 		})
+	}
+}
+
+func TestDNSSECAlgorithmToString(t *testing.T) {
+	testcases := []struct {
+		name      string
+		algorithm uint8
+		mnemonic  string
+	}{
+		{"sm2sm3", SM2SM3, "SM2SM3"},
+		{"mldsa44", MLDSA44, "MLDSA44"},
+		{"eccgost12", ECCGOST12, "ECC-GOST12"},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := AlgorithmToString[tc.algorithm]; got != tc.mnemonic {
+				t.Errorf("expected %s, got %s", tc.mnemonic, got)
+			}
+			if got := StringToAlgorithm[tc.mnemonic]; got != tc.algorithm {
+				t.Errorf("expected %d, got %d", tc.algorithm, got)
+			}
+
+			// The mnemonic must also be accepted where the zone parser takes one.
+			rr, err := New("example.org. 3600 IN RRSIG A " + tc.mnemonic +
+				" 2 3600 20260101000000 20250101000000 12345 example.org. AwEAAcNEU67LSytcCEN9e43u")
+			if err != nil {
+				t.Fatalf("failure to parse: %s", err)
+			}
+			if got := rr.(*RRSIG).Algorithm; got != tc.algorithm {
+				t.Errorf("expected %d, got %d", tc.algorithm, got)
+			}
+		})
+	}
+
+	// The rdata package renders algorithms via its own copy of the map, which must not drift.
+	if !maps.Equal(AlgorithmToString, dnsstring.AlgorithmToString) {
+		t.Errorf("expected %v, got %v", AlgorithmToString, dnsstring.AlgorithmToString)
 	}
 }
