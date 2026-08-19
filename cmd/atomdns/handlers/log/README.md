@@ -78,6 +78,6 @@ example.org. {
 }
 ```
 
-# Also See
+# See Also
 
 signal(7), atomdns-ecs(7), atomdns-id(7).

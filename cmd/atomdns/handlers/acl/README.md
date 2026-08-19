@@ -107,7 +107,7 @@ If monitoring is enabled (via the _metrics_ handler) then the following metrics 
 The `zone`,`network` and `family` labels are explained in the _metrics_ handler documentation. These metrics
 follow the _global_'s metric `\N` setup, and as such should be multiplied by `N` to get the actual value.
 
-# Also See
+# See Also
 
 See atomdns-ecs(7) that can add a better source address.
 
