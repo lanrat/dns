@@ -357,7 +357,8 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 	return dst, nil
 }
 
-// Unpack unpacks a binary message that sits in m.Data to a Msg structure.
+// Unpack unpacks a binary message that sits in m.Data to a Msg structure. There are few semantic errors, but
+// multiple [OPT] RRs are disallowed and return an error.
 func (m *Msg) Unpack() (err error) {
 	s := cryptobyte.String(m.Data)
 	var counts uint64 // read all counters into 64 bits and slice the 16 bits values out of it
@@ -382,7 +383,7 @@ func (m *Msg) Unpack() (err error) {
 
 	if m.offset > MsgHeaderSize {
 		if !s.Skip(int(m.offset - MsgHeaderSize)) {
-			return fmt.Errorf("overflow %s", "MsgHeader")
+			return unpack.Errorf("overflow %s", "MsgHeader")
 		}
 		goto Rest
 	}
@@ -413,8 +414,8 @@ Rest:
 	}
 
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
-	// section. We will only check one OPT, any others will be left in Extra.
-Extra1:
+	// section. We will only check one OPT, any others will be flagged as an error.
+Extra:
 	for i := len(m.Extra) - 1; i >= 0; i-- {
 		switch opt := m.Extra[i].(type) {
 		case *OPT:
@@ -432,17 +433,18 @@ Extra1:
 			}
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // opt's place switch with last rr
 			m.Extra = m.Extra[:len(m.Extra)-1]   // remove cruft
-			break Extra1
+			break Extra
 		}
 	}
-Extra2:
+
 	for i := len(m.Extra) - 1; i >= 0; i-- {
 		switch m.Extra[i].(type) {
 		case *TSIG, *SIG:
 			m.Pseudo = append(m.Pseudo, m.Extra[i])
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // sig/tsig's place switch with last rr
 			m.Extra = m.Extra[:len(m.Extra)-1]   // remove cruft
-			break Extra2
+		case *OPT:
+			return unpack.Errorf("extra OPT")
 		}
 	}
 
