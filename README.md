@@ -11,17 +11,14 @@ resolvers with it.
 
 We try to keep the _main_ branch as sane as possible and at the bleeding edge of standards, avoiding
 breaking changes wherever reasonable. We rigorously follow upstream Go versions and use bleeding edge Go
-language features.
+language features. But because this version is young, we allow ourselves some more headroom for
+making backwards incompatible changes.
 
 Many convenience functions are included in _dns_, _dnstest_ or otherwise in _dnsutils_. The RR's resource data
 (RDATA) is split off into its own package: _rdata_. This means accessing the RR's header and rdata is much
 simpler now. [^a]
 
 [^a]: A function is put in _dnsutils_, unless (due to cyclic imports) it is utterly impossible to put it there. Only then it is put in the main _dns_ package.
-
-We try to keep the "main" branch as sane as possible and at the bleeding edge of standards, avoiding breaking
-changes wherever reasonable. But because this version is young, we allow ourselves some more headroom for
-making backwards incompatible changes.
 
 Example programs are included _and_ benchmarked in
 [`cmd`](https://codeberg.org/miekg/dns/src/branch/main/cmd). And
