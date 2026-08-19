@@ -10,7 +10,7 @@ lean and mean philosophy. Server side and client side programming is supported, 
 resolvers with it.
 
 We try to keep the _main_ branch as sane as possible and at the bleeding edge of standards, avoiding
-breaking changes wherever reasonable. We rigorously follow upstream Go version and use bleeding edge Go
+breaking changes wherever reasonable. We rigorously follow upstream Go versions and use bleeding edge Go
 language features.
 
 Many convenience functions are included in _dns_, _dnstest_ or otherwise in _dnsutils_. The RR's resource data
