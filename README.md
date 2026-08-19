@@ -9,6 +9,10 @@ Complete and usable DNS library. All Resource Records are supported, including t
 lean and mean philosophy. Server side and client side programming is supported, i.e. you can build servers and
 resolvers with it.
 
+We try to keep the _main_ branch as sane as possible and at the bleeding edge of standards, avoiding
+breaking changes wherever reasonable. We rigorously follow upstream Go version and use bleeding edge Go
+language features.
+
 Many convenience functions are included in _dns_, _dnstest_ or otherwise in _dnsutils_. The RR's resource data
 (RDATA) is split off into its own package: _rdata_. This means accessing the RR's header and rdata is much
 simpler now. [^a]
@@ -36,7 +40,7 @@ Everything from <https://github.com/miekg/dns> works. See
 [README-v1-to-v2.md](https://codeberg.org/miekg/dns/src/branch/main/_doc/README-v1-to-v2.md)
 for the differences, if you are porting your application, in `cookbook.go` are some common recipes.
 
-Note that a design choice has been made to not supported `\DDD` and `\x` syntax in domain names. This archeic
+Note that a design choice has been made to not supported `\DDD` and `\x` syntax in domain names. This archaic
 way of encoding names was useful way-back-when, nowadays DNS is pretty much a 7-bit protocol and things like
 [Punycode](https://en.wikipedia.org/wiki/Punycode) had to be invented. There is one exception to this and that
 is the SOA's mname can contain a `\.`, for the rest it is ignore and interpreted as `\` and `.`.
