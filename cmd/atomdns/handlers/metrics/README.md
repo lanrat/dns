@@ -78,6 +78,6 @@ scrape_configs:
       - targets: ["localhost:9153"]
 ```
 
-# Also See
+# See Also
 
 [Getting Started with Prometheus](https://prometheus.io/docs/prometheus/latest/getting_started/).

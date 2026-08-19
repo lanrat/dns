@@ -5,9 +5,8 @@ _chaos_ - respond to TXT queries in the CH class
 # Description
 
 This is useful for retrieving version or author information from the server by querying a TXT record
-for a special domain name in the CH class.
-
-The _chaos_ handler configures the _unpack_ handler to allow CHAOS class queries.
+for a special domain name in the CH class. For this to works you have to signal you need CH class queries in
+the config file, by adding **/CH** to the zone, see atomdns-conffile(5).
 
 # Syntax
 
@@ -51,3 +50,7 @@ And test with `dig`:
 ;; ANSWER SECTION:
 version.bind.		0	CH	TXT	"atomdns-001"
 ```
+
+# See Also
+
+atomdns-conffile(5).

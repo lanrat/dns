@@ -2,6 +2,8 @@ package handlers_test
 
 import (
 	"bufio"
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,6 +34,10 @@ func TestReadme(t *testing.T) {
 		}
 		readme := filepath.Join(d.Name(), "README.md")
 		t.Logf("Testing %s", readme)
+
+		if err := seeAlso(readme); err != nil {
+			t.Fatal(err)
+		}
 
 		confs, err := confFromReadme(readme)
 		if err != nil {
@@ -100,4 +106,15 @@ func confFromReadme(readme string) ([]string, error) {
 		return nil, err
 	}
 	return confs, nil
+}
+
+func seeAlso(readme string) error {
+	conffile, err := os.ReadFile(readme)
+	if err != nil {
+		return err
+	}
+	if bytes.Contains(conffile, []byte("# Also See")) {
+		return fmt.Errorf("use 'See Also' instead of 'Also See'")
+	}
+	return nil
 }
