@@ -34,12 +34,15 @@ const (
 	RSASHA256
 	_ // Skip 9, RFC 6725, section 2.1
 	RSASHA512
-	_ // Skip 11, RFC 6725, section 2.1
-	ECCGOST
+	_       // Skip 11, RFC 6725, section 2.1
+	ECCGOST // Deprecated.
 	ECDSAP256SHA256
 	ECDSAP384SHA384
 	ED25519
 	ED448
+	SM2SM3 // See RFC 9563.
+	MLDSA44
+	ECCGOST12  uint8 = 23 // See RFC 9558
 	INDIRECT   uint8 = 252
 	PRIVATEDNS uint8 = 253 // Private (experimental keys).
 	PRIVATEOID uint8 = 254
@@ -60,6 +63,9 @@ var AlgorithmToString = map[uint8]string{
 	ECDSAP384SHA384:  "ECDSAP384SHA384",
 	ED25519:          "ED25519",
 	ED448:            "ED448",
+	SM2SM3:           "SM2SM3",
+	MLDSA44:          "ML-DSA-44",
+	ECCGOST12:        "ECC-GOST-12",
 	INDIRECT:         "INDIRECT",
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",

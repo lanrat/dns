@@ -223,6 +223,8 @@ _all of them_ and _then some_
 - 9462 - Discovery of Designated Resolvers
 - 9460 - SVCB and HTTPS Records
 - 9499 - DNS Terminology
+- 9558 - GOST 2012 for DNSSEC
+- 9563 - SM2 for DNSSEC
 - 9567 - DNS Error Reporting
 - 9606 - DNS Resolver Information
 - 9660 - Zone version
@@ -230,3 +232,4 @@ _all of them_ and _then some_
 - 9824 - Compact Denial of Existence in DNSSEC
 - 9859 - DSYNC RR
 - draft-ietf-deleg - DELEG RR
+- draft-westerbaan-dnssec-mldsa-03 - MLDSA for DNSSEC
