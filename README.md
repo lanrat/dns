@@ -113,7 +113,7 @@ What users say:
 - Server side programming (mimicking the net/http package), with `dns.Handle` and `dns.HandleFunc` allowing
   for middleware servers.
 - Client side programming.
-- DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA and Ed25519.
+- DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA, Ed25519 and ML-DSA-44.
 - EDNS0, NSID, Cookies, etc, as pseudo RRs in the (fake) pseudo section.
 - AXFR/IXFR.
 - TSIG, SIG(0).
@@ -233,4 +233,4 @@ _all of them_ and _then some_
 - 9824 - Compact Denial of Existence in DNSSEC
 - 9859 - DSYNC RR
 - draft-ietf-deleg - DELEG RR
-- draft-westerbaan-dnssec-mldsa-03 - MLDSA for DNSSEC
+- draft-westerbaan-dnssec-mldsa-04 - MLDSA for DNSSEC

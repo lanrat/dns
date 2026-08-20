@@ -3,7 +3,10 @@ package dns
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rsa"
+	"os"
+	"strings"
 	"testing"
 
 	"codeberg.org/miekg/dns/rdata"
@@ -36,6 +39,12 @@ func TestDNSSECSignVerify(t *testing.T) {
 			},
 		},
 		{
+			"mldsa44", MLDSA44, 256,
+			[]RR{
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, SRV: rdata.SRV{Port: 1000, Weight: 80, Target: "web1.miek.nl."}},
+			},
+		},
+		{
 			"rsasha256-sorting", RSASHA256, 1024,
 			[]RR{
 				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "linode.atoom.net."}},
@@ -61,6 +70,8 @@ func TestDNSSECSignVerify(t *testing.T) {
 				err = sig.Sign(priv.(*ecdsa.PrivateKey), tc.rrs, options)
 			case ED25519:
 				err = sig.Sign(priv.(ed25519.PrivateKey), tc.rrs, options)
+			case MLDSA44:
+				err = sig.Sign(priv.(*mldsa.PrivateKey), tc.rrs, options)
 			}
 			if err != nil {
 				t.Fatalf("failure to sign: %s", err)
@@ -148,5 +159,102 @@ func TestDNSSECVerify(t *testing.T) {
 				t.Fatalf("failure to verify: %s", err)
 			}
 		})
+	}
+}
+
+// readZone parses the zone in file and returns all RRs in it.
+func readZone(t *testing.T, file string) []RR {
+	t.Helper()
+	buf, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rrs := []RR{}
+	zp := NewZoneParser(strings.NewReader(string(buf)), ".", file)
+	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+		rrs = append(rrs, rr)
+	}
+	if err := zp.Err(); err != nil {
+		t.Fatal(err)
+	}
+	return rrs
+}
+
+func TestDNSSECVerifyMLDSA44(t *testing.T) {
+	testcases := []struct {
+		name        string
+		file        string
+		typeCovered uint16
+	}{
+		{"draft-westerbaan-dnssec-mldsa", "testdata/mldsa44-example.com", TypeMX},
+		{"mldsa.huque.com", "testdata/mldsa44-mldsa.huque.com", TypeDNSKEY},
+		{"kochen-specker.info", "testdata/mldsa44-kochen-specker.info", TypeDNSKEY},
+	}
+
+	options := &SignOption{}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			keys := map[uint16]*DNSKEY{}
+			sigs := []*RRSIG{}
+			rrset := []RR{}
+			for _, rr := range readZone(t, tc.file) {
+				if sig, ok := rr.(*RRSIG); ok {
+					if sig.TypeCovered == tc.typeCovered {
+						sigs = append(sigs, sig)
+					}
+					continue
+				}
+				if key, ok := rr.(*DNSKEY); ok {
+					keys[key.KeyTag()] = key
+				}
+				if RRToType(rr) == tc.typeCovered {
+					rrset = append(rrset, rr)
+				}
+			}
+			if len(sigs) == 0 {
+				t.Fatal("no signatures found")
+			}
+
+			for _, sig := range sigs {
+				key, ok := keys[sig.KeyTag]
+				if !ok {
+					t.Fatalf("no DNSKEY with keytag %d", sig.KeyTag)
+				}
+				if err := sig.Verify(key, rrset, options); err != nil {
+					t.Errorf("failure to verify keytag %d, algorithm %s: %s", sig.KeyTag, AlgorithmToString[sig.Algorithm], err)
+				}
+			}
+		})
+	}
+}
+
+// mldsa44PrivateKey is the private key from section 6 of draft-westerbaan-dnssec-mldsa.
+const mldsa44PrivateKey = `Private-key-format: v1.3
+Algorithm: 18 (MLDSA44)
+PrivateKey: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
+`
+
+func TestDNSSECMLDSA44PrivateKey(t *testing.T) {
+	var key *DNSKEY
+	for _, rr := range readZone(t, "testdata/mldsa44-example.com") {
+		if k, ok := rr.(*DNSKEY); ok {
+			key = k
+		}
+	}
+
+	priv, err := key.NewPrivate(mldsa44PrivateKey)
+	if err != nil {
+		t.Fatalf("failure to read the private key: %s", err)
+	}
+
+	// The key pair is derived from the seed, the public part must match the DNSKEY.
+	pub := new(DNSKEY)
+	pub.setPublicKeyMLDSA44(priv.(*mldsa.PrivateKey).PublicKey())
+	if pub.PublicKey != key.PublicKey {
+		t.Error("public key derived from the seed does not match the DNSKEY")
+	}
+
+	if got := key.PrivateKeyString(priv); got != mldsa44PrivateKey {
+		t.Errorf("expected private key %q, got %q", mldsa44PrivateKey, got)
 	}
 }
