@@ -411,6 +411,24 @@ func TestZoneParserEDNS0(t *testing.T) {
 	}
 }
 
+// readZone parses the zone in file and returns all RRs in it.
+func readZone(t *testing.T, file string) []RR {
+	t.Helper()
+	buf, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rrs := []RR{}
+	zp := NewZoneParser(bytes.NewReader(buf), ".", file)
+	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+		rrs = append(rrs, rr)
+	}
+	if err := zp.Err(); err != nil {
+		t.Fatal(err)
+	}
+	return rrs
+}
+
 func BenchmarkZoneParser(b *testing.B) {
 	root, err := os.ReadFile("testdata/root.zone")
 	if err != nil {

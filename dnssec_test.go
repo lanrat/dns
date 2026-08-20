@@ -5,8 +5,6 @@ import (
 	"crypto/ed25519"
 	"crypto/mldsa"
 	"crypto/rsa"
-	"os"
-	"strings"
 	"testing"
 
 	"codeberg.org/miekg/dns/rdata"
@@ -160,24 +158,6 @@ func TestDNSSECVerify(t *testing.T) {
 			}
 		})
 	}
-}
-
-// readZone parses the zone in file and returns all RRs in it.
-func readZone(t *testing.T, file string) []RR {
-	t.Helper()
-	buf, err := os.ReadFile(file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rrs := []RR{}
-	zp := NewZoneParser(strings.NewReader(string(buf)), ".", file)
-	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
-		rrs = append(rrs, rr)
-	}
-	if err := zp.Err(); err != nil {
-		t.Fatal(err)
-	}
-	return rrs
 }
 
 func TestDNSSECVerifyMLDSA44(t *testing.T) {
