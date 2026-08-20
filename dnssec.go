@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	_ "crypto/sha1"   // need its init function
@@ -72,7 +73,7 @@ var AlgorithmToString = map[uint8]string{
 }
 
 // AlgorithmToHash is a map of algorithm crypto hash IDs to crypto.Hash's.
-// Newer algorithm that do their own hashing (i.e. ED25519) are not present here.
+// Newer algorithm that do their own hashing (i.e. ED25519 and MLDSA44) are not present here.
 var AlgorithmToHash = map[uint8]crypto.Hash{
 	RSAMD5:           crypto.MD5, // Deprecated in RFC 6725.
 	DSA:              crypto.SHA1,
@@ -405,6 +406,18 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 		}
 
 		if ed25519.Verify(pubkey, signeddata, sigbuf) {
+			return nil
+		}
+		return ErrSig
+
+	case MLDSA44:
+		pubkey := k.publicKeyMLDSA44()
+		if pubkey == nil {
+			return ErrKey
+		}
+
+		// Nil options selects pure ML-DSA with an empty context, see draft-westerbaan-dnssec-mldsa.
+		if mldsa.Verify(pubkey, signeddata, sigbuf, nil) == nil {
 			return nil
 		}
 		return ErrSig
