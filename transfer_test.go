@@ -9,7 +9,6 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
-	"codeberg.org/miekg/dns/rdata"
 )
 
 var testTransferData = []dns.RR{
@@ -112,7 +111,7 @@ func TestTransfer(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			c := dns.NewClient()
 			m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
-			ixfrsoa := []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2009032799}}}
+			ixfrsoa := []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: 2009032799}}
 			addr := ""
 			switch name {
 			case "tcp", "tcp-ixfr":
@@ -211,7 +210,7 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 
 			c := new(dns.Client)
 			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
-			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: tc.serial}}}
+			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: tc.serial}}
 
 			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 			if err != nil {
@@ -269,7 +268,7 @@ func TestTransferIncremental(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			c := dns.NewClient()
 			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
-			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2009032800}}}
+			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: 2009032800}}
 
 			addr := ""
 			switch name {
