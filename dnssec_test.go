@@ -39,7 +39,7 @@ func TestDNSSECSignVerify(t *testing.T) {
 		{
 			"mldsa44", MLDSA44, 256,
 			[]RR{
-				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, SRV: rdata.SRV{Port: 1000, Weight: 80, Target: "web1.miek.nl."}},
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
 			},
 		},
 		{
@@ -91,6 +91,9 @@ func TestDNSSECKeyTag(t *testing.T) {
 		{
 			10771, dnstestNew("example.net. 3600 IN DNSKEY 257 3 14 xKYaNhWdGOfJ+nPrL8/arkwf2EY3MDJ+SErKivBVSum1w/egsXvSADtNJhyem5RCOpgQ6K8X1DRSEkrbYQ+OB+v8/uX45NBwY8rp65F6Glur8I/mlVNgF6W/qTI37m40"),
 		},
+		{
+			59829, readZone(t, "testdata/mldsa44-example.com")[0],
+		},
 	}
 	for i, tc := range testcases {
 		got := tc.rr.(*DNSKEY).KeyTag()
@@ -101,6 +104,10 @@ func TestDNSSECKeyTag(t *testing.T) {
 }
 
 func TestDNSSECVerify(t *testing.T) {
+	draftKey, draftSig, draftRRs := signedRRset(t, "testdata/mldsa44-example.com", TypeMX, 59829)
+	huqueKey, huqueSig, huqueRRs := signedRRset(t, "testdata/mldsa44-mldsa.huque.com", TypeDNSKEY, 23583)
+	kochenKey, kochenSig, kochenRRs := signedRRset(t, "testdata/mldsa44-kochen-specker.info", TypeDNSKEY, 20767)
+
 	testcases := []struct {
 		name string
 		key  *DNSKEY
@@ -147,6 +154,9 @@ func TestDNSSECVerify(t *testing.T) {
 				dnstestNew("org.	30	IN	DNSKEY	257 3 8 AwEAAexZJ/1wfyNCxNPrTZizaG7UlibGhP+AyogR6bqjptKweEgE4gD8GxRQJkt+Fn5pCoNqzmm1ZnEoKqvm93uOYtbKkYQDGH+W69J66MSKpgIyS+mT/4iaXn+lpb5o99l/sf7lHMa975O/fqN6aPUll4hUbN2T1LHv6HzQuQCtNRJA8jHGwX5q0NMmh2Z+yaG6B9cISerje9l5L+ID2ydJ6zXquYteoIUvX2xzqnXCdHPSvD+oL6R/weW+tztdFS1hok/1z3tn5NzmcaOLll9nXniCozEpLFEGPswyvtphWgCYhI8bBTqhUsIwfIwLSBQTEg2oCX7sS5CbXg44OqwhIW8="),
 			},
 		},
+		{"mldsa44-example.com", draftKey, draftSig, draftRRs},
+		{"mldsa44-mldsa.huque.com", huqueKey, huqueSig, huqueRRs},
+		{"mldsa44-kochen-specker.info", kochenKey, kochenSig, kochenRRs},
 	}
 
 	options := &SignOption{}
@@ -160,52 +170,30 @@ func TestDNSSECVerify(t *testing.T) {
 	}
 }
 
-func TestDNSSECVerifyMLDSA44(t *testing.T) {
-	testcases := []struct {
-		name        string
-		file        string
-		typeCovered uint16
-	}{
-		{"draft-westerbaan-dnssec-mldsa", "testdata/mldsa44-example.com", TypeMX},
-		{"mldsa.huque.com", "testdata/mldsa44-mldsa.huque.com", TypeDNSKEY},
-		{"kochen-specker.info", "testdata/mldsa44-kochen-specker.info", TypeDNSKEY},
+func signedRRset(t *testing.T, file string, typ, keytag uint16) (*DNSKEY, *RRSIG, []RR) {
+	t.Helper()
+	var key *DNSKEY
+	var sig *RRSIG
+	rrs := []RR{}
+	for _, rr := range readZone(t, file) {
+		switch x := rr.(type) {
+		case *DNSKEY:
+			if x.KeyTag() == keytag {
+				key = x
+			}
+		case *RRSIG:
+			if x.TypeCovered == typ && x.KeyTag == keytag {
+				sig = x
+			}
+		}
+		if RRToType(rr) == typ {
+			rrs = append(rrs, rr)
+		}
 	}
-
-	options := &SignOption{}
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			keys := map[uint16]*DNSKEY{}
-			sigs := []*RRSIG{}
-			rrset := []RR{}
-			for _, rr := range readZone(t, tc.file) {
-				if sig, ok := rr.(*RRSIG); ok {
-					if sig.TypeCovered == tc.typeCovered {
-						sigs = append(sigs, sig)
-					}
-					continue
-				}
-				if key, ok := rr.(*DNSKEY); ok {
-					keys[key.KeyTag()] = key
-				}
-				if RRToType(rr) == tc.typeCovered {
-					rrset = append(rrset, rr)
-				}
-			}
-			if len(sigs) == 0 {
-				t.Fatal("no signatures found")
-			}
-
-			for _, sig := range sigs {
-				key, ok := keys[sig.KeyTag]
-				if !ok {
-					t.Fatalf("no DNSKEY with keytag %d", sig.KeyTag)
-				}
-				if err := sig.Verify(key, rrset, options); err != nil {
-					t.Errorf("failure to verify keytag %d, algorithm %s: %s", sig.KeyTag, AlgorithmToString[sig.Algorithm], err)
-				}
-			}
-		})
+	if key == nil || sig == nil {
+		t.Fatalf("no DNSKEY or RRSIG with keytag %d in %s", keytag, file)
 	}
+	return key, sig, rrs
 }
 
 // mldsa44PrivateKey is the private key from section 6 of draft-westerbaan-dnssec-mldsa.
