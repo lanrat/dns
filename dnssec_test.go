@@ -104,9 +104,6 @@ func TestDNSSECKeyTag(t *testing.T) {
 }
 
 func TestDNSSECVerify(t *testing.T) {
-	//	huqueKey, huqueSig, huqueRRs := signedRRset(t, "testdata/mldsa44-mldsa.huque.com", TypeDNSKEY, 23583)
-	//	kochenKey, kochenSig, kochenRRs := signedRRset(t, "testdata/mldsa44-kochen-specker.info", TypeDNSKEY, 20767)
-
 	testcases := []struct {
 		name string
 		key  *DNSKEY
@@ -187,9 +184,8 @@ func TestDNSSECPrivateKey(t *testing.T) {
 		name    string
 		privkey string
 	}{
-		// mldsa44PrivateKey is the private key from section 6 of draft-westerbaan-dnssec-mldsa.
 		{
-			"MLDSA44",
+			"MLDSA44", // mldsa44PrivateKey is the private key from section 6 of draft-westerbaan-dnssec-mldsa.
 			`Private-key-format: v1.3
 Algorithm: 18 (MLDSA44)
 PrivateKey: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
