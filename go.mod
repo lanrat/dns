@@ -1,6 +1,6 @@
 module codeberg.org/miekg/dns
 
-go 1.25.0
+go 1.27.0
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.0

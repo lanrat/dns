@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/rdata"
 )
 
 func TestToString(t *testing.T) {
@@ -128,7 +127,7 @@ func TestStringToOpcode(t *testing.T) {
 }
 
 func ExampleTypeToString() {
-	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
+	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
 	fmt.Println(TypeToString(dns.RRToType(rr)))
 	// Output: MX
 }

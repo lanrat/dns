@@ -11,7 +11,6 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/dnsutil"
 	"codeberg.org/miekg/dns/pkg/pool"
-	"codeberg.org/miekg/dns/rdata"
 )
 
 type Whoami int
@@ -37,9 +36,9 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 
 		var rr dns.RR
 		if ip.Is4() {
-			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: rdata.A{Addr: ip}}
+			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, Addr: ip}
 		} else {
-			rr = &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: ip}}
+			rr = &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, Addr: ip}
 		}
 
 		sb := builderPool.Get()
@@ -48,7 +47,7 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 		sb.WriteString(" (")
 		sb.WriteString(dnsutil.Network(w))
 		sb.WriteString(")")
-		t := &dns.TXT{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{sb.String()}}}
+		t := &dns.TXT{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{sb.String()}}
 		builderPool.Put(sb)
 
 		switch r.Question[0].(type) {

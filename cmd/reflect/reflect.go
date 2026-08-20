@@ -46,7 +46,6 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
-	"codeberg.org/miekg/dns/rdata"
 )
 
 var (
@@ -81,9 +80,9 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 
 	var rr dns.RR
 	if ip.Is4() {
-		rr = &dns.A{Hdr: *hdr, A: rdata.A{Addr: ip}}
+		rr = &dns.A{Hdr: *hdr, Addr: ip}
 	} else {
-		rr = &dns.AAAA{Hdr: *hdr, AAAA: rdata.AAAA{Addr: ip}}
+		rr = &dns.AAAA{Hdr: *hdr, Addr: ip}
 	}
 
 	txt := textPool.Get().([]byte)
@@ -93,7 +92,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	txt = append(txt, " ("...)
 	txt = append(txt, dnsutil.Network(w)...)
 	txt = append(txt, ')')
-	t := &dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{string(txt)}}}
+	t := &dns.TXT{Hdr: *hdr, Txt: []string{string(txt)}}
 	textPool.Put(txt)
 
 	switch r.Question[0].(type) {

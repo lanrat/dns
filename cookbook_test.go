@@ -26,7 +26,7 @@ func ExampleHeader_replace() {
 
 // ExampleRDATA shows how to access the various elements in a [dns.RR].
 func ExampleRDATA() {
-	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
+	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
 	rh := rr.Header()
 	rd := rr.Data()
 	fmt.Println("Split RR")
