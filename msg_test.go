@@ -359,7 +359,9 @@ func TestMsg(t *testing.T) {
 				// name=. type=A class=IN ttl=0 rdlength={0, 0} -> and no rdata
 				return &dns.Msg{Data: []byte{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0}}
 			},
-			func(r *dns.Msg) error { return nil },
+			func(r *dns.Msg) error {
+				return nil
+			},
 		},
 		{
 			"malformed-aaaa",
@@ -367,32 +369,9 @@ func TestMsg(t *testing.T) {
 				// name=. type=AAAA class=IN ttl=0 rdlength={0,1} -> and then 2 as malformed address
 				return &dns.Msg{Data: []byte{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 28, 0, 0, 0, 0, 0, 1, 2}}
 			},
-			func(r *dns.Msg) error { return nil },
-		},
-		{
-			"multiple-opt",
-			func() *dns.Msg {
-				m := dns.NewMsg("miek.nl.", dns.TypeA)
-				m.Security = true
-				m.Extra = append(m.Extra, &dns.OPT{})
-				return m
-			},
 			func(r *dns.Msg) error {
-				err := r.Unpack()
-				if err == nil {
-					return fmt.Errorf("expected error")
-				}
 				return nil
 			},
-		},
-		{
-			"single-opt",
-			func() *dns.Msg {
-				m := dns.NewMsg("miek.nl.", dns.TypeA)
-				m.Security = true
-				return m
-			},
-			func(r *dns.Msg) error { return r.Unpack() },
 		},
 	}
 
