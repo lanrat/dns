@@ -89,6 +89,7 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	}
 
 	r = &Msg{Data: m.Data}
+	m.Data = m.Data[:0]
 	if len(r.Data) < int(m.UDPSize) {
 		r.Data = append(r.Data, make([]byte, (int(m.UDPSize)-len(r.Data)))...)
 	}
