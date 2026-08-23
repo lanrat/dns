@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"cmp"
 	"context"
 	"io"
 	"sync"
@@ -89,13 +90,8 @@ func (mux *ServeMux) match(q string, t, c uint16) (Handler, string) {
 			ds = off
 		}
 	}
-	if handler != nil { // never found a parent, just give the DS query to this handler
-		mux.RUnlock()
-		return handler, q[ds:]
-	}
-
 	mux.RUnlock()
-	return nil, ""
+	return handler, cmp.Or(q[ds:], "")
 }
 
 // Handle adds a handler to the ServeMux for pattern. Identical patterns silently overwrites earlier handlers.
