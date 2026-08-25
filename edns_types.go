@@ -410,8 +410,11 @@ func (o *ZONEVERSION) String() string {
 	case 0:
 		sb.WriteString("SOA-SERIAL")
 		sb.WriteByte(' ')
-		version := binary.BigEndian.Uint32([]byte(o.Version))
-		sb.WriteString(strconv.Itoa(int(version)))
+		version := 0
+		if len(o.Version) == 4 {
+			version = int(binary.BigEndian.Uint32([]byte(o.Version)))
+		}
+		sb.WriteString(strconv.Itoa(version))
 	default:
 		sb.WriteString("TYPE")
 		sb.WriteString(strconv.Itoa(int(o.Type)))
@@ -634,6 +637,8 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *KEYTAG:
 		return x.unpack(s)
+	case *UPDATELEASE:
+		return x.unpack(s)
 	case *ERFC3597:
 		return x.unpack(s)
 	}
@@ -679,6 +684,8 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *MQRESPONSE:
 		return x.pack(msg, off)
 	case *KEYTAG:
+		return x.pack(msg, off)
+	case *UPDATELEASE:
 		return x.pack(msg, off)
 	case *ERFC3597:
 		return x.pack(msg, off)
