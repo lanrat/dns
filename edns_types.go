@@ -26,6 +26,7 @@ const (
 	CodeCOOKIE       uint16 = 0xA  // Cookie, RFC 7873.
 	CodeTCPKEEPALIVE uint16 = 0xB  // TCP keep alive (see RFC 7828).
 	CodePADDING      uint16 = 0xC  // Padding (see RFC 7830).
+	CodeKEYTAG       uint16 = 0xE  // Key Tag Signaling (see RFC 8145).
 	CodeEDE          uint16 = 0xF  // Extended DNS errors (see RFC 8914).
 	CodeREPORTING    uint16 = 0x12 // EDNS0 reporting (see RFC 9567).
 	CodeZONEVERSION  uint16 = 0x13 // Zone version (see RFC 9660).
