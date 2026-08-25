@@ -20,9 +20,6 @@ import (
 // NewPrivate returns a crypto.PrivateKey by parsing the string s.
 // s should be in the same form of the BIND private key files.
 func (k *DNSKEY) NewPrivate(s string) (crypto.PrivateKey, error) {
-	if s == "" || s[len(s)-1] != '\n' { // We need a closing newline
-		return k.readPrivate(strings.NewReader(s+"\n"), "")
-	}
 	return k.readPrivate(strings.NewReader(s), "")
 }
 
