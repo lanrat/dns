@@ -114,7 +114,7 @@ func TestMsgBinary(t *testing.T) {
 				if len(m.Pseudo) == 0 {
 					return errors.New("expected pseudo section")
 				}
-				_, ok := m.Pseudo[len(m.Pseudo)-1].(*dns.TSIG)
+				_, ok := m.Pseudo[len(m.Pseudo)-2].(*dns.TSIG)
 				if !ok {
 					return errors.New("expected TSIG")
 				}
