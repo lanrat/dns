@@ -6,8 +6,6 @@ import (
 	"crypto/mldsa"
 	"crypto/rsa"
 	"testing"
-
-	"codeberg.org/miekg/dns/rdata"
 )
 
 func TestDNSSECSignVerify(t *testing.T) {
@@ -45,9 +43,9 @@ func TestDNSSECSignVerify(t *testing.T) {
 		{
 			"rsasha256-sorting", RSASHA256, 1024,
 			[]RR{
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "linode.atoom.net."}},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "ns-ext.nlnetlabs.nl."}},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "omval.tednet.nl"}},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "linode.atoom.net."},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
 			},
 		},
 	}
@@ -183,13 +181,20 @@ func TestDNSSECPrivateKey(t *testing.T) {
 	testcases := []struct {
 		name    string
 		privkey string
+		err     bool
 	}{
 		{
 			"MLDSA44", // mldsa44PrivateKey is the private key from section 6 of draft-westerbaan-dnssec-mldsa.
 			`Private-key-format: v1.3
 Algorithm: 18 (MLDSA44)
-PrivateKey: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
-`,
+PrivateKey: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=`,
+			false,
+		},
+		{
+			"ECDSA-should-fail",
+			`Private-key-format: v1.3
+Algorithm:`,
+			true,
 		},
 	}
 
@@ -197,7 +202,7 @@ PrivateKey: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
 		t.Run(tc.name, func(t *testing.T) {
 			var key *DNSKEY
 			_, err := key.NewPrivate(tc.privkey)
-			if err != nil {
+			if err != nil && !tc.err {
 				t.Fatalf("failure to read the private key: %s", err)
 			}
 		})
