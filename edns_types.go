@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// ENDS0 option codes.
+// ENDS0 option codes. See https://www.iana.org/assignments/dns-parameters#dns-parameters-11.
 const (
 	CodeNone         uint16 = 0x0
 	CodeLLQ          uint16 = 0x1  // Long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01.
@@ -423,6 +423,9 @@ func (o *ZONEVERSION) String() string {
 	return s
 }
 
+// MQQUERY implements the EDNS0 MQTYPE-Query option (RFC 10029).
+//
+// This record must be put in the pseudo section.
 type MQQUERY struct {
 	Types []uint16
 }
@@ -450,13 +453,27 @@ func (o *MQQUERY) String() string {
 	return sb.String()
 }
 
+// MQRESPONSE implements the EDNS0 MQTYPE-Response option (RFC 10029).
+//
+// This record must be put in the pseudo section.
 type MQRESPONSE struct {
 	Types []uint16
 }
 
-func (o *MQRESPONSE) Len() int    { return tlv + len(o.Types)*2 }
-func (o *MQRESPONSE) Data() RDATA { return o }
-func (o *MQRESPONSE) String() string {
+func (o *MQRESPONSE) Len() int       { return tlv + len(o.Types)*2 }
+func (o *MQRESPONSE) Data() RDATA    { return o }
+func (o *MQRESPONSE) String() string { x := MQQUERY(*o); return x.String() }
+
+// KEYTAG implements the EDNS0 key tag signalling option (RFC 8145).
+//
+// This record must be put in the pseudo section.
+type KEYTAG struct {
+	Types []uint16
+}
+
+func (o *KEYTAG) Len() int    { return tlv + len(o.Types)*2 }
+func (o *KEYTAG) Data() RDATA { return o }
+func (o *KEYTAG) String() string {
 	sb := sprintOptionHeader(o)
 	defer builderPool.Put(*sb)
 
@@ -464,14 +481,14 @@ func (o *MQRESPONSE) String() string {
 	case 0:
 		return sb.String()
 	case 1:
-		sb.WriteString(typeToString(o.Types[0]))
+		fmt.Fprintf(sb, "%d", o.Types[0])
 		return sb.String()
 	default:
-		typeToString(o.Types[0])
+		fmt.Fprintf(sb, "%d", o.Types[0])
 	}
 	for _, t := range o.Types[1:] {
 		sb.WriteByte(' ')
-		sb.WriteString(typeToString(t))
+		fmt.Fprintf(sb, "%d", t)
 	}
 
 	return sb.String()
@@ -615,6 +632,8 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *MQRESPONSE:
 		return x.unpack(s)
+	case *KEYTAG:
+		return x.unpack(s)
 	case *ERFC3597:
 		return x.unpack(s)
 	}
@@ -658,6 +677,8 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *MQQUERY:
 		return x.pack(msg, off)
 	case *MQRESPONSE:
+		return x.pack(msg, off)
+	case *KEYTAG:
 		return x.pack(msg, off)
 	case *ERFC3597:
 		return x.pack(msg, off)
