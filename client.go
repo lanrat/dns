@@ -49,7 +49,7 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // fall back to the historic limit of 512 octets (bytes).
 //
 // The full binary data is included in the (decoded) message as r.Data. If the Data buffer in m is empty
-// client.Exchange calls m.Pack().
+// client.Exchange calls m.Pack(), the buffer (in m) will be reset.
 //
 // An error is returned if:
 //   - if the message returned does not have the same ID as the message sent.
