@@ -216,6 +216,7 @@ _all of them_ and _then some_
 - 8482 - Minimal Answers for ANY
 - 8484 - DOH
 - 8499 - DNS Terminology
+- 8509 - DNSSEC Trusted Key Sentinel
 - 8659 - DNS Certification Authority Authorization (CAA) Resource Record
 - 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
 - 8914 - Extended DNS Errors
