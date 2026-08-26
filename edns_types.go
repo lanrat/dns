@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// ENDS0 option codes.
+// ENDS0 option codes. See https://www.iana.org/assignments/dns-parameters#dns-parameters-11.
 const (
 	CodeNone         uint16 = 0x0
 	CodeLLQ          uint16 = 0x1  // Long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01.
@@ -423,6 +423,9 @@ func (o *ZONEVERSION) String() string {
 	return s
 }
 
+// MQQUERY implements the EDNS0 MQTYPE-Query option (RFC 10029).
+//
+// This record must be put in the pseudo section.
 type MQQUERY struct {
 	Types []uint16
 }
@@ -450,6 +453,9 @@ func (o *MQQUERY) String() string {
 	return sb.String()
 }
 
+// MQRESPONSE implements the EDNS0 MQTYPE-Response option (RFC 10029).
+//
+// This record must be put in the pseudo section.
 type MQRESPONSE struct {
 	Types []uint16
 }
@@ -458,7 +464,9 @@ func (o *MQRESPONSE) Len() int       { return tlv + len(o.Types)*2 }
 func (o *MQRESPONSE) Data() RDATA    { return o }
 func (o *MQRESPONSE) String() string { x := MQQUERY(*o); return x.String() }
 
-// KEYTAG is the EDNS0 option as defined in RFC 8145.
+// KEYTAG implements the EDNS0 key tag signalling option (RFC 8145).
+//
+// This record must be put in the pseudo section.
 type KEYTAG struct {
 	Types []uint16
 }
