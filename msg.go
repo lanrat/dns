@@ -745,16 +745,13 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 
 	if sock, ok := r.(*net.UDPConn); ok {
 		n, err := sock.Read(m.Data)
-		if err != nil {
-			return 0, err
-		}
 		m.Data = m.Data[:n]
-		return int64(n), nil
+		return int64(n), err
 	}
 
 	// When doing io.Copy that underlaying type we get from net is net.tcpConnWithoutWriteTo, not a
 	// net.TCPConn.For udp this seems not to be the case, so the fallthrough when things are not UDP like
-	// is too assume TCP.
+	// is to assume TCP.
 
 	l := uint16(0)
 	if err := binary.Read(r, binary.BigEndian, &l); err != nil {
@@ -763,7 +760,7 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	li := int(l)
 	if li < MsgHeaderSize {
 		io.Copy(io.Discard, io.LimitReader(r, int64(li))) // discard the remaining octets
-		return 0, fmt.Errorf("dns: message size %d, can not be smaller than %d", li, MsgHeaderSize)
+		return int64(li), fmt.Errorf("dns: message size %d, can not be smaller than %d", li, MsgHeaderSize)
 	}
 
 	if len(m.Data) < li {
@@ -772,10 +769,10 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 		m.Data = m.Data[:li]
 	}
 	n, err := io.ReadFull(r, m.Data)
-	if err == nil && n != li {
-		return 0, fmt.Errorf("dns: message size %d does not match prefix %d", li, n)
-	}
 	m.Data = m.Data[:n]
+	if err == nil && n != li {
+		return int64(n), fmt.Errorf("dns: message size %d does not match prefix %d", li, n)
+	}
 	return int64(n), err
 }
 
