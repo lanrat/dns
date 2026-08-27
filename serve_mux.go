@@ -140,14 +140,17 @@ func (mux *ServeMux) HandleRemove(pattern string, class ...uint16) {
 // ServeDNS dispatches the request to the handler whose pattern most closely matches the request message.
 //
 // ServeDNS is DNSSEC aware, meaning that queries for the DS record are redirected to the parent zone (if
-// that is also registered), otherwise the child gets the query.
+// that is also registered), otherwise the current zone gets the query.
 //
 // If no handler is found a standard REFUSED message is returned. No checks are made on the request message.
 func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
-	h, zone := mux.match(req.Question[0].Header().Name, req.qtype, req.qclass)
-	if h != nil {
-		ctx = context.WithValue(ctx, contextKeyZone, zone)
-		h.ServeDNS(ctx, w, req)
+	if req.qtype == 0 { // this is an implicit check that we've at least seen something resembling a question
+		refuse(w, req)
+		return
+	}
+
+	if h, zone := mux.match(req.Question[0].Header().Name, req.qtype, req.qclass); h != nil {
+		h.ServeDNS(context.WithValue(ctx, contextKeyZone, zone), w, req)
 		return
 	}
 
