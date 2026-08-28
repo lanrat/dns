@@ -44,7 +44,7 @@ func (rr *YO) String() string {
 		rr.Yo.String()
 }
 
-// Packer interface
+// Packer interface.
 func (rr *YO) Pack(msg []byte, off int) (int, error) {
 	if off+rr.Yo.Len()+1 > len(msg) {
 		return len(msg), fmt.Errorf("overflow packing YO")
@@ -112,6 +112,19 @@ func TestExternalRR(t *testing.T) {
 	}
 }
 
+func ExampleRR_private() {
+	dns.TypeToRR[codepoint] = func() dns.RR { return new(YO) }
+	dns.TypeToString[codepoint] = "YO"
+	dns.StringToType["YO"] = codepoint
+
+	y := &YO{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, Yo: YoData{Priority: 10, Yo: "Yo!"}}
+
+	m := dns.NewMsg("yo.example.org.", codepoint)
+	m.Answer = []dns.RR{y}
+	m.Pack()
+	// do something with m
+}
+
 // YOOPT is a custom EDNS0 option for testing external EDNS0 support.
 type YOOPT struct {
 	Yo string
@@ -175,4 +188,14 @@ func TestExternalEDNS0(t *testing.T) {
 	if x := y.Type(); x != optcodepoint {
 		t.Fatalf("expected type %d, got %d", optcodepoint, x)
 	}
+}
+
+func ExampleEDNS0_private() {
+	dns.CodeToRR[optcodepoint] = func() dns.EDNS0 { return new(YOOPT) }
+	dns.CodeToString[optcodepoint] = "YOOPT"
+
+	m := dns.NewMsg("yo.example.org.", dns.TypeA)
+	m.Pseudo = []dns.RR{&YOOPT{Yo: "Yo!"}}
+	m.Pack()
+	// do something with m
 }
