@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnstest"
 )
 
 func TestRecorder(t *testing.T) {
@@ -47,7 +46,7 @@ func ExampleRecorder() {
 		ctx  context.Context
 	)
 
-	rw := dnstest.NewRecorder(w)
+	rw := NewRecorder(w)
 	next.ServeDNS(ctx, rw, r)
 
 	// If hijacked we don't get anything back.
