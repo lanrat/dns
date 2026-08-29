@@ -1,4 +1,5 @@
-// Package dnstest allows for easy testing of DNS clients against a test server.
+// Package dnstest allows for easy testing of DNS clients against a test server. But the function can also be
+// useful in production servers.
 package dnstest
 
 import (
