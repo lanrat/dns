@@ -603,9 +603,8 @@ func (m *Msg) isPseudo() int {
 	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
 		n = 1
 	}
-	lp := len(m.Pseudo)
-	if lp > 0 {
-		switch m.Pseudo[lp-1].(type) {
+	for i := range m.Pseudo {
+		switch m.Pseudo[i].(type) {
 		case *TSIG:
 			n++
 		case *SIG:
