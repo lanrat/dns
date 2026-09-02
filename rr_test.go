@@ -112,6 +112,54 @@ func TestExternalRR(t *testing.T) {
 	}
 }
 
+func TestRFC3597TypeRoundTrip(t *testing.T) {
+	for _, text := range []string{
+		"example. IN TYPE65534 \\# 5 084ff00001",
+		"example. IN TYPE65280 \\# 0",
+	} {
+		t.Run(text, func(t *testing.T) {
+			rr, err := dns.New(text)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := dns.RRToType(rr)
+			m := dns.NewMsg("example.", dns.TypeA)
+			m.Answer = []dns.RR{rr}
+			if err := m.Pack(); err != nil {
+				t.Fatal(err)
+			}
+			if err := m.Unpack(); err != nil {
+				t.Fatal(err)
+			}
+			if got := dns.RRToType(m.Answer[0]); got != want {
+				t.Fatalf("expected TYPE%d after wire round trip, got TYPE%d", want, got)
+			}
+			if err := m.Pack(); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+
+	a, err := dns.New("example. IN A 192.0.2.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, known := range []dns.RR{
+		a,
+		&dns.NULL{Hdr: dns.Header{Name: "example.", Class: dns.ClassINET}},
+	} {
+		t.Run(fmt.Sprintf("%T", known), func(t *testing.T) {
+			generic := new(dns.RFC3597)
+			if err := generic.ToRFC3597(known); err != nil {
+				t.Fatal(err)
+			}
+			if got, want := generic.RRType, dns.RRToType(known); got != want {
+				t.Fatalf("converted %T to TYPE%d, expected TYPE%d", known, got, want)
+			}
+		})
+	}
+}
+
 func ExampleRR_private() {
 	dns.TypeToRR[codepoint] = func() dns.RR { return new(YO) }
 	dns.TypeToString[codepoint] = "YO"

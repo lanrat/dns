@@ -140,7 +140,10 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 		rr = newFn()
 		*rr.Header() = *h
 	} else {
-		rr = &RFC3597{Hdr: *h}
+		rr = &RFC3597{
+			Hdr:     *h,
+			RFC3597: rdata.RFC3597{RRType: typ},
+		}
 	}
 
 	if rdlength == 0 {

@@ -320,17 +320,18 @@ func (h *MsgHeader) String() string {
 
 // ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {
-	buf := make([]byte, r.Len())
+	buf := make([]byte, r.Len()+1)
 	headerEnd, off, err := packRR(r, buf, 0, map[string]uint16{})
 	if err != nil {
 		return err
 	}
 	buf = buf[:off]
+	rdlength := off - headerEnd
 
 	*rr = RFC3597{Hdr: *r.Header()}
-	rr.RRType = uint16(off - headerEnd)
+	rr.RRType = RRToType(r)
 
-	if rr.RRType == 0 {
+	if rdlength == 0 {
 		return nil
 	}
 
