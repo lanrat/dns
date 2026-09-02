@@ -106,3 +106,9 @@ generic way to make this possible.
 
 There are also many more Example tests to aid in documenting this package. Consider adding one for your new
 feature.
+
+### Benchmarking
+
+There are various benchmarking tests you can run. In cmd/reflect there is a tiny reflection DNS server that is
+used for benchmarking, with `make old.txt` you create the current baseline, then in your branch you run `make
+new.txt` and `make stat` to get a sense of how efficient your change is.
