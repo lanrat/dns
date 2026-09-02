@@ -194,6 +194,7 @@ type MsgHeader struct {
 	// Extended DNS (version 0) option that can be set directly on the message. The package takes care of
 	// putting the bits in the right places and creating an OPT RR if needed.
 	UDPSize uint16 // UDPSize is the OPT's RR advertised UDP size.
+	Z       uint16 // Z holds the OPT's unassigned Z bits, see [OPT.Z].
 	Version uint8  // Version is the EDNS version, always zero.
 
 	Response           bool

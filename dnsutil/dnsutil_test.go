@@ -80,3 +80,12 @@ func TestRemoteIP(t *testing.T) {
 		})
 	}
 }
+
+func TestSetReplyClearsZ(t *testing.T) {
+	r := dns.NewMsg("example.org.", dns.TypeMX)
+	r.Z = 0x0080
+
+	if m := SetReply(r.Copy(), r); m.Z != 0 {
+		t.Errorf("expected %#04x, got %#04x", 0, m.Z)
+	}
+}
