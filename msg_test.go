@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/netip"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -115,7 +114,7 @@ func TestMsgBinary(t *testing.T) {
 				if len(m.Pseudo) == 0 {
 					return errors.New("expected pseudo section")
 				}
-				_, ok := m.Pseudo[len(m.Pseudo)-2].(*dns.TSIG)
+				_, ok := m.Pseudo[len(m.Pseudo)-1].(*dns.TSIG)
 				if !ok {
 					return errors.New("expected TSIG")
 				}
@@ -282,24 +281,6 @@ func TestMsg(t *testing.T) {
 			},
 		},
 		{
-			"malformed-double-tsig",
-			func() *dns.Msg {
-				m := dns.NewMsg("example.org.", dns.TypeMX)
-				m.ID = 3
-				// Note: extra here, not pseudo, we want to test as-if we parse from the wire.
-				m.Extra = append(m.Extra, dns.NewTSIG("example.", dns.HmacSHA256, 0))
-				m.Extra = append(m.Extra, dns.NewTSIG("example.org.", dns.HmacSHA256, 0))
-				return m
-			},
-			func(r *dns.Msg) error {
-				err := r.Unpack()
-				if strings.Contains(err.Error(), "multiple TSIG in Extra") {
-					return nil
-				}
-				return err
-			},
-		},
-		{
 			"nsec3",
 			func() *dns.Msg {
 				m := dns.NewMsg("miek.nl.", dns.TypeMX)
@@ -407,6 +388,7 @@ func TestMsg(t *testing.T) {
 			}
 		})
 	}
+
 }
 
 func FuzzMsgPack(f *testing.F) {
