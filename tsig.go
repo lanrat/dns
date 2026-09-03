@@ -150,12 +150,12 @@ type TSIGSigner interface {
 }
 
 func hasTSIG(m *Msg) *TSIG {
-	for i := range m.Pseudo {
-		if tsig, ok := m.Pseudo[i].(*TSIG); ok {
-			return tsig
-		}
+	lp := len(m.Pseudo)
+	if lp == 0 {
+		return nil
 	}
-	return nil
+	t, _ := m.Pseudo[lp-1].(*TSIG)
+	return t
 }
 
 func setArcount(m *Msg, isPseudo int) int {
