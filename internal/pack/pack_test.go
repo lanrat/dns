@@ -57,3 +57,38 @@ func BenchmarkName(b *testing.B) {
 		Name(s, buf, 0, nil, false)
 	}
 }
+
+func TestMName(t *testing.T) {
+	testcases := []struct {
+		in   string
+		wire string // empty means MName must return an error
+	}{
+		{`.`, "\x00"},
+		{``, "\x00"},
+		{`hostmaster.example.org.`, "\x0ahostmaster\x07example\x03org\x00"},
+		{`a\.b.example.org.`, "\x03a.b\x07example\x03org\x00"},
+		// The rname of the .mil SOA, which carries four escaped dots in a single label.
+		{`DISA\.COLUMBUS\.NS\.MBX\.HOSTMASTER-DOD-NIC.MAIL.mil.`, "\x27DISA.COLUMBUS.NS.MBX.HOSTMASTER-DOD-NIC\x04MAIL\x03mil\x00"},
+		{`a\.b\.c.`, "\x05a.b.c\x00"},
+		{`\.a.example.org.`, ""},
+		{`.example.org.`, ""},
+		{`a\.`, ""},
+		{`a\.b.example.org`, ""},
+		{`a\.b..example.org.`, ""},
+	}
+	buf := make([]byte, 256)
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			off, err := MName(tc.in, buf, 0)
+			if (err == nil) != (tc.wire != "") {
+				t.Fatalf("expected error %t for mname %q, got %v", tc.wire == "", tc.in, err)
+			}
+			if err != nil {
+				return
+			}
+			if got := string(buf[:off]); got != tc.wire {
+				t.Errorf("expected wire %q, got %q", tc.wire, got)
+			}
+		})
+	}
+}
