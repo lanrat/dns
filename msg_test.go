@@ -174,6 +174,14 @@ func TestMsgBinary(t *testing.T) {
 
 func TestMsg(t *testing.T) {
 	const msgArcount = 10 // offset in the message where the Arcount is, 2 octets long.
+	a := new(dns.RFC3597)
+	if err := a.ToRFC3597(dnstest.New("example. IN A 192.0.2.1")); err != nil {
+		t.Fatal(err)
+	}
+	null := new(dns.RFC3597)
+	if err := null.ToRFC3597(&dns.NULL{Hdr: dns.Header{Name: "example.", Class: dns.ClassINET}}); err != nil {
+		t.Fatal(err)
+	}
 	testcases := []struct {
 		name   string
 		makeFn func() *dns.Msg
@@ -351,6 +359,31 @@ func TestMsg(t *testing.T) {
 					return fmt.Errorf("Msg octets do not match")
 				}
 				return nil
+			},
+		},
+		{
+			"rfc3597",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("example. IN TYPE65534 \\# 5 084ff00001"),
+					dnstest.New("example. IN TYPE65280 \\# 0"),
+					a,
+					null,
+				}
+				return m
+			},
+			func(r *dns.Msg) error {
+				want := []uint16{65534, 65280, dns.TypeA, dns.TypeNULL}
+				if len(r.Answer) != len(want) {
+					return fmt.Errorf("expected %d answers, got %d", len(want), len(r.Answer))
+				}
+				for i, rr := range r.Answer {
+					if got := dns.RRToType(rr); got != want[i] {
+						return fmt.Errorf("answer %d: expected TYPE%d, got TYPE%d", i, want[i], got)
+					}
+				}
+				return r.Pack()
 			},
 		},
 		{
