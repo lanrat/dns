@@ -15,7 +15,7 @@ import (
 )
 
 type Drunk struct {
-	i        uint64 // counter of queries
+	i        atomic.Uint64 // counter of queries
 	drop     uint64
 	delay    uint64
 	truncate uint64
@@ -25,8 +25,8 @@ type Drunk struct {
 
 func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		i := atomic.LoadUint64(&d.i)
-		atomic.AddUint64(&d.i, 1)
+		i := d.i.Load()
+		d.i.Add(1)
 
 		drop := d.drop > 0 && i%d.drop == 0
 		delay := d.delay > 0 && i%d.delay == 0

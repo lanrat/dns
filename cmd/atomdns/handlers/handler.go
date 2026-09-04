@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"slices"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -51,8 +52,8 @@ func Compile(hs []Handler) dns.HandlerFunc {
 	}
 
 	wrapped := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {}
-	for i := len(hs) - 1; i >= 0; i-- { // loop in reverse to preserve middleware order
-		wrapped = hs[i].HandlerFunc(wrapped)
+	for _, h := range slices.Backward(hs) { // loop in reverse to preserve middleware order
+		wrapped = h.HandlerFunc(wrapped)
 	}
 	return wrapped
 }
