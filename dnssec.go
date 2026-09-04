@@ -87,13 +87,12 @@ var AlgorithmToHash = map[uint8]crypto.Hash{
 
 // DNSSEC hashing algorithm codes.
 const (
-	_        uint8 = iota
-	SHA1           // RFC 4034.
-	SHA256         // RFC 4509.
-	GOST94         // RFC 5933.
-	SHA384         // RFC 6605.
-	GOST2012       // RFC 9558.
-	SM3            // RFC 9563.
+	SHA1     uint8 = 1 // RFC 4034.
+	SHA256   uint8 = 2 // RFC 4509.
+	GOST94   uint8 = 3 // RFC 5933.
+	SHA384   uint8 = 4 // RFC 6605.
+	GOST2012 uint8 = 5 // RFC 9558.
+	SM3      uint8 = 6 // RFC 9563.
 )
 
 // HashToString is a map of hash IDs to names.
