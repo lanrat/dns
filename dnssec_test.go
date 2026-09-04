@@ -101,6 +101,20 @@ func TestDNSSECKeyTag(t *testing.T) {
 	}
 }
 
+func TestDNSSECToDS(t *testing.T) {
+	key := dnstestNew("example.net. 3600 IN DNSKEY 257 3 14 xKYaNhWdGOfJ+nPrL8/arkwf2EY3MDJ+SErKivBVSum1w/egsXvSADtNJhyem5RCOpgQ6K8X1DRSEkrbYQ+OB+v8/uX45NBwY8rp65F6Glur8I/mlVNgF6W/qTI37m40").(*DNSKEY)
+	for _, h := range []uint8{SHA1, SHA256, SHA384} {
+		if key.ToDS(h) == nil {
+			t.Errorf("digest %d (%s), expected a DS", h, HashToString[h])
+		}
+	}
+	for _, h := range []uint8{GOST94, GOST2012, SM3} {
+		if key.ToDS(h) != nil {
+			t.Errorf("digest %d (%s), expected no DS", h, HashToString[h])
+		}
+	}
+}
+
 func TestDNSSECVerify(t *testing.T) {
 	testcases := []struct {
 		name string
