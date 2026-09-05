@@ -15,7 +15,7 @@ import (
 // Default maximum number of TCP queries before we close the socket.
 const MaxTCPQueries = 1024
 
-// ListenAndServe Starts a server on address and network specified and invokes handler for incoming queries.
+// ListenAndServe starts a server on address and network specified and invokes handler for incoming queries.
 func ListenAndServe(addr, network string, handler Handler) error {
 	server := NewServer()
 	server.Addr = addr
@@ -68,7 +68,7 @@ func DefaultMsgAcceptFunc(m *Msg) MsgAcceptAction {
 
 // InvalidMsgFunc is a listener hook for observing incoming messages that were discarded
 // because they could not be parsed or an earlier error in the server.
-// Every message that is read by a Reader will eventually be provided to the Handler, or passed to this function.
+// Every message that is read by a Reader will eventually be provided to the [Handler], or passed to this function.
 type InvalidMsgFunc func(m *Msg, err error)
 
 // DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a noop.
