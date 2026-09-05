@@ -183,9 +183,9 @@ func (srv *Server) ListenAndServe() error {
 	}
 	srv.init()
 
-	// some sanity checks
 	buf := srv.MsgPool.Get()
 	if len(buf) < srv.UDPSize {
+		srv.once.Do(func() { close(srv.exited) })
 		return &Error{err: fmt.Sprintf("MsgPool size (%d) should be larger or equal to UDPSize (%d)", len(buf), srv.UDPSize)}
 	}
 	srv.MsgPool.Put(buf)
@@ -203,6 +203,7 @@ func (srv *Server) ListenAndServe() error {
 	case "tcp", "tcp4", "tcp6":
 		l, err := listenTCP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
 		if err != nil {
+			srv.once.Do(func() { close(srv.exited) })
 			return err
 		}
 		if srv.TLSConfig != nil {
@@ -217,6 +218,7 @@ func (srv *Server) ListenAndServe() error {
 	case "udp", "udp4", "udp6":
 		l, err := listenUDP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
 		if err != nil {
+			srv.once.Do(func() { close(srv.exited) })
 			return err
 		}
 		u := l.(*net.UDPConn)
