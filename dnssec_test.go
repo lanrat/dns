@@ -81,6 +81,21 @@ func TestDNSSECSignVerify(t *testing.T) {
 	}
 }
 
+// RFC 4035, 5.3.2: an answer expanded from *.miek.nl., signed elsewhere. The
+// owner is reconstructed for every record, not just the first.
+func TestDNSSECVerifyWildcard(t *testing.T) {
+	key := dnstestNew("miek.nl. 3600 IN DNSKEY 256 3 13 CBXS0JBABBV9VF5SV6sQqklQf9MLxlnb3tFB6uq2ell2mJRoS+5qABIgrUTFrmCi7EQYmWK6CMMDwgIdIpZRXw==").(*DNSKEY)
+	sig := dnstestNew("www.miek.nl. 600 IN RRSIG A 13 2 600 21000101000000 20250101000000 64683 miek.nl. FEMuhN0OK1dJYKtkVe/uEkw/AM99hsvz3oexrZX0ESSlyVHEuCFDUWjtMEg6FbpJT3oSxCa6K06s3dmDZEJG8g==").(*RRSIG)
+	rrs := []RR{
+		dnstestNew("www.miek.nl. 600 IN A 192.0.2.10"),
+		dnstestNew("www.miek.nl. 600 IN A 192.0.2.11"),
+	}
+
+	if err := sig.Verify(key, rrs, &SignOption{}); err != nil {
+		t.Fatalf("failure to verify: %s", err)
+	}
+}
+
 func TestDNSSECKeyTag(t *testing.T) {
 	testcases := []struct {
 		tag uint16
