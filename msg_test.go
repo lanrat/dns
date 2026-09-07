@@ -249,12 +249,12 @@ func TestMsg(t *testing.T) {
 			func() *dns.Msg {
 				m := dns.NewMsg("example.org.", dns.TypeMX)
 				m.ID = 3
-				m.Z = 0x0080
+				m.EDNSZ = 0x0080
 				return m
 			},
 			func(r *dns.Msg) error {
-				if r.Z != 0x0080 {
-					return fmt.Errorf("expected %#04x, got %#04x", 0x0080, r.Z)
+				if r.EDNSZ != 0x0080 {
+					return fmt.Errorf("expected %#04x, got %#04x", 0x0080, r.EDNSZ)
 				}
 				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
 				if arcount != 1 {
@@ -272,8 +272,8 @@ func TestMsg(t *testing.T) {
 				return m
 			},
 			func(r *dns.Msg) error {
-				if r.Z != 0 {
-					return fmt.Errorf("expected %#04x, got %#04x", 0, r.Z)
+				if r.EDNSZ != 0 {
+					return fmt.Errorf("expected %#04x, got %#04x", 0, r.EDNSZ)
 				}
 				return nil
 			},
