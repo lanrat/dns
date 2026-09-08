@@ -141,7 +141,7 @@ func readData(r io.Reader, rrtype uint16, origin ...string) (RDATA, error) {
 // ZoneParser is a parser for an RFC 1035 style zone file.
 //
 // Each parsed RR in the zone is returned sequentially from [ZoneParser.Next].
-// Also see [ZoneParser.RRs] which is an iterator.
+// Also see [ZoneParser.All] which is an iterator.
 //
 // The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are all supported.
 // Note that $GENERATE's range support up to a maximum of 65535 steps.
@@ -649,8 +649,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	return nil, false
 }
 
-// RRs allows ranging over the RRs from the zone currently parsed. See [Msg.RRs] also.
-func (zp *ZoneParser) RRs() iter.Seq2[RR, error] {
+// All allows ranging over the RRs from the zone currently parsed. See [Msg.All] also.
+func (zp *ZoneParser) All() iter.Seq2[RR, error] {
 	return func(yield func(RR, error) bool) {
 		for {
 			rr, ok := zp.Next()

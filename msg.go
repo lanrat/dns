@@ -776,9 +776,9 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	return int64(n), err
 }
 
-// RRs allows ranging over the RRs of all the sections in m. This includes the question, pseudo and stateful
+// All allows ranging over the RRs of all the sections in m. This includes the question, pseudo and stateful
 // sections. See [ZoneParser.RRs] also.
-func (m *Msg) RRs() iter.Seq[RR] {
+func (m *Msg) All() iter.Seq[RR] {
 	return func(yield func(RR) bool) {
 		for i := range m.Question {
 			if !yield(m.Question[i]) {
