@@ -12,7 +12,7 @@ import (
 
 // Example on how get the text presentation of a [dns.RR].
 func ExampleRDATA_string() {
-	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
+	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
 	s := rr.Header().String() + " " + dnsutil.TypeToString(dns.RRToType(rr)) + "\t" + rr.Data().String()
 	fmt.Println(s)
 	// Output: miek.nl.	3600	IN MX	10 mx.miek.nl.
@@ -147,8 +147,9 @@ func TestNewDataTXT(t *testing.T) {
 		{"quoted 3", `"one" "two" "three"`, []string{`one`, `two`, `three`}, false},
 		// whitespace:
 		{"whitespace", `  whitespace  `, []string{`whitespace`}, false},
-		{"quoted ws", `" whitespace "`, []string{` whitespace `}, false},
-		// semicolons:
+		{"quoted ws", `" white space "`, []string{` white space `}, false},
+		// quotes and semicolons:
+		{"dquote", `"double\"quote"`, []string{`double"quote`}, false},
 		{"semi", `;`, []string{}, false},
 		{"escaped semi", `\;`, []string{`;`}, false},
 		{"quoted escaped semi", `"\;"`, []string{`;`}, false},
@@ -164,12 +165,21 @@ func TestNewDataTXT(t *testing.T) {
 		// `\127`: (a non-printable ascii char, highest value in the ascii table)
 		{"del", `\127`, []string{"\x7f"}, false},
 		{"quoted del", `"\127"`, []string{"\x7f"}, false},
+		{"swearing", `"!@#$%^&*();:'\"<>,./?~"`, []string{`!@#$%^&*();:'"<>,./?~`}, false},
 		//
 		// Special cases
 		// AWS Route53 is known to produce TXT records with no space between the segments if they are both quoted.
 		{"amazon", `"first""second"`, []string{`first`, `second`}, false},
-		{"vercel1", `"letsencrypt.org; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567"`, []string{`letsencrypt.org; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567`}, false},
-		{"vercel2", `"letsencrypt.org\; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567"`, []string{`letsencrypt.org; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567`}, false},
+		// Vercel has unescaped and escaped semicolons.
+		{"vercel1", `"letsencrypt.org; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567"`,
+			[]string{`letsencrypt.org; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567`}, false},
+		{"vercel2", `"letsencrypt.org\; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567"`,
+			[]string{`letsencrypt.org; accounturi=https://acme-v01.api.letsencrypt.org/acme/reg/1234567`}, false},
+		// Cloudflare has interior quotes and a $1 in the string.
+		{`cf url`, `"302,test2.foo.com,https://goo.com/$1"`,
+			[]string{`302,test2.foo.com,https://goo.com/$1`}, false},
+		{`cf quotes`, `"http.host eq \"test2.foo.com\" and http.request.uri.path eq \"/\""`,
+			[]string{`http.host eq "test2.foo.com" and http.request.uri.path eq "/"`}, false},
 		//
 		// Errors:
 		{"unclosedquote", `"unclosedquote`, []string{`unclosedquote`}, true},
@@ -206,10 +216,16 @@ func TestNewDataTXT(t *testing.T) {
 			}
 			rdtxts2, ok := rd2.(rdata.TXT)
 			if !ok {
-				t.Fatalf("expected type %T, got %T", rdata.TXT{}, rdtxts2)
+				t.Fatalf("roundtrip: expected type %T, got %T", rdata.TXT{}, rdtxts2)
 			}
 			if !slices.Equal(rdtxts.Txt, rdtxts2.Txt) {
-				t.Fatalf("expected %s, got %s", rdtxts.Txt, rdtxts2.Txt)
+				t.Errorf("roundtrip: expected %s, got %s", rdtxts.Txt, rdtxts2.Txt)
+			}
+
+			// Round-trip string representation:
+			rt := rd2.String()
+			if escaped != rt {
+				t.Errorf("2nd round trip: expected %s, got %s", escaped, rt)
 			}
 
 		})
