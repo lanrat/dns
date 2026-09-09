@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strings"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -175,7 +176,12 @@ func TestTXT(t *testing.T) {
 		// `\127`: (a non-printable ascii char, highest value in the ascii table)
 		{"del", `\127`, []string{"\x7f"}, false},
 		{"quoted del", `"\127"`, []string{"\x7f"}, false},
+		//
 		{"swearing", `"!@#$%^&*();:'\"<>,./?~"`, []string{`!@#$%^&*();:'"<>,./?~`}, false},
+		// long strings
+		{"long", `"` + strings.Repeat("x", 255) + `"`, []string{strings.Repeat("x", 255)}, false},
+		{"too long", `"` + strings.Repeat("x", 255) + strings.Repeat("y", 10) + `"`,
+			[]string{strings.Repeat("x", 255), strings.Repeat("y", 10)}, false},
 		//
 		// Special cases
 		// AWS Route53 is known to produce TXT records with no space between the segments if they are both quoted.
