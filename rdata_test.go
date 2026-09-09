@@ -2,11 +2,13 @@ package dns_test
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"testing"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/internal/dnsstring"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -133,7 +135,15 @@ func TestNewData(t *testing.T) {
 	}
 }
 
-func TestNewDataTXT(t *testing.T) {
+func TestDataDrift(t *testing.T) {
+	// The rdata package renders algorithms via its own copy of the map, which must not drift.
+	if !maps.Equal(dns.AlgorithmToString, dnsstring.AlgorithmToString) {
+		t.Errorf("expected %v, got %v", dns.AlgorithmToString, dnsstring.AlgorithmToString)
+	}
+}
+
+// TestTXT round-trips TXT records.
+func TestTXT(t *testing.T) {
 	testcases := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
