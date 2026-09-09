@@ -169,6 +169,7 @@ func remainderSlice(c *dnslex.Lexer, errstr string) ([]string, error) {
 			if !ok {
 				return nil, &ParseError{err: errstr, lex: l}
 			}
+			// break long strings into 255-octet chunks
 			for len(token) > 255 {
 				s = append(s, token[:255])
 				token = token[255:]
