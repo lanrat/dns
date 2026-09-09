@@ -139,6 +139,30 @@ func escapedStringOffset(s string, desiredByteOffset int) (int, bool) {
 	return -1, true
 }
 
+// unescapeStringToken takes a string token and returns a new string with all
+// escape sequences replaced by their corresponding characters. If the input
+// string contains invalid escape sequences, it returns an empty string and
+// false.
+func unescapeStringToken(token string) (string, bool) {
+	if strings.IndexByte(token, '\\') == -1 {
+		return token, true
+	}
+
+	sb := builderPool.Get()
+	sb.Grow(len(token))
+	for i := 0; i < len(token); {
+		b, n := ddd.Next(token, i)
+		if n == 0 {
+			return "", false
+		}
+		sb.WriteByte(b)
+		i += n
+	}
+	t := sb.String()
+	builderPool.Put(sb)
+	return t, true
+}
+
 // remainder returns a remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
 func remainder(c *dnslex.Lexer, errstr string) (string, error) {
@@ -176,21 +200,17 @@ func remainderSlice(c *dnslex.Lexer, errstr string) ([]string, error) {
 		switch l.Value {
 		case dnslex.String:
 			empty = false
-			// split up tokens that are larger than 255 into 255-chunks
-			p := 0
-			for {
-				i, ok := escapedStringOffset(l.Token[p:], 255)
-				if !ok {
-					return nil, &ParseError{err: errstr, lex: l}
-				}
-				if i != -1 && p+i != len(l.Token) {
-					s = append(s, l.Token[p:p+i])
-					p += i
-				} else {
-					s = append(s, l.Token[p:])
-					break
-				}
+			// Turn \x and \DDD into their corresponding characters
+			token, ok := unescapeStringToken(l.Token)
+			if !ok {
+				return nil, &ParseError{err: errstr, lex: l}
 			}
+			// split up tokens that are larger than 255 into 255-chunks
+			for len(token) > 255 {
+				s = append(s, token[:255])
+				token = token[255:]
+			}
+			s = append(s, token)
 		case dnslex.Blank:
 			if quote {
 				// dnslex.Blank can only be seen in between txt parts.
