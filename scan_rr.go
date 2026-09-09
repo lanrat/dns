@@ -103,6 +103,24 @@ func (rr *DELEGPARAM) parse(c *dnslex.Lexer, o string) error {
 }
 func (rr *DSYNC) parse(c *dnslex.Lexer, o string) error { return parseDSYNC(&rr.DSYNC, c, o) }
 
+// remainder returns a remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
+// or an error
+func remainder(c *dnslex.Lexer, errstr string) (string, error) {
+	sb := &strings.Builder{} // allocate on stack, no pooling
+	for {
+		l, _ := c.Next()
+		switch l.Value {
+		case dnslex.String:
+			sb.WriteString(l.Token)
+		case dnslex.Blank:
+		case dnslex.Newline, dnslex.EOF:
+			return sb.String(), nil
+		default:
+			return "", &ParseError{err: errstr, lex: l}
+		}
+	}
+}
+
 // unescapeStringToken takes a string token and returns a new string with all
 // escape sequences replaced by their corresponding characters. If the input
 // string contains invalid escape sequences, it returns an empty string and
@@ -125,24 +143,6 @@ func unescapeStringToken(token string) (string, bool) {
 	t := sb.String()
 	builderPool.Put(sb)
 	return t, true
-}
-
-// remainder returns a remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
-// or an error
-func remainder(c *dnslex.Lexer, errstr string) (string, error) {
-	sb := &strings.Builder{} // allocate on stack, no pooling
-	for {
-		l, _ := c.Next()
-		switch l.Value {
-		case dnslex.String:
-			sb.WriteString(l.Token)
-		case dnslex.Blank:
-		case dnslex.Newline, dnslex.EOF:
-			return sb.String(), nil
-		default:
-			return "", &ParseError{err: errstr, lex: l}
-		}
-	}
 }
 
 // remainderSlice returns a remainder of the rdata with embedded spaces, split on unquoted whitespace
