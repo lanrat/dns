@@ -100,7 +100,7 @@ func TestZoneParser(t *testing.T) {
 	}
 }
 
-func TestZoneParserRRs(t *testing.T) {
+func TestZoneParserAll(t *testing.T) {
 	testcases := []struct {
 		name   string
 		input  string
@@ -128,7 +128,7 @@ func TestZoneParserRRs(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			zp := NewZoneParser(strings.NewReader(tc.input), "", "")
-			for rr, err := range zp.RRs() {
+			for rr, err := range zp.All() {
 				if tc.err != nil && err != nil {
 					if !strings.Contains(err.Error(), tc.err.Error()) {
 						t.Fatalf("expected err to be %s, got %s", tc.err, err)
@@ -154,13 +154,13 @@ func TestZoneParserRRs(t *testing.T) {
 	}
 }
 
-func ExampleZoneParser_RRs() {
+func ExampleZoneParser_All() {
 	f, err := os.Open("example.org")
 	if err != nil {
 		log.Fatal(err)
 	}
 	zp := NewZoneParser(f, "example.org", "example.org")
-	for rr, err := range zp.RRs() {
+	for rr, err := range zp.All() {
 		if err != nil {
 			log.Fatal(err)
 		}
