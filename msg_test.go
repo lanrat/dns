@@ -32,7 +32,7 @@ func ExampleMsg() {
 	if n, ok := r.Pseudo[0].(*dns.NSID); ok {
 		fmt.Println(n.Nsid)
 	}
-	for rr := range r.RRs() {
+	for rr := range r.All() {
 		fmt.Println(rr)
 	}
 }
