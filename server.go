@@ -327,6 +327,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 		readtimeout = srv.IdleTimeout
 	}
 
+	hijacked = hijacked || w.hijacked.Load()
 	if !hijacked {
 		w.Close()
 	}
