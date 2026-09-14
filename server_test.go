@@ -201,3 +201,44 @@ func TestServerTimeout(t *testing.T) {
 		t.Fatalf("server did not close the connection after ReadTimeout: %v", err)
 	}
 }
+
+func TestServerStartupFailureRetry(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+
+	srv := &dns.Server{Net: "tcp", Addr: listener.Addr().String()}
+	if err := srv.ListenAndServe(); err == nil {
+		t.Fatal("expected bind failure")
+	}
+
+	// Retry the same server using the already bound listener.
+	srv.Listener = listener
+	ready := make(chan struct{})
+	srv.NotifyStartedFunc = func(context.Context) { close(ready) }
+	served := make(chan error, 1)
+	go func() { served <- srv.ListenAndServe() }()
+	select {
+	case <-ready:
+	case err := <-served:
+		t.Fatalf("retry failed: %v", err)
+	case <-time.After(time.Second):
+		t.Fatal("retry did not start")
+	}
+
+	done := make(chan error, 1)
+	go func() {
+		srv.Shutdown(context.Background())
+		done <- <-served
+	}()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Shutdown blocked after successful retry")
+	}
+}
