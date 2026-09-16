@@ -264,6 +264,39 @@ func TestMsg(t *testing.T) {
 			},
 		},
 		{
+			"edns+tsig",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.", dns.TypeA)
+				m.UDPSize = dns.DefaultMsgSize
+				m.Pseudo = append(m.Pseudo,
+					&dns.COOKIE{Cookie: "0102030405060708"},
+					dns.NewTSIG("example.", dns.HmacSHA256, 0),
+				)
+				if err := dns.TSIGSign(m, dns.HmacTSIG{Secret: []byte("Wg==")}, new(dns.TSIGOption)); err != nil {
+					panic(err)
+				}
+				return m
+			},
+			func(r *dns.Msg) error {
+				if len(r.Pseudo) != 2 {
+					return fmt.Errorf("expected two pseudo records, got %d", len(r.Pseudo))
+				}
+				if _, ok := r.Pseudo[0].(*dns.COOKIE); !ok {
+					return fmt.Errorf("expected COOKIE first, got %T", r.Pseudo[0])
+				}
+				if _, ok := r.Pseudo[1].(*dns.TSIG); !ok {
+					return fmt.Errorf("expected TSIG last, got %T", r.Pseudo[1])
+				}
+				if err := dns.TSIGVerify(r, dns.HmacTSIG{Secret: []byte("Wg==")}, new(dns.TSIGOption)); err != nil {
+					return fmt.Errorf("failed to verify TSIG: %w", err)
+				}
+				if err := r.Pack(); err != nil {
+					return fmt.Errorf("failed to repack message: %w", err)
+				}
+				return nil
+			},
+		},
+		{
 			"tsig",
 			func() *dns.Msg {
 				m := dns.NewMsg("example.org.", dns.TypeMX)
