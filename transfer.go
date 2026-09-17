@@ -273,14 +273,19 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 
 		ch <- &Envelope{Answer: r.Answer}
 
+		// On the first message, skip index 0 (the opening SOA) — it is not the
+		// terminal SOA. On subsequent messages start from 0 so nothing is missed.
+		startIdx := 0
+		if !options.TimersOnly {
+			startIdx = 1
+		}
+
 		// If we see the first SOA's serial expectSOA times we need to stop.
-		if options.TimersOnly {
-			for i := range r.Answer {
-				if s, ok := r.Answer[i].(*SOA); ok && s.Serial == serial {
-					expectSOA--
-					if expectSOA == 0 {
-						return
-					}
+		for i := startIdx; i < len(r.Answer); i++ {
+			if s, ok := r.Answer[i].(*SOA); ok && s.Serial == serial {
+				expectSOA--
+				if expectSOA == 0 {
+					return
 				}
 			}
 		}
