@@ -160,6 +160,7 @@ func (m *Msg) Reset() {
 	m.Answer, m.Ns, m.Extra, m.Pseudo = m.Answer[:0], m.Ns[:0], m.Extra[:0], m.Pseudo[:0]
 }
 
+// Packs packs the message m into m.Data.
 func (m *Msg) Pack() error {
 	if l := m.Len(); cap(m.Data) < l {
 		m.Data = make([]byte, l)
@@ -220,8 +221,8 @@ func (m *Msg) Pack() error {
 		compression = make(map[string]uint16, l+3) // 3 is randomly chosen, as that much rdata might be compressable...
 	}
 
-	if len(m.Question) > 0 {
-		if off, err = packQuestion(m.Question[0], m.Data, off, compression); err != nil {
+	for i := range m.Question {
+		if off, err = packQuestion(m.Question[i], m.Data, off, compression); err != nil {
 			return err
 		}
 	}
