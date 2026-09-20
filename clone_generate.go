@@ -70,7 +70,11 @@ func main() {
 			continue
 		}
 
-		fmt.Fprintf(b, "func (rr *%s) Clone() RR {\n", rrname)
+		if i >= lspecs {
+			fmt.Fprintf(b, "func (o *%s) Clone() RR {\n", rrname)
+		} else {
+			fmt.Fprintf(b, "func (rr *%s) Clone() RR {\n", rrname)
+		}
 		strct := spec.Type.(*ast.StructType)
 
 		// an embedded type, need to be copied by using that type.
@@ -160,7 +164,11 @@ func main() {
 				continue
 			}
 
-			o("%s: rr.%s,\n")
+			if i >= lspecs {
+				o("%s: o.%s,\n")
+			} else {
+				o("%s: rr.%s,\n")
+			}
 		}
 		if i < lspecs {
 			if !slices.Contains(generate.EmptyData, rrname) {
