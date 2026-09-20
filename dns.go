@@ -194,7 +194,6 @@ type MsgHeader struct {
 	// Extended DNS (version 0) option that can be set directly on the message. The package takes care of
 	// putting the bits in the right places and creating an OPT RR if needed.
 	UDPSize uint16 // UDPSize is the OPT's RR advertised UDP size.
-	EDNSZ   uint16 // EDNSZ holds the OPT's unassigned Z bits, see [OPT.Z].
 	Version uint8  // Version is the EDNS version, always zero.
 
 	Response           bool
@@ -207,9 +206,10 @@ type MsgHeader struct {
 	CheckingDisabled   bool
 
 	// Extended DNS.
-	Security       bool // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
-	CompactAnswers bool // Compact Answers OK, see RFC 9824.
-	Delegation     bool // Delegation is the DELEG OK bit, see https://datatracker.ietf.org/doc/draft-ietf-deleg/.
+	Security       bool   // Security is the DNSSEC OK bit, see RFC 403{3,4,5}, see [OPT.Security].
+	CompactAnswers bool   // Compact Answers OK, see RFC 9824, see [OPT.CompactAnswers].
+	Delegation     bool   // Delegation is the DELEG OK bit, see https://datatracker.ietf.org/doc/draft-ietf-deleg/ and [OPT.Delegation].
+	Z              uint16 // Z holds the OPT's unassigned Z bits, see [OPT.Z].
 }
 
 // Msg is a DNS message. Each message has a Data field that contains the binary data buffer. This is filled when
