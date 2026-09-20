@@ -310,11 +310,10 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 	if err != nil {
 		return nil, err
 	}
-	if !msg.Empty() && !msg.ReadUint16(&m.qtype) {
+	if msg.Empty() || !msg.ReadUint16(&m.qtype) {
 		return nil, unpack.Errorf("overflow %s", "Question type")
 	}
-
-	if !msg.Empty() && !msg.ReadUint16(&m.qclass) {
+	if msg.Empty() || !msg.ReadUint16(&m.qclass) {
 		return nil, unpack.Errorf("overflow %s", "Question class")
 	}
 

@@ -187,6 +187,16 @@ func TestMsgBinary(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"question without class", // dns.NewMsg("example.", dns.TypeAAAA) -> println(bin.Bytes(m.Data)) and stripped away the class; last 2 bytes.
+			[]byte{175, 231, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7, 101, 120, 97, 109, 112, 108, 101, 0, 0, 28},
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr == nil {
+					return fmt.Errorf("unpacking without class should error")
+				}
+				return nil
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
