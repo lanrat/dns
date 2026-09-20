@@ -267,7 +267,11 @@ func (m *Msg) Pack() error {
 			opt.Hdr.Name = "."
 			opt.setDelegation(true)
 		}
-		if m.Z != 0 {
+		if m.Version > 0 {
+			opt.Hdr.Name = "."
+			opt.setVersion(m.Version)
+		}
+		if m.Z > 0 {
 			opt.Hdr.Name = "."
 			opt.setZ(m.Z)
 		}
