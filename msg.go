@@ -775,12 +775,12 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	if err := binary.Read(r, binary.BigEndian, &l); err != nil {
 		return 0, err
 	}
-	li := int(l)
-	if li < MsgHeaderSize {
-		io.Copy(io.Discard, io.LimitReader(r, int64(li))) // discard the remaining octets
-		return int64(li), fmt.Errorf("dns: message size %d, can not be smaller than %d", li, MsgHeaderSize)
+	if l < MsgHeaderSize {
+		// ignore remaining data
+		return int64(l), fmt.Errorf("dns: message size %d, can not be smaller than %d", l, MsgHeaderSize)
 	}
 
+	li := int(l)
 	if len(m.Data) < li {
 		m.Data = append(m.Data, make([]byte, li-len(m.Data))...)
 	} else {
