@@ -249,27 +249,27 @@ func (m *Msg) Pack() error {
 		opt := &OPT{} // hack, empty name, that gets filled if we did something
 		if m.UDPSize > MinMsgSize {
 			opt.Hdr.Name = "."
-			opt.SetUDPSize(m.UDPSize)
+			opt.setUDPSize(m.UDPSize)
 		}
 		if m.Rcode > 0xF {
 			opt.Hdr.Name = "."
-			opt.SetRcode(m.Rcode) // we leave m.Rcode as packing/unpacking will set the correct bits there.
+			opt.setRcode(m.Rcode) // we leave m.Rcode as packing/unpacking will set the correct bits there.
 		}
 		if m.Security {
 			opt.Hdr.Name = "."
-			opt.SetSecurity(true)
+			opt.setSecurity(true)
 		}
 		if m.CompactAnswers {
 			opt.Hdr.Name = "."
-			opt.SetCompactAnswers(true)
+			opt.setCompactAnswers(true)
 		}
 		if m.Delegation {
 			opt.Hdr.Name = "."
-			opt.SetDelegation(true)
+			opt.setDelegation(true)
 		}
 		if m.Z != 0 {
 			opt.Hdr.Name = "."
-			opt.SetZ(m.Z)
+			opt.setZ(m.Z)
 		}
 		for i := range m.Pseudo {
 			switch x := m.Pseudo[i].(type) {
@@ -426,14 +426,14 @@ Rest:
 				return unpack.Errorf("multiple OPT RRs")
 			}
 
-			m.Security = opt.Security()
-			m.CompactAnswers = opt.CompactAnswers()
-			m.Delegation = opt.Delegation()
-			m.Z = opt.Z()
-			m.Rcode += opt.Rcode() // See TestMsgExtendedRcode.
-			m.Version = opt.Version()
+			m.Security = opt.security()
+			m.CompactAnswers = opt.compactAnswers()
+			m.Delegation = opt.delegation()
+			m.Z = opt.z()
+			m.Rcode += opt.rcode() // See TestMsgExtendedRcode.
+			m.Version = opt.version()
 			// RFC 6891 mandates that the payload size in an OPT record less than 512 (MinMsgSize) bytes must be treated as equal to 512 bytes.
-			m.UDPSize = max(opt.UDPSize(), MinMsgSize)
+			m.UDPSize = max(opt.udpSize(), MinMsgSize)
 
 			// We are travelling backwards through the options, so add them in reverse too, i.e. in front.
 			// Make space for len(opt.Options) RRs to be put there. This is avoid having to: make([]RR, len(opt.Options)).
