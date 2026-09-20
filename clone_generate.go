@@ -155,7 +155,11 @@ func main() {
 					continue
 				}
 
-				o("%s: slices.Clone(rr.%s),\n")
+				if i >= lspecs {
+					o("%s: slices.Clone(o.%s),\n")
+				} else {
+					o("%s: slices.Clone(rr.%s),\n")
+				}
 				continue
 			}
 

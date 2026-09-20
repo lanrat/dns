@@ -870,19 +870,19 @@ func (o *EXPIRE) Clone() RR {
 
 func (o *DAU) Clone() RR {
 	return &DAU{
-		AlgCode: slices.Clone(rr.AlgCode),
+		AlgCode: slices.Clone(o.AlgCode),
 	}
 }
 
 func (o *DHU) Clone() RR {
 	return &DHU{
-		AlgCode: slices.Clone(rr.AlgCode),
+		AlgCode: slices.Clone(o.AlgCode),
 	}
 }
 
 func (o *N3U) Clone() RR {
 	return &N3U{
-		AlgCode: slices.Clone(rr.AlgCode),
+		AlgCode: slices.Clone(o.AlgCode),
 	}
 }
 
@@ -918,25 +918,25 @@ func (o *ZONEVERSION) Clone() RR {
 	return &ZONEVERSION{
 		Labels:  o.Labels,
 		Type:    o.Type,
-		Version: slices.Clone(rr.Version),
+		Version: slices.Clone(o.Version),
 	}
 }
 
 func (o *MQQUERY) Clone() RR {
 	return &MQQUERY{
-		Types: slices.Clone(rr.Types),
+		Types: slices.Clone(o.Types),
 	}
 }
 
 func (o *MQRESPONSE) Clone() RR {
 	return &MQRESPONSE{
-		Types: slices.Clone(rr.Types),
+		Types: slices.Clone(o.Types),
 	}
 }
 
 func (o *KEYTAG) Clone() RR {
 	return &KEYTAG{
-		Types: slices.Clone(rr.Types),
+		Types: slices.Clone(o.Types),
 	}
 }
 
