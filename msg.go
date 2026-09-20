@@ -7,6 +7,7 @@ import (
 	"io"
 	"iter"
 	"net"
+	"slices"
 	"strconv"
 
 	"codeberg.org/miekg/dns/internal/pack"
@@ -439,13 +440,12 @@ Rest:
 			m.UDPSize = max(opt.udpSize(), MinMsgSize)
 
 			// We are travelling backwards through the options, so add them in reverse too, i.e. in front.
-			// Make space for len(opt.Options) RRs to be put there. This is avoid having to: make([]RR, len(opt.Options)).
+			// Make space for len(opt.Options) RRs to be put there. This avoids having to: make([]RR, len(opt.Options)).
 			m.Pseudo = append(m.Pseudo[:0], append(make([]RR, len(opt.Options)), m.Pseudo[0:]...)...)
 			for j := range opt.Options {
 				m.Pseudo[j] = RR(opt.Options[j])
 			}
-
-			m.Extra[i] = m.Extra[0+int(uint32(counts)+uint32(counts>>32))] // switch with first + what we've seen
+			m.Extra[i] = nil // sentinel value, deleted after the loop
 
 			counts = counts&^0xFFFFFFFF | 1
 
@@ -455,18 +455,19 @@ Rest:
 			}
 
 			m.Pseudo = append([]RR{m.Extra[i]}, m.Pseudo...)
-			m.Extra[i] = m.Extra[0+int(uint32(counts)+uint32(counts>>32))]
+			m.Extra[i] = nil // sentinel
 
 			counts += 1 << 32
 		}
 	}
-
-	// remove cruft, that was moved to the beginning.
-	m.Extra = m.Extra[int(uint32(counts)+uint32(counts>>32)):]
-
 	if !s.Empty() {
 		return unpack.Errorf("%d more octets", len(s))
 	}
+
+	// TODO(miek): might it be possible, to do this in the loop - I've tried, but switching elements while
+	// looping remained problematic. For now, another loop over m.Extra.
+	m.Extra = slices.DeleteFunc(m.Extra, func(rr RR) bool { return rr == nil })
+
 	return nil
 }
 
