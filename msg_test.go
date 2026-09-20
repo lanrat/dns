@@ -49,14 +49,17 @@ func TestMsgBinary(t *testing.T) {
 	testcases := []struct {
 		name string
 		buf  []byte
-		fn   func(*dns.Msg) error
+		fn   func(*dns.Msg, error) error
 	}{
 		{
 			// m := dns.NewMsg("example.org.", dns.TypeMX)
 			// m.Answer = []dns.RR{dnstest.New("example.org. IN SOA linode.atoom.net. miek\\.miek.nl. 1 3600 3600 3600 3600")}
 			"soa-mbox",
 			[]byte{148, 44, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 7, 101, 120, 97, 109, 112, 108, 101, 3, 111, 114, 103, 0, 0, 15, 0, 1, 192, 12, 0, 6, 0, 1, 0, 0, 14, 16, 0, 52, 6, 108, 105, 110, 111, 100, 101, 5, 97, 116, 111, 111, 109, 3, 110, 101, 116, 0, 9, 109, 105, 101, 107, 46, 109, 105, 101, 107, 2, 110, 108, 0, 0, 0, 0, 1, 0, 0, 14, 16, 0, 0, 14, 16, 0, 0, 14, 16, 0, 0, 14, 16},
-			func(m *dns.Msg) error {
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr != nil {
+					return unpackerr
+				}
 				if len(m.Answer) != 1 {
 					return errors.New("expected answer section")
 				}
@@ -74,7 +77,10 @@ func TestMsgBinary(t *testing.T) {
 		{
 			"edns0-subnet",
 			[]byte{149, 112, 0, 16, 0, 1, 0, 0, 0, 0, 0, 1, 1, 97, 4, 109, 105, 69, 75, 2, 78, 76, 0, 0, 1, 0, 1, 0, 0, 41, 5, 120, 0, 0, 128, 0, 0, 11, 0, 8, 0, 7, 0, 1, 24, 0, 14, 128, 63},
-			func(m *dns.Msg) error {
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr != nil {
+					return unpackerr
+				}
 				if len(m.Pseudo) == 0 {
 					return errors.New("expected pseudo section")
 				}
@@ -92,7 +98,10 @@ func TestMsgBinary(t *testing.T) {
 		{
 			"edns0-subnet",
 			[]byte{255, 234, 0, 16, 0, 1, 0, 0, 0, 0, 0, 1, 7, 99, 111, 114, 101, 68, 110, 83, 2, 105, 111, 0, 0, 28, 0, 1, 0, 0, 41, 5, 120, 0, 0, 128, 0, 0, 11, 0, 8, 0, 7, 0, 1, 24, 0, 62, 212, 234},
-			func(m *dns.Msg) error {
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr != nil {
+					return unpackerr
+				}
 				if len(m.Pseudo) == 0 {
 					return errors.New("expected pseudo section")
 				}
@@ -110,11 +119,14 @@ func TestMsgBinary(t *testing.T) {
 		{
 			"opt-and-tsig",
 			[]byte{148, 7, 1, 32, 0, 1, 0, 0, 0, 0, 0, 2, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 6, 0, 1, 0, 0, 41, 4, 208, 0, 0, 0, 0, 0, 12, 0, 10, 0, 8, 73, 65, 52, 201, 253, 43, 171, 193, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 250, 0, 255, 0, 0, 0, 0, 0, 93, 11, 104, 109, 97, 99, 45, 115, 104, 97, 53, 49, 50, 0, 0, 0, 105, 104, 143, 225, 1, 44, 0, 64, 195, 169, 191, 31, 144, 147, 160, 197, 245, 76, 217, 137, 234, 208, 246, 112, 113, 12, 208, 172, 99, 181, 29, 108, 140, 62, 197, 130, 116, 207, 127, 178, 163, 16, 242, 203, 41, 135, 60, 218, 187, 237, 181, 106, 91, 34, 125, 38, 190, 56, 117, 43, 76, 212, 161, 165, 61, 214, 193, 180, 117, 1, 27, 129, 148, 7, 0, 0, 0, 0},
-			func(m *dns.Msg) error {
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr != nil {
+					return unpackerr
+				}
 				if len(m.Pseudo) == 0 {
 					return errors.New("expected pseudo section")
 				}
-				_, ok := m.Pseudo[len(m.Pseudo)-1].(*dns.TSIG)
+				_, ok := m.Pseudo[1].(*dns.TSIG) // 0 is COOKIE
 				if !ok {
 					return errors.New("expected TSIG")
 				}
@@ -122,9 +134,22 @@ func TestMsgBinary(t *testing.T) {
 			},
 		},
 		{
+			"opt-and-extra-tsig",
+			[]byte{148, 7, 1, 32, 0, 1, 0, 0, 0, 0, 0, 3, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 6, 0, 1, 0, 0, 41, 4, 208, 0, 0, 0, 0, 0, 12, 0, 10, 0, 8, 73, 65, 52, 201, 253, 43, 171, 193, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 250, 0, 255, 0, 0, 0, 0, 0, 93, 11, 104, 109, 97, 99, 45, 115, 104, 97, 53, 49, 50, 0, 0, 0, 105, 104, 143, 225, 1, 44, 0, 64, 195, 169, 191, 31, 144, 147, 160, 197, 245, 76, 217, 137, 234, 208, 246, 112, 113, 12, 208, 172, 99, 181, 29, 108, 140, 62, 197, 130, 116, 207, 127, 178, 163, 16, 242, 203, 41, 135, 60, 218, 187, 237, 181, 106, 91, 34, 125, 38, 190, 56, 117, 43, 76, 212, 161, 165, 61, 214, 193, 180, 117, 1, 27, 129, 148, 7, 0, 0, 0, 0, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 250, 0, 255, 0, 0, 0, 0, 0, 93, 11, 104, 109, 97, 99, 45, 115, 104, 97, 53, 49, 50, 0, 0, 0, 105, 104, 143, 225, 1, 44, 0, 64, 195, 169, 191, 31, 144, 147, 160, 197, 245, 76, 217, 137, 234, 208, 246, 112, 113, 12, 208, 172, 99, 181, 29, 108, 140, 62, 197, 130, 116, 207, 127, 178, 163, 16, 242, 203, 41, 135, 60, 218, 187, 237, 181, 106, 91, 34, 125, 38, 190, 56, 117, 43, 76, 212, 161, 165, 61, 214, 193, 180, 117, 1, 27, 129, 148, 7, 0, 0, 0, 0},
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr == nil {
+					return errors.New("expected Unpack failure 'multiple TSIG RRs'")
+				}
+				return nil
+			},
+		},
+		{
 			"opt-and-tsig-extra-should-empty",
 			[]byte{148, 7, 1, 32, 0, 1, 0, 0, 0, 0, 0, 2, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 6, 0, 1, 0, 0, 41, 4, 208, 0, 0, 0, 0, 0, 12, 0, 10, 0, 8, 73, 65, 52, 201, 253, 43, 171, 193, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 250, 0, 255, 0, 0, 0, 0, 0, 93, 11, 104, 109, 97, 99, 45, 115, 104, 97, 53, 49, 50, 0, 0, 0, 105, 104, 143, 225, 1, 44, 0, 64, 195, 169, 191, 31, 144, 147, 160, 197, 245, 76, 217, 137, 234, 208, 246, 112, 113, 12, 208, 172, 99, 181, 29, 108, 140, 62, 197, 130, 116, 207, 127, 178, 163, 16, 242, 203, 41, 135, 60, 218, 187, 237, 181, 106, 91, 34, 125, 38, 190, 56, 117, 43, 76, 212, 161, 165, 61, 214, 193, 180, 117, 1, 27, 129, 148, 7, 0, 0, 0, 0},
-			func(m *dns.Msg) error {
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr != nil {
+					return unpackerr
+				}
 				if len(m.Extra) != 0 {
 					return errors.New("expected additional section to be empty")
 				}
@@ -136,7 +161,10 @@ func TestMsgBinary(t *testing.T) {
 			//  edns255 := &dns.ERFC3597{EDNS0Code: 255, Code: hex.EncodeToString([]byte("hallo"))}
 			//  m.Pseudo = append(m.Pseudo, edns255)
 			[]byte{0, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 3, 119, 119, 119, 7, 101, 120, 97, 109, 112, 108, 101, 3, 111, 114, 103, 0, 0, 1, 0, 1, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 9, 0, 255, 0, 5, 104, 97, 108, 108, 111},
-			func(m *dns.Msg) error {
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr != nil {
+					return unpackerr
+				}
 				if len(m.Pseudo) != 1 {
 					return errors.New("expected pseudo section to carry an option")
 				}
@@ -150,7 +178,10 @@ func TestMsgBinary(t *testing.T) {
 		{
 			"fuzzing-find-#932",
 			[]byte{48, 48, 48, 48, 0, 2, 0, 2, 0, 0, 0, 0, 0, 48, 48, 48, 48, 0, 48, 48, 48, 48, 0, 0, 9, 48, 48, 48, 48, 48, 48, 0, 0, 192, 32, 48, 48, 48, 48, 48, 48, 48, 48, 0, 16, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
-			func(m *dns.Msg) error {
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr != nil {
+					return unpackerr
+				}
 				// the message is a bit fubar, but we did crash on it, when packing again.
 				m.Pack()
 				return nil
@@ -160,11 +191,8 @@ func TestMsgBinary(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := &dns.Msg{Data: tc.buf}
-			if err := m.Unpack(); err != nil {
-				t.Logf("%v\n", bin.Dump(m.Data))
-				t.Fatal(err)
-			}
-			if err := tc.fn(m); err != nil {
+			err := m.Unpack()
+			if err := tc.fn(m, err); err != nil {
 				t.Logf("%s\n", bin.Dump(m.Data))
 				t.Fatal(err)
 			}
@@ -217,6 +245,40 @@ func TestMsg(t *testing.T) {
 			},
 		},
 		{
+			"ednsz",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Z = 0x0080
+				return m
+			},
+			func(r *dns.Msg) error {
+				if r.Z != 0x0080 {
+					return fmt.Errorf("expected %#04x, got %#04x", 0x0080, r.Z)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
+				if arcount != 1 {
+					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
+				}
+				return nil
+			},
+		},
+		{
+			"ednsz-security",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Security, m.CompactAnswers, m.Delegation = true, true, true
+				return m
+			},
+			func(r *dns.Msg) error {
+				if r.Z != 0 {
+					return fmt.Errorf("expected %#04x, got %#04x", 0, r.Z)
+				}
+				return nil
+			},
+		},
+		{
 			"security+nsd",
 			func() *dns.Msg {
 				m := dns.NewMsg("example.org.", dns.TypeMX)
@@ -264,7 +326,7 @@ func TestMsg(t *testing.T) {
 			},
 		},
 		{
-			"edns+tsig",
+			"edns0+tsig",
 			func() *dns.Msg {
 				m := dns.NewMsg("example.", dns.TypeA)
 				m.UDPSize = dns.DefaultMsgSize
@@ -272,7 +334,7 @@ func TestMsg(t *testing.T) {
 					&dns.COOKIE{Cookie: "0102030405060708"},
 					dns.NewTSIG("example.", dns.HmacSHA256, 0),
 				)
-				if err := dns.TSIGSign(m, dns.HmacTSIG{Secret: []byte("Wg==")}, new(dns.TSIGOption)); err != nil {
+				if err := dns.TSIGSign(m, dns.HmacTSIG{Secret: []byte("Wg==")}, &dns.TSIGOption{}); err != nil {
 					panic(err)
 				}
 				return m
@@ -287,7 +349,7 @@ func TestMsg(t *testing.T) {
 				if _, ok := r.Pseudo[1].(*dns.TSIG); !ok {
 					return fmt.Errorf("expected TSIG last, got %T", r.Pseudo[1])
 				}
-				if err := dns.TSIGVerify(r, dns.HmacTSIG{Secret: []byte("Wg==")}, new(dns.TSIGOption)); err != nil {
+				if err := dns.TSIGVerify(r, dns.HmacTSIG{Secret: []byte("Wg==")}, &dns.TSIGOption{}); err != nil {
 					return fmt.Errorf("failed to verify TSIG: %w", err)
 				}
 				if err := r.Pack(); err != nil {

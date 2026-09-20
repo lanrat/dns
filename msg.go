@@ -160,6 +160,7 @@ func (m *Msg) Reset() {
 	m.Answer, m.Ns, m.Extra, m.Pseudo = m.Answer[:0], m.Ns[:0], m.Extra[:0], m.Pseudo[:0]
 }
 
+// Packs packs the message m into m.Data.
 func (m *Msg) Pack() error {
 	if l := m.Len(); cap(m.Data) < l {
 		m.Data = make([]byte, l)
@@ -220,8 +221,8 @@ func (m *Msg) Pack() error {
 		compression = make(map[string]uint16, l+3) // 3 is randomly chosen, as that much rdata might be compressable...
 	}
 
-	if len(m.Question) > 0 {
-		if off, err = packQuestion(m.Question[0], m.Data, off, compression); err != nil {
+	for i := range m.Question {
+		if off, err = packQuestion(m.Question[i], m.Data, off, compression); err != nil {
 			return err
 		}
 	}
@@ -248,23 +249,31 @@ func (m *Msg) Pack() error {
 		opt := &OPT{} // hack, empty name, that gets filled if we did something
 		if m.UDPSize > MinMsgSize {
 			opt.Hdr.Name = "."
-			opt.SetUDPSize(m.UDPSize)
+			opt.setUDPSize(m.UDPSize)
 		}
 		if m.Rcode > 0xF {
 			opt.Hdr.Name = "."
-			opt.SetRcode(m.Rcode) // we leave m.Rcode as packing/unpacking will set the correct bits there.
+			opt.setRcode(m.Rcode) // we leave m.Rcode as packing/unpacking will set the correct bits there.
 		}
 		if m.Security {
 			opt.Hdr.Name = "."
-			opt.SetSecurity(true)
+			opt.setSecurity(true)
 		}
 		if m.CompactAnswers {
 			opt.Hdr.Name = "."
-			opt.SetCompactAnswers(true)
+			opt.setCompactAnswers(true)
 		}
 		if m.Delegation {
 			opt.Hdr.Name = "."
-			opt.SetDelegation(true)
+			opt.setDelegation(true)
+		}
+		if m.Version > 0 {
+			opt.Hdr.Name = "."
+			opt.setVersion(m.Version)
+		}
+		if m.Z > 0 {
+			opt.Hdr.Name = "."
+			opt.setZ(m.Z)
 		}
 		for i := range m.Pseudo {
 			switch x := m.Pseudo[i].(type) {
@@ -301,24 +310,20 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 	if err != nil {
 		return nil, err
 	}
-	var qtype uint16
-	if !msg.Empty() && !msg.ReadUint16(&qtype) {
+	if !msg.Empty() && !msg.ReadUint16(&m.qtype) {
 		return nil, unpack.Errorf("overflow %s", "Question type")
 	}
-	m.qtype = qtype
 
-	var qclass uint16
-	if !msg.Empty() && !msg.ReadUint16(&qclass) {
+	if !msg.Empty() && !msg.ReadUint16(&m.qclass) {
 		return nil, unpack.Errorf("overflow %s", "Question class")
 	}
-	m.qclass = qclass
 
 	var rr RR
-	if newFn, ok := TypeToRR[qtype]; ok {
+	if newFn, ok := TypeToRR[m.qtype]; ok {
 		rr = newFn()
-		*rr.Header() = Header{Name: name, Class: qclass}
+		*rr.Header() = Header{Name: name, Class: m.qclass}
 	} else {
-		rr = &RFC3597{Header{Name: name, Class: qclass}, rdata.RFC3597{RRType: qtype}}
+		rr = &RFC3597{Header{Name: name, Class: m.qclass}, rdata.RFC3597{RRType: m.qtype}}
 	}
 	return rr, nil
 }
@@ -360,8 +365,10 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 // Unpack unpacks a binary message that sits in m.Data to a Msg structure.
 func (m *Msg) Unpack() (err error) {
 	s := cryptobyte.String(m.Data)
-	var counts uint64 // read all counters into 64 bits and slice the 16 bits values out of it
-	var bits uint16
+	var (
+		counts uint64 // read all counters into 64 bits and slice the 16 bits values out of it
+		bits   uint16
+	)
 	if !s.ReadUint16(&m.ID) || !s.ReadUint16(&bits) || !s.ReadUint64(&counts) {
 		return unpack.Errorf("overflow %s", "MsgHeader")
 	}
@@ -382,7 +389,7 @@ func (m *Msg) Unpack() (err error) {
 
 	if m.offset > MsgHeaderSize {
 		if !s.Skip(int(m.offset - MsgHeaderSize)) {
-			return fmt.Errorf("overflow %s", "MsgHeader")
+			return unpack.Errorf("overflow %s", "MsgHeader")
 		}
 		goto Rest
 	}
@@ -412,39 +419,51 @@ Rest:
 		return err
 	}
 
-	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
-	// section. We will only check one OPT, any others will be left in Extra.
-Extra1:
+	// Check for the OPT/TSIG/SIG RR and move it to the Pseudo section.
+	m.Pseudo = m.Pseudo[:0] // Reset pseudo as we need to fill it from the Extra section.
+	counts = 0              // reuse counts, use the two 32 bit halves
 	for i := len(m.Extra) - 1; i >= 0; i-- {
+
 		switch opt := m.Extra[i].(type) {
 		case *OPT:
-			m.Security = opt.Security()
-			m.CompactAnswers = opt.CompactAnswers()
-			m.Delegation = opt.Delegation()
-			m.Rcode += opt.Rcode() // See TestMsgExtendedRcode.
-			m.Version = opt.Version()
-			// RFC 6891 mandates that the payload size in an OPT record less than 512 (MinMsgSize) bytes must be treated as equal to 512 bytes.
-			m.UDPSize = max(opt.UDPSize(), MinMsgSize)
+			if uint32(counts) > 0 {
+				return unpack.Errorf("multiple OPT RRs")
+			}
 
-			m.Pseudo = make([]RR, len(opt.Options), len(opt.Options)+1) // +1 for tsig/sig zero, avoid 2x in a append
+			m.Security = opt.security()
+			m.CompactAnswers = opt.compactAnswers()
+			m.Delegation = opt.delegation()
+			m.Z = opt.z()
+			m.Rcode += opt.rcode() // See TestMsgExtendedRcode.
+			m.Version = opt.version()
+			// RFC 6891 mandates that the payload size in an OPT record less than 512 (MinMsgSize) bytes must be treated as equal to 512 bytes.
+			m.UDPSize = max(opt.udpSize(), MinMsgSize)
+
+			// We are travelling backwards through the options, so add them in reverse too, i.e. in front.
+			// Make space for len(opt.Options) RRs to be put there. This is avoid having to: make([]RR, len(opt.Options)).
+			m.Pseudo = append(m.Pseudo[:0], append(make([]RR, len(opt.Options)), m.Pseudo[0:]...)...)
 			for j := range opt.Options {
 				m.Pseudo[j] = RR(opt.Options[j])
 			}
-			m.Extra[i] = m.Extra[len(m.Extra)-1] // opt's place switch with last rr
-			m.Extra = m.Extra[:len(m.Extra)-1]   // remove cruft
-			break Extra1
-		}
-	}
-Extra2:
-	for i := len(m.Extra) - 1; i >= 0; i-- {
-		switch m.Extra[i].(type) {
+
+			m.Extra[i] = m.Extra[0+int(uint32(counts)+uint32(counts>>32))] // switch with first + what we've seen
+
+			counts = counts&^0xFFFFFFFF | 1
+
 		case *TSIG, *SIG:
-			m.Pseudo = append(m.Pseudo, m.Extra[i])
-			m.Extra[i] = m.Extra[len(m.Extra)-1] // sig/tsig's place switch with last rr
-			m.Extra = m.Extra[:len(m.Extra)-1]   // remove cruft
-			break Extra2
+			if uint32(counts>>32) > 0 {
+				return unpack.Errorf("multiple TSIG/SIG RRs")
+			}
+
+			m.Pseudo = append([]RR{m.Extra[i]}, m.Pseudo...)
+			m.Extra[i] = m.Extra[0+int(uint32(counts)+uint32(counts>>32))]
+
+			counts += 1 << 32
 		}
 	}
+
+	// remove cruft, that was moved to the beginning.
+	m.Extra = m.Extra[int(uint32(counts)+uint32(counts>>32)):]
 
 	if !s.Empty() {
 		return unpack.Errorf("%d more octets", len(s))
@@ -463,7 +482,7 @@ func (m *Msg) String() string {
 
 	sb.WriteString(m.MsgHeader.String())
 	// if core EDNS flags are set, we print this (flags are already handled in MsgHeader)
-	if m.UDPSize > 0 || m.Security || m.CompactAnswers || m.Delegation {
+	if m.UDPSize > 0 || m.Security || m.CompactAnswers || m.Delegation || m.Z > 0 {
 		sb.WriteString(";; EDNS, version: ")
 		sb.WriteString(strconv.Itoa(int(m.Version)))
 		sb.WriteString(", udp: ")
@@ -586,7 +605,7 @@ func (m *Msg) String() string {
 // int becuse we need that number of the Extra section sizing.
 func (m *Msg) isPseudo() int {
 	n := 0
-	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
+	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Z > 0 || m.Rcode > 0xF {
 		n = 1
 	}
 	lp := len(m.Pseudo)
@@ -634,10 +653,9 @@ func (m *Msg) Len() int {
 
 	// isPseudo call is basically already done in the above loop where we get the length, only things left
 	// are the extra checks we do here. See [isPseudo] and keep in sync.
-	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Z > 0 || m.Rcode > 0xF {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
-		// In case of only a TSIG/SIG0 we overestimate, but because of speed we don't want to the full
-		// i.Pseudo check.
+		// In case of only a TSIG/SIG0 we overestimate, but because of speed we don't want to the full i.Pseudo check.
 		l += minHeaderSize
 	}
 
