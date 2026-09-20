@@ -197,6 +197,39 @@ func TestMsgBinary(t *testing.T) {
 				return nil
 			},
 		},
+		/*
+			;; OPT PSEUDOSECTION:
+			; EDNS: version 0; flags:; udp: 1232
+			;; QUESTION SECTION:
+			;example.       IN       A
+			;; ADDITIONAL SECTION:
+			example.        0       IN      TXT     "preserve-me"
+			;; TSIG PSEUDOSECTION:
+			; key.example.  0       CLASS255        TSIG     hmac-sha256. 20260920150926 300 32 FEEB41C4A3597B9CC34F26CF8B249B34B7F617923DD12C67BFCD05DC3DCC7946 4660 0 0
+		*/
+		{
+			"Extra opt+txt+sig",
+			[]byte{18, 52, 1, 0, 0, 1, 0, 0, 0, 0, 0, 3, 7, 101, 120, 97, 109, 112, 108, 101, 0, 0, 1, 0, 1, 0, 0, 41, 4, 208, 0, 0, 0, 0, 0, 0, 7, 101, 120, 97, 109, 112, 108, 101, 0, 0, 16, 0, 1, 0, 0, 0, 0, 0, 12, 11, 112, 114, 101, 115, 101, 114, 118, 101, 45, 109, 101, 3, 107, 101, 121, 7, 101, 120, 97, 109, 112, 108, 101, 0, 0, 250, 0, 255, 0, 0, 0, 0, 0, 61, 11, 104, 109, 97, 99, 45, 115, 104, 97, 50, 53, 54, 0, 0, 0, 106, 175, 247, 38, 1, 44, 0, 32, 254, 235, 65, 196, 163, 89, 123, 156, 195, 79, 38, 207, 139, 36, 155, 52, 183, 246, 23, 146, 61, 209, 44, 103, 191, 205, 5, 220, 61, 204, 121, 70, 18, 52, 0, 0, 0, 0},
+			func(m *dns.Msg, unpackerr error) error {
+				if m.UDPSize != 1232 {
+					t.Fatalf("expected UDPSize to be 1232, got %d", m.UDPSize)
+				}
+				if len(m.Pseudo) != 1 {
+					t.Fatalf("expected Pseudo count to be 1, got %d", len(m.Pseudo))
+				}
+				if _, ok := m.Pseudo[0].(*dns.TSIG); !ok {
+					t.Fatalf("expected TSIG, got %T", m.Pseudo[0])
+				}
+				if len(m.Extra) != 1 {
+					t.Fatalf("expected Extra count to be 1, got %d", len(m.Extra))
+				}
+				txt, ok := m.Extra[0].(*dns.TXT)
+				if !ok || len(txt.Txt) != 1 || txt.Txt[0] != "preserve-me" {
+					t.Fatal("failed to find TXT record")
+				}
+				return nil
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
