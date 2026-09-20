@@ -192,7 +192,7 @@ func TestMsgBinary(t *testing.T) {
 			[]byte{175, 231, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7, 101, 120, 97, 109, 112, 108, 101, 0, 0, 28},
 			func(m *dns.Msg, unpackerr error) error {
 				if unpackerr == nil {
-					return fmt.Errorf("unpacking with class should error")
+					return fmt.Errorf("unpacking without class should error")
 				}
 				return nil
 			},
