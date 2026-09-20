@@ -245,6 +245,40 @@ func TestMsg(t *testing.T) {
 			},
 		},
 		{
+			"ednsz",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Z = 0x0080
+				return m
+			},
+			func(r *dns.Msg) error {
+				if r.Z != 0x0080 {
+					return fmt.Errorf("expected %#04x, got %#04x", 0x0080, r.Z)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
+				if arcount != 1 {
+					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
+				}
+				return nil
+			},
+		},
+		{
+			"ednsz-security",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Security, m.CompactAnswers, m.Delegation = true, true, true
+				return m
+			},
+			func(r *dns.Msg) error {
+				if r.Z != 0 {
+					return fmt.Errorf("expected %#04x, got %#04x", 0, r.Z)
+				}
+				return nil
+			},
+		},
+		{
 			"security+nsd",
 			func() *dns.Msg {
 				m := dns.NewMsg("example.org.", dns.TypeMX)

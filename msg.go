@@ -249,23 +249,31 @@ func (m *Msg) Pack() error {
 		opt := &OPT{} // hack, empty name, that gets filled if we did something
 		if m.UDPSize > MinMsgSize {
 			opt.Hdr.Name = "."
-			opt.SetUDPSize(m.UDPSize)
+			opt.setUDPSize(m.UDPSize)
 		}
 		if m.Rcode > 0xF {
 			opt.Hdr.Name = "."
-			opt.SetRcode(m.Rcode) // we leave m.Rcode as packing/unpacking will set the correct bits there.
+			opt.setRcode(m.Rcode) // we leave m.Rcode as packing/unpacking will set the correct bits there.
 		}
 		if m.Security {
 			opt.Hdr.Name = "."
-			opt.SetSecurity(true)
+			opt.setSecurity(true)
 		}
 		if m.CompactAnswers {
 			opt.Hdr.Name = "."
-			opt.SetCompactAnswers(true)
+			opt.setCompactAnswers(true)
 		}
 		if m.Delegation {
 			opt.Hdr.Name = "."
-			opt.SetDelegation(true)
+			opt.setDelegation(true)
+		}
+		if m.Version > 0 {
+			opt.Hdr.Name = "."
+			opt.setVersion(m.Version)
+		}
+		if m.Z > 0 {
+			opt.Hdr.Name = "."
+			opt.setZ(m.Z)
 		}
 		for i := range m.Pseudo {
 			switch x := m.Pseudo[i].(type) {
@@ -422,13 +430,14 @@ Rest:
 				return unpack.Errorf("multiple OPT RRs")
 			}
 
-			m.Security = opt.Security()
-			m.CompactAnswers = opt.CompactAnswers()
-			m.Delegation = opt.Delegation()
-			m.Rcode += opt.Rcode() // See TestMsgExtendedRcode.
-			m.Version = opt.Version()
+			m.Security = opt.security()
+			m.CompactAnswers = opt.compactAnswers()
+			m.Delegation = opt.delegation()
+			m.Z = opt.z()
+			m.Rcode += opt.rcode() // See TestMsgExtendedRcode.
+			m.Version = opt.version()
 			// RFC 6891 mandates that the payload size in an OPT record less than 512 (MinMsgSize) bytes must be treated as equal to 512 bytes.
-			m.UDPSize = max(opt.UDPSize(), MinMsgSize)
+			m.UDPSize = max(opt.udpSize(), MinMsgSize)
 
 			// We are travelling backwards through the options, so add them in reverse too, i.e. in front.
 			// Make space for len(opt.Options) RRs to be put there. This is avoid having to: make([]RR, len(opt.Options)).
@@ -473,7 +482,7 @@ func (m *Msg) String() string {
 
 	sb.WriteString(m.MsgHeader.String())
 	// if core EDNS flags are set, we print this (flags are already handled in MsgHeader)
-	if m.UDPSize > 0 || m.Security || m.CompactAnswers || m.Delegation {
+	if m.UDPSize > 0 || m.Security || m.CompactAnswers || m.Delegation || m.Z > 0 {
 		sb.WriteString(";; EDNS, version: ")
 		sb.WriteString(strconv.Itoa(int(m.Version)))
 		sb.WriteString(", udp: ")
@@ -596,7 +605,7 @@ func (m *Msg) String() string {
 // int becuse we need that number of the Extra section sizing.
 func (m *Msg) isPseudo() int {
 	n := 0
-	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
+	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Z > 0 || m.Rcode > 0xF {
 		n = 1
 	}
 	lp := len(m.Pseudo)
@@ -644,10 +653,9 @@ func (m *Msg) Len() int {
 
 	// isPseudo call is basically already done in the above loop where we get the length, only things left
 	// are the extra checks we do here. See [isPseudo] and keep in sync.
-	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Z > 0 || m.Rcode > 0xF {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
-		// In case of only a TSIG/SIG0 we overestimate, but because of speed we don't want to the full
-		// i.Pseudo check.
+		// In case of only a TSIG/SIG0 we overestimate, but because of speed we don't want to the full i.Pseudo check.
 		l += minHeaderSize
 	}
 
