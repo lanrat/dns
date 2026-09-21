@@ -13,7 +13,7 @@ import (
 )
 
 func (d *Dbfile) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-	if d.To == nil {
+	if d.To == nil || dnsutil.Network(w) == "udp" {
 		m := new(dns.Msg)
 		dnsutil.SetReply(m, r)
 		m.Rcode = dns.RcodeRefused
