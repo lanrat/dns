@@ -229,7 +229,6 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 				write() // only a buggy client falls back to io.Copy and reads this
 				w.Close()
 			})
-
 		}
 
 		t.Run(tc.name, func(t *testing.T) {
