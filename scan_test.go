@@ -344,6 +344,44 @@ example.com. 60 PX (
 	}
 }
 
+func TestZoneParserEscapedStringOffset(t *testing.T) {
+	testcases := []struct {
+		input          string
+		inputOffset    int
+		expectedOffset int
+		expectedOK     bool
+	}{
+		{"simple string with no escape sequences", 20, 20, true},
+		{"simple string with no escape sequences", 500, -1, true},
+		{`\;\088\\\;\120\\`, 0, 0, true},
+		{`\;\088\\\;\120\\`, 1, 2, true},
+		{`\;\088\\\;\120\\`, 2, 6, true},
+		{`\;\088\\\;\120\\`, 3, 8, true},
+		{`\;\088\\\;\120\\`, 4, 10, true},
+		{`\;\088\\\;\120\\`, 5, 14, true},
+		{`\;\088\\\;\120\\`, 6, 16, true},
+		{`\;\088\\\;\120\\`, 7, -1, true},
+		{`\`, 3, 0, false},
+		{`a\`, 3, 0, false},
+		{`aa\`, 3, 0, false},
+		{`aaa\`, 3, 3, true},
+		{`aaaa\`, 3, 3, true},
+	}
+	for i, tc := range testcases {
+		outputOffset, outputOK := escapedStringOffset(tc.input, tc.inputOffset)
+		if outputOffset != tc.expectedOffset {
+			t.Errorf("test %d (input %#q offset %d) returned offset %d but expected %d",
+				i, tc.input, tc.inputOffset, outputOffset, tc.expectedOffset,
+			)
+		}
+		if outputOK != tc.expectedOK {
+			t.Errorf("test %d (input %#q offset %d) returned ok=%t but expected %t",
+				i, tc.input, tc.inputOffset, outputOK, tc.expectedOK,
+			)
+		}
+	}
+}
+
 func TestZoneParserEDNS0(t *testing.T) {
 	testcases := []struct {
 		name string
