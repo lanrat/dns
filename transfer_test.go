@@ -179,6 +179,15 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
 			}, 4200000000, false, 8,
 		},
+		{
+			// A server sends the complete IXFR diff inside a single TCP message. The client
+			// must recognise the transfer as done and return without falling back to io.Copy
+			// for a second read.
+			//
+			// Note this uses a different handler.
+			"changed-handler-double-write", [][]dns.RR{},
+			2009032800, false, 8,
+		},
 	}
 
 	var answers [][]dns.RR
@@ -203,6 +212,25 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 	defer dns.HandleRemove(testTransferZone)
 
 	for _, tc := range testcases {
+		if tc.name == "changed-handler-double-write" {
+			dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+				r.Unpack()
+				w.Hijack()
+
+				write := func() {
+					resp := new(dns.Msg)
+					resp.ID = r.ID
+					resp.Response = true
+					resp.Answer = testTransferDataIncrementalData
+					resp.WriteTo(w)
+				}
+
+				write() // complete IXFR — client must stop here
+				write() // only a buggy client falls back to io.Copy and reads this
+				w.Close()
+			})
+		}
+
 		t.Run(tc.name, func(t *testing.T) {
 			answers = tc.answers
 			cancel, addr, _ := dnstest.TCPServer(":0")
@@ -238,65 +266,6 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 				t.Fatalf("bad ixfr: expected %d, got %d", tc.want, i)
 			}
 		})
-	}
-}
-
-// TestTransferIncrementalSingleMessage is a regression test for the case where
-// a server sends the complete IXFR diff inside a single TCP message. The client
-// must recognise the transfer as done and return without falling back to io.Copy
-// for a second read.
-//
-// The server writes the same complete IXFR response twice on the same connection.
-// A correct client exits after the first message and never reads the second. A
-// buggy client falls through to io.Copy, reads the second message, and delivers
-// twice as many records — caught by the record count assertion.
-func TestTransferIncrementalSingleMessage(t *testing.T) {
-	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		r.Unpack()
-		w.Hijack()
-
-		write := func() {
-			resp := new(dns.Msg)
-			resp.ID = r.ID
-			resp.Response = true
-			resp.Answer = testTransferDataIncrementalData
-			resp.WriteTo(w)
-		}
-
-		write() // complete IXFR — client must stop here
-		write() // only a buggy client falls back to io.Copy and reads this
-		w.Close()
-	})
-	defer dns.HandleRemove(testTransferZone)
-
-	cancel, addr, _ := dnstest.TCPServer(":0")
-	defer cancel()
-
-	c := dns.NewClient()
-	m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
-	m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: 2009032800}}
-
-	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
-	if err != nil {
-		t.Fatal("failed to setup zone transfer in", err)
-	}
-
-	var (
-		gotErr error
-		count  int
-	)
-	for e := range env {
-		if e.Error != nil {
-			gotErr = e.Error
-		}
-		count += len(e.Answer)
-	}
-
-	if gotErr != nil {
-		t.Fatalf("unexpected error: %v", gotErr)
-	}
-	if count != len(testTransferDataIncrementalData) {
-		t.Fatalf("expected %d records, got %d (client read past the single complete IXFR message)", len(testTransferDataIncrementalData), count)
 	}
 }
 
