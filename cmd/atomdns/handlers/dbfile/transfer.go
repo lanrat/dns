@@ -45,7 +45,7 @@ func (d *Dbfile) TransferIn(origin string) error {
 	defer os.Remove(f.Name())
 
 	for _, ip := range d.From.IPs {
-		env, err := c.TransferIn(context.TODO(), m, "tcp", ip)
+		env, err := c.TransferIn(context.TODO(), m, ip, nil)
 		if err != nil {
 			continue
 		}

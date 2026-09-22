@@ -56,7 +56,7 @@ func TestDbfileTransferOut(t *testing.T) {
 			c := new(dns.Client)
 			addrs := server.Addr()
 			m := dns.NewMsg("example.org.", dns.TypeAXFR)
-			env, err := c.TransferIn(context.TODO(), m, "tcp", addrs[1])
+			env, err := c.TransferIn(context.TODO(), m, addrs[1], nil)
 			if err != nil {
 				if !tc.success {
 					return
