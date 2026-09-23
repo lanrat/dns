@@ -118,16 +118,20 @@ return 1
 				switch tag {
 				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
-					o(`j := 0
+					o(`if len(rr.%[1]s) < len(b.(*%[2]s).%[3]s) {
+							return -1
+						}
+					    if len(rr.%[1]s) > len(b.(*%[2]s).%[3]s) {
+							return 1
+						}
 						for i := range rr.%[1]s {
-						if i > j || x != 0 {
+						if x != 0 {
 							break
 						}
-						x = len(rr.%[1]s[i]) - len(b.(*%[2]s).%[3]s[j])
+						x = len(rr.%[1]s[i]) - len(b.(*%[2]s).%[3]s[i])
 						if x == 0 {
-							x = strings.Compare(rr.%[1]s[i], b.(*%[2]s).%[3]s[j])
+							x = strings.Compare(rr.%[1]s[i], b.(*%[2]s).%[3]s[i])
 						}
-						j++
 					}`)
 				case `dns:"opt"`:
 				// never signed, but compare would be nice...
@@ -142,13 +146,17 @@ return 1
 					o(`x = compareinfo(rr.%s, b.(*%s).%s)`)
 
 				case `dns:"name"`:
-					o(`j := 0
+					o(`if len(rr.%[1]s) < len(b.(*%[2]s).%[3]s) {
+							return -1
+					    }
+						if len(rr.%[1]s) > len(b.(*%[2]s).%[3]s) {
+							return 1
+						}
 						for i := range rr.%[1]s {
-						if i > j || x != 0 {
+						if x != 0 {
 							break
 						}
-						x = comparename(rr.%[1]s[i], b.(*%[2]s).%[3]s[j])
-						j++
+						x = comparename(rr.%[1]s[i], b.(*%[2]s).%[3]s[i])
 					}`)
 				}
 				continue
