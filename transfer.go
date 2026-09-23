@@ -18,11 +18,10 @@ type Envelope struct {
 // should have an [AXFR] or [IXFR] RR in the question section.  For doing an IXFR a SOA record needs to be
 // present in the [Ns] section of the [Msg], see RFC 1995.
 //
-// If the pseudo section contains a (stub) TSIG or in the future.
-// SIG0 record, TSIG or SIG0 signing is performed, see [NewTSIG] and [NewSIG0] on how create such RRs. For
-// this the client also need a [TSIGSigner] or [SIG0Signer].
+// If the pseudo section contains a (stub) TSIG  recrods, TSIG signing is performed, see [NewTSIG] on how create such RRs. For
+// this [TransferOption] needs a [TSIGSigner]. In the future SIG0 may be implemented as well.
 //
-// On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs
+// On the returned channel the received RRs are returned (and a non-nil error in case of an error). These RRs
 // are as they were found, i.e. including the starting and ending SOA RRs.
 //
 // If m's buffer is empty TransferIn will call m.Pack(). If the clients's transport is nil [NewDefaultTransport] will
