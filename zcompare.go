@@ -521,10 +521,10 @@ func (rr *SOA) compare(b RR) (x int) {
 }
 
 func (rr *TXT) compare(b RR) (x int) {
-	if len(b.(*TXT).Txt) < len(rr.Txt) {
+	if len(rr.Txt) < len(b.(*TXT).Txt) {
 		return -1
 	}
-	if len(b.(*TXT).Txt) > len(rr.Txt) {
+	if len(rr.Txt) > len(b.(*TXT).Txt) {
 		return 1
 	}
 	for i := range rr.Txt {
@@ -1449,10 +1449,10 @@ func (rr *HIP) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	if len(b.(*HIP).RendezvousServers) < len(rr.RendezvousServers) {
+	if len(rr.RendezvousServers) < len(b.(*HIP).RendezvousServers) {
 		return -1
 	}
-	if len(b.(*HIP).RendezvousServers) > len(rr.RendezvousServers) {
+	if len(rr.RendezvousServers) > len(b.(*HIP).RendezvousServers) {
 		return 1
 	}
 	for i := range rr.RendezvousServers {
@@ -1471,10 +1471,10 @@ func (rr *HIP) compare(b RR) (x int) {
 }
 
 func (rr *NINFO) compare(b RR) (x int) {
-	if len(b.(*NINFO).ZSData) < len(rr.ZSData) {
+	if len(rr.ZSData) < len(b.(*NINFO).ZSData) {
 		return -1
 	}
-	if len(b.(*NINFO).ZSData) > len(rr.ZSData) {
+	if len(rr.ZSData) > len(b.(*NINFO).ZSData) {
 		return 1
 	}
 	for i := range rr.ZSData {

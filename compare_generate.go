@@ -118,10 +118,10 @@ return 1
 				switch tag {
 				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
-					o(`if len(b.(*%[2]s).%[3]s) < len(rr.%[1]s) {
+					o(`if len(rr.%[1]s) < len(b.(*%[2]s).%[3]s) {
 							return -1
 						}
-					    if len(b.(*%[2]s).%[3]s) > len(rr.%[1]s) {
+					    if len(rr.%[1]s) > len(b.(*%[2]s).%[3]s) {
 							return 1
 						}
 						for i := range rr.%[1]s {
@@ -146,10 +146,10 @@ return 1
 					o(`x = compareinfo(rr.%s, b.(*%s).%s)`)
 
 				case `dns:"name"`:
-					o(`if len(b.(*%[2]s).%[3]s) < len(rr.%[1]s) {
+					o(`if len(rr.%[1]s) < len(b.(*%[2]s).%[3]s) {
 							return -1
 					    }
-					    if len(b.(*%[2]s).%[3]s) > len(rr.%[1]s) {
+						if len(rr.%[1]s) > len(b.(*%[2]s).%[3]s) {
 							return 1
 						}
 						for i := range rr.%[1]s {
