@@ -14,7 +14,7 @@ type Envelope struct {
 	Error  error // If something went wrong, this contains the error.
 }
 
-// TransferIn performs a zone transfer with address over network, the message m is used to ask for the transfer and
+// TransferIn performs a zone transfer with address over TCP, the message m is used to ask for the transfer and
 // should have an [AXFR] or [IXFR] RR in the question section.  For doing an IXFR a SOA record needs to be
 // present in the [Ns] section of the [Msg], see RFC 1995.
 //
@@ -31,9 +31,9 @@ type Envelope struct {
 // Setting up a transfer is done as follows:
 //
 //	c := dns.NewClient()
-//	c.Transfer = &dns.Transfer{TSIGSigner: dns.HmacTSIG{[]byte("secret")}} // optionally set up TSIG with hmac
 //	m := dns.NewMsg("example.org.", dns.TypeAXFR)
-//	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+//	options := &dns.TransferOption{TSIGSigner: dns.HmacTSIG{[]byte("secret")}} // optionally set up a TSIG with hmac
+//	env, err := c.TransferIn(context.TODO(), m, addr, options)
 //	if err != nil {
 //	   return fmt.Errorf("failed to setup zone transfer in", err)
 //	}
@@ -44,19 +44,22 @@ type Envelope struct {
 //		}
 //		// do things with e.Answer
 //	}
-func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string) (<-chan *Envelope, error) {
+func (c *Client) TransferIn(ctx context.Context, m *Msg, address string, options *TransferOption) (<-chan *Envelope, error) {
 	if c.Transport == nil {
 		c.Transport = NewTransport()
 	}
-	conn, err := c.dial(ctx, network, address)
+	conn, err := c.dial(ctx, "tcp", address)
 	if err != nil {
 		return nil, err
 	}
-	return c.TransferInWithConn(ctx, m, conn)
+	return c.TransferInWithConn(ctx, m, conn, options)
 }
 
-// TransferInWithConn behaves like [client.TransferIn], but with a supplied connection.
-func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) (<-chan *Envelope, error) {
+// TransferInWithConn behaves like [client.TransferIn], but with a supplied (TCP) connection.
+func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn, options *TransferOption) (<-chan *Envelope, error) {
+	if _, ok := conn.(*net.UDPConn); ok {
+		return nil, &Error{err: "bad network"}
+	}
 	_, axfr := m.Question[0].(*AXFR)
 	_, ixfr := m.Question[0].(*IXFR)
 	if !axfr && !ixfr {
@@ -77,12 +80,12 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 		}
 	}
 
-	if c.Transfer != nil && c.TSIGSigner != nil && hasTSIG(m) != nil {
-		if err := TSIGSign(m, c.TSIGSigner, &TSIGOption{}); err != nil {
+	if options != nil && options.TSIGSigner != nil && hasTSIG(m) != nil {
+		if err := TSIGSign(m, options.TSIGSigner, &TSIGOption{}); err != nil {
 			return nil, err
 		}
 	}
-	// if.SIG0Signer != nil {} // TODO(miek): implement the whole SIG0 dance
+	// if options.SIG0Signer != nil {} // TODO(miek): implement the whole SIG0 dance
 
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
@@ -91,15 +94,15 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 
 	ch := make(chan *Envelope)
 	if axfr {
-		go c.transferInAXFR(ctx, m, ch, conn)
+		go c.transferInAXFR(ctx, m, ch, conn, options)
 	}
 	if ixfr {
-		go c.transferInIXFR(ctx, m, ch, conn)
+		go c.transferInIXFR(ctx, m, ch, conn, options)
 	}
 	return ch, nil
 }
 
-func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
+func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn, options *TransferOption) {
 	defer func() {
 		// First close the connection, then the channel. This allows functions blocked on the channel to
 		// assume that the connection is closed and no further operations are pending when they resume.
@@ -107,10 +110,10 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		close(ch)
 	}()
 
-	options := TSIGOption{}
+	tsigOptions := TSIGOption{}
 	t := hasTSIG(m)
 	if t != nil {
-		options.RequestMAC = t.MAC
+		tsigOptions.RequestMAC = t.MAC
 	}
 
 	r := &Msg{}
@@ -150,7 +153,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		}
 
 		// On first loop first be need to see a SOA RR.
-		if !options.TimersOnly {
+		if !tsigOptions.TimersOnly {
 			if len(r.Answer) == 0 {
 				ch <- &Envelope{Error: fmt.Errorf("%w: %s", ErrSOA, "empty answer")}
 				return
@@ -161,8 +164,8 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.Transfer != nil && c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
-			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
+		if options != nil && options.TSIGSigner != nil && t != nil { // Original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, options.TSIGSigner, &tsigOptions); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 				return
 			}
@@ -171,7 +174,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		ch <- &Envelope{Answer: r.Answer}
 
 		// If there is a SOA RR as the last we're done
-		if options.TimersOnly {
+		if tsigOptions.TimersOnly {
 			if len(r.Answer) > 0 {
 				if _, ok := r.Answer[len(r.Answer)-1].(*SOA); ok {
 					return
@@ -179,26 +182,26 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		options.TimersOnly = true
+		tsigOptions.TimersOnly = true
 		if t != nil {
 			// r must have tsig, otherwise errored out above
-			options.RequestMAC = hasTSIG(r).MAC
+			tsigOptions.RequestMAC = hasTSIG(r).MAC
 		}
 	}
 }
 
 // ixfr is similar, but different enough to warrant its own function. Doing this in the axfr-loop is possible,
 // but make that more brittle. Although ifxr also needs to support axfr...
-func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
+func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn, options *TransferOption) {
 	defer func() {
 		conn.Close()
 		close(ch)
 	}()
 
-	options := TSIGOption{}
+	tsigOptions := TSIGOption{}
 	t := hasTSIG(m)
 	if t != nil {
-		options.RequestMAC = t.MAC
+		tsigOptions.RequestMAC = t.MAC
 	}
 	// serial is the serial of the first SOA, it used to determine when we seen all the RRs.
 	serial := uint32(0)
@@ -242,7 +245,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		}
 
 		// On first loop first be need to see a SOA RR and check that with the request serial.
-		if !options.TimersOnly {
+		if !tsigOptions.TimersOnly {
 			if len(r.Answer) == 0 {
 				ch <- &Envelope{Error: fmt.Errorf("%w: %s", ErrSOA, "empty answer")}
 				return
@@ -264,8 +267,8 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.Transfer != nil && c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
-			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
+		if options != nil && options.TSIGSigner != nil && t != nil { // Original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, options.TSIGSigner, &tsigOptions); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 				return
 			}
@@ -276,7 +279,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		// On the first message, skip index 0 (the opening SOA) — it is not the
 		// terminal SOA. On subsequent messages start from 0 so nothing is missed.
 		start := 0
-		if !options.TimersOnly {
+		if !tsigOptions.TimersOnly {
 			start = 1
 		}
 
@@ -290,10 +293,10 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		options.TimersOnly = true
+		tsigOptions.TimersOnly = true
 		if t != nil {
 			// r must have tsig, otherwise errored out above
-			options.RequestMAC = hasTSIG(r).MAC
+			tsigOptions.RequestMAC = hasTSIG(r).MAC
 		}
 	}
 }
@@ -317,7 +320,10 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 //
 // The server is responsible for sending the correct sequence of RRs through the channel env.
 // If the clients's transport is nil [NewDefaultTransport] will be set and used.
-func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (err error) {
+func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope, options *TransferOption) (err error) {
+	if _, ok := w.RemoteAddr().(*net.UDPAddr); ok {
+		return &Error{err: "bad network"}
+	}
 	if c.Transport == nil {
 		c.Transport = NewTransport()
 	}
@@ -327,24 +333,23 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 		}
 	}()
 
-	options := TSIGOption{}
+	tsigOptions := TSIGOption{}
 	t := hasTSIG(r)
 	if t != nil {
-		options.RequestMAC = t.MAC
+		tsigOptions.RequestMAC = t.MAC
 	}
+	m := new(Msg)
+	m.Authoritative = true
+	// dnsutil.SetReply as used here, but led to all kinds of cyclic imports, just use that very static code here.
+	m.ID, m.Rcode = r.ID, RcodeSuccess
+	m.Response, m.Opcode = true, r.Opcode
+	m.RecursionDesired = r.RecursionDesired
+	m.CheckingDisabled = r.CheckingDisabled
+	m.Security = r.Security
+	m.Question = r.Question
+
 	for e := range env {
-		m := new(Msg) // TODO(miek): Msg can be lifted out of for loop?
-		m.Authoritative = true
-
-		// dnsutil.SetReply as used here, but led to all kinds of cyclic imports, just use that very static code here.
-		m.ID, m.Rcode = r.ID, RcodeSuccess
-		m.Response, m.Opcode = true, r.Opcode
-		m.RecursionDesired = r.RecursionDesired
-		m.CheckingDisabled = r.CheckingDisabled
-		m.Security = r.Security
-		m.Question = r.Question
-		m.Answer, m.Ns, m.Extra, m.Pseudo = nil, nil, nil, nil
-
+		m.Reset()
 		m.Answer = e.Answer
 		if t != nil {
 			m.Pseudo = []RR{t} // will overwrite the bits that matter
@@ -352,8 +357,8 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 		if err = m.Pack(); err != nil {
 			return err
 		}
-		if c.Transfer != nil && c.TSIGSigner != nil && t != nil {
-			if err = TSIGSign(m, c.TSIGSigner, &options); err != nil {
+		if options != nil && options.TSIGSigner != nil && t != nil {
+			if err = TSIGSign(m, options.TSIGSigner, &tsigOptions); err != nil {
 				return err
 			}
 		}
@@ -362,10 +367,10 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 			return err
 		}
 
-		options.TimersOnly = true
+		tsigOptions.TimersOnly = true
 		if t != nil {
 			// m must have tsig, otherwise errored out above
-			options.RequestMAC = hasTSIG(m).MAC
+			tsigOptions.RequestMAC = hasTSIG(m).MAC
 		}
 	}
 	return nil

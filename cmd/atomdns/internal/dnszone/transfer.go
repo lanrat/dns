@@ -17,7 +17,7 @@ func TransferOut(z Interface, ctx context.Context, w dns.ResponseWriter, r *dns.
 	i := 0
 	ch := make(chan error)
 	wg.Go(func() {
-		err := c.TransferOut(w, r, env)
+		err := c.TransferOut(w, r, env, nil)
 		w.Close()
 		ch <- err
 	})

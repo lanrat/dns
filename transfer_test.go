@@ -42,7 +42,7 @@ func TestTransferEdgeCases(t *testing.T) {
 
 		var wg sync.WaitGroup
 		wg.Go(func() {
-			c.TransferOut(w, r, env)
+			c.TransferOut(w, r, env, nil)
 		})
 		if single {
 			env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
@@ -66,7 +66,7 @@ func TestTransferEdgeCases(t *testing.T) {
 			m := new(dns.Msg)
 			dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
 
-			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			env, err := c.TransferIn(context.TODO(), m, addr, nil)
 			if err != nil {
 				t.Fatal("failed to zone transfer in", err)
 			}
@@ -93,7 +93,7 @@ func TestTransfer(t *testing.T) {
 
 		var wg sync.WaitGroup
 		wg.Go(func() {
-			err := c.TransferOut(w, r, env)
+			err := c.TransferOut(w, r, env, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -133,7 +133,7 @@ func TestTransfer(t *testing.T) {
 				}
 			}
 
-			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			env, err := c.TransferIn(context.TODO(), m, addr, nil)
 			if err != nil {
 				t.Fatal("failed to setup zone transfer in", err)
 			}
@@ -200,7 +200,7 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 
 		var wg sync.WaitGroup
 		wg.Go(func() {
-			c.TransferOut(w, r, env)
+			c.TransferOut(w, r, env, nil)
 		})
 
 		for _, ans := range answers {
@@ -240,7 +240,7 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
 			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: tc.serial}}
 
-			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			env, err := c.TransferIn(context.TODO(), m, addr, nil)
 			if err != nil {
 				t.Fatal("failed to zone transfer in", err)
 			}
@@ -279,7 +279,7 @@ func TestTransferIncremental(t *testing.T) {
 
 		var wg sync.WaitGroup
 		wg.Go(func() {
-			err := c.TransferOut(w, r, env)
+			err := c.TransferOut(w, r, env, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -311,7 +311,7 @@ func TestTransferIncremental(t *testing.T) {
 				c.TLSConfig = dnstest.TLSConfig()
 			}
 
-			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			env, err := c.TransferIn(context.TODO(), m, addr, nil)
 			if err != nil {
 				t.Fatal("failed to setup zone transfer in", err)
 			}
@@ -338,9 +338,9 @@ func TestTransferTSIG(t *testing.T) {
 		var wg sync.WaitGroup
 		env := make(chan *dns.Envelope)
 		c := dns.NewClient()
-		c.Transfer = &dns.Transfer{TSIGSigner: dns.HmacTSIG{[]byte("geheim")}}
+		options := &dns.TransferOption{TSIGSigner: dns.HmacTSIG{[]byte("geheim")}}
 		wg.Go(func() {
-			err := c.TransferOut(w, r, env)
+			err := c.TransferOut(w, r, env, options)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -358,12 +358,12 @@ func TestTransferTSIG(t *testing.T) {
 	defer cancel()
 
 	c := dns.NewClient()
-	c.Transfer = &dns.Transfer{TSIGSigner: dns.HmacTSIG{[]byte("geheim")}}
 
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG(".", dns.HmacSHA512, 0)}
 
-	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+	options := &dns.TransferOption{TSIGSigner: dns.HmacTSIG{[]byte("geheim")}}
+	env, err := c.TransferIn(context.TODO(), m, addr, options)
 	if err != nil {
 		t.Fatal("failed to zone transfer in", err)
 	}

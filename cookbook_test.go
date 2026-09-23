@@ -125,7 +125,7 @@ func ExampleClient_transferIn() {
 
 	client := dns.NewClient()
 
-	ch, err := client.TransferIn(ctx, msg, "tcp", "192.0.2.1:53")
+	ch, err := client.TransferIn(ctx, msg, "192.0.2.1:53", nil)
 	if err != nil {
 		// Connection or send error before the transfer started.
 		return
