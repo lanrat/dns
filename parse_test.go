@@ -144,6 +144,21 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"CERT",
+			`cert.test. CERT PKIX 0 0 Y2VydGlmaWNhdGUtZGF0YQ==`,
+			func(rr RR) error {
+				cert := rr.(*CERT)
+				if cert.Type != 1 {
+					return fmt.Errorf("expected type 1, got %d", cert.Type)
+				}
+				if cert.Certificate != "Y2VydGlmaWNhdGUtZGF0YQ==" {
+					return fmt.Errorf("expected certificate %q, got %q", "Y2VydGlmaWNhdGUtZGF0YQ==", cert.Certificate)
+
+				}
+				return nil
+			},
+		},
 		// EDNS0 types
 		{
 			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil },
