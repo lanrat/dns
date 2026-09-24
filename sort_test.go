@@ -207,3 +207,15 @@ func ExampleRRset_compact() {
 		fmt.Println(rrs[i])
 	}
 }
+
+func TestResize(t *testing.T) {
+	buf := make([]byte, 10)
+	resize(&buf, 9)
+	if cap(buf) != 10 {
+		t.Fatalf("expected cap to be 10, got %d", cap(buf))
+	}
+	resize(&buf, 11)
+	if cap(buf) != 11 {
+		t.Fatalf("expected cap to be 11, got %d", cap(buf))
+	}
+}
