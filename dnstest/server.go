@@ -3,14 +3,12 @@ package dnstest
 import (
 	"context"
 	"crypto/tls"
-	"log"
 	"net"
 	"net/http"
 	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnshttp"
-	"codeberg.org/miekg/dns/internal/bin"
 )
 
 // Server returns a new running (UDP) [dns.Server]. The returned cancel function shuts down the server. Any options should
@@ -21,9 +19,6 @@ func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening st
 	s.Addr = addr
 	wait := make(chan error, 1)
 	s.NotifyStartedFunc = func(context.Context) { wait <- nil }
-	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
-		log.Printf("Invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
-	}
 	cancel = func() { s.Shutdown(context.TODO()) }
 
 	for _, opt := range opts {
