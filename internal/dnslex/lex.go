@@ -490,13 +490,13 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		return
 	}
 
-	if t, ok := zl.stringToClass[l.Token]; ok {
+	if t, ok := upperLookup(l.Token, zl.stringToClass); ok {
 		l.Value = Class
 		l.Torc = t
 		return
 	}
 
-	if strings.HasPrefix(l.Token, "TYPE") {
+	if HasPrefixFold(l.Token, "TYPE") {
 		t, ok := TypeToInt(l.Token)
 		if !ok {
 			l.Token = "unknown RR type"
@@ -509,7 +509,7 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		return
 	}
 
-	if strings.HasPrefix(l.Token, "CLASS") {
+	if HasPrefixFold(l.Token, "CLASS") {
 		t, ok := classToInt(l.Token)
 		if !ok {
 			l.Token = "unknown class"
