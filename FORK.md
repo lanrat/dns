@@ -14,6 +14,13 @@ kept in new files where possible for the same reason.
   Unlike the v1 fork, it does not discard anything when the error token already ended the RR. The v1
   version dropped the next good record in that case (for example after `b IN A` with no rdata).
   Files: `scan_reset.go`, `scan_reset_test.go`.
+- Classes and type mnemonics are accepted in any case, as RFC 1035 Section 5.1 requires. Upstream
+  looks up types case-insensitively but not classes, the `TYPExxx` and `CLASSxxx` prefixes, RRSIG
+  covered types, NSEC/NSEC3/CSYNC type bitmaps or the DSYNC type. Some published zone files are
+  entirely lower case (`a. 3600 in soa ...`), and every line of those failed to parse. This is a bug
+  fix worth sending upstream, after which this change can be dropped.
+  Files: `internal/dnslex/fold.go`, `scan_case_test.go`, and small edits to `internal/dnslex/lex.go`
+  and `scan_rdata.go`.
 
 ## Using the fork
 
@@ -33,7 +40,7 @@ libraries imported by other modules.
 ## Branches
 
 - `miekg`: a mirror of upstream `main`. Never commit to it.
-- One feature branch per change, containing only that change (`parseRecover`).
+- One feature branch per change, containing only that change (`parseRecover`, `caseInsensitive`).
 - `main`: `miekg` with every feature branch merged in, plus this file.
 
 ## Updating from upstream
