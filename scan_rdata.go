@@ -385,9 +385,9 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) error {
 	var err error
 	var ok bool
 	l, _ := c.Next()
-	rd.TypeCovered, ok = StringToType[l.Token]
+	rd.TypeCovered, ok = dnslex.LookupFold(l.Token, StringToType)
 	if !ok {
-		if !strings.HasPrefix(l.Token, "TYPE") {
+		if !dnslex.HasPrefixFold(l.Token, "TYPE") {
 			return &ParseError{err: "bad RRSIG Typecovered", lex: l}
 		}
 		if rd.TypeCovered, ok = dnslex.TypeToInt(l.Token); !ok {
@@ -952,7 +952,7 @@ func parseDELEG(rd *rdata.DELEG, c *dnslex.Lexer, o string) error {
 func parseDSYNC(rd *rdata.DSYNC, c *dnslex.Lexer, o string) error {
 	var err error
 	l, _ := c.Next()
-	rd.Type = StringToType[l.Token]
+	rd.Type, _ = dnslex.LookupFold(l.Token, StringToType)
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
@@ -996,9 +996,9 @@ func typeBitMap(c *dnslex.Lexer) (bitmap []uint16, ok bool) {
 		case dnslex.Blank:
 			// Ok
 		case dnslex.String:
-			k, ok = StringToType[l.Token]
+			k, ok = dnslex.LookupFold(l.Token, StringToType)
 			if !ok {
-				if !strings.HasPrefix(l.Token, "TYPE") {
+				if !dnslex.HasPrefixFold(l.Token, "TYPE") {
 					return bitmap, false
 				}
 				if k, ok = dnslex.TypeToInt(l.Token); !ok {
