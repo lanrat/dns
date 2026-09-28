@@ -1,5 +1,5 @@
 Name:           atomdns
-Version:        0.74
+Version:        0.77
 Release:        1.0
 Summary:        DNS server that chains handlers
 License:        ASL-2.0
