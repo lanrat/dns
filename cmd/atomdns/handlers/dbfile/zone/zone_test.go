@@ -462,6 +462,17 @@ func TestZoneEdgeCases(t *testing.T) {
 				return m
 			},
 		},
+		{
+			"cnameoutofzone",
+			func() *dns.Msg { m := dns.NewMsg("blog.miek.nl.", dns.TypeA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("blog.miek.nl.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("blog.miek.nl. IN CNAME   coredns.netlify.com."),
+				}
+				return m
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
