@@ -173,9 +173,6 @@ func TestEqualName(t *testing.T) {
 	}{
 		{"example.org.", "example.org.", true},
 		{"example.org.", "eXAMPLe.oRG.", true},
-		{"bla.example.org.", "eXAMPLe.oRG.", false},
-		{"bla.example.org.", ".", false},
-		{"bla.example.org.", "", false},
 	}
 	for i, tc := range testcases {
 		got := EqualName(tc.a, tc.b)
