@@ -11,8 +11,8 @@ import (
 )
 
 type Log struct {
-	Contexts map[string][]string
-	UnixAddr string
+	Contexts  map[string][]string
+	UnixAddrs []string
 }
 
 func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
@@ -36,11 +36,11 @@ func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				}
 				return dnsutil.Network(w)
 			}()).
-			With("remote", func() string {
+			With("remote", func() []string {
 				if unix {
-					return l.UnixAddr
+					return l.UnixAddrs
 				}
-				return dnsutil.RemoteIP(w)
+				return []string{dnsutil.RemoteIP(w)}
 			}()).
 			With("port", dnsutil.RemotePort(w)).
 			With(ecs).
