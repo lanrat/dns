@@ -209,6 +209,9 @@ type ZoneParser struct {
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	var pe *ParseError
 	if origin != "" {
+		if domainFunc != nil { // fork change, see FORK.md
+			origin = domainFunc(origin)
+		}
 		origin = dnsutilFqdn(origin)
 		if ok := dnsutilIsName(origin); !ok {
 			pe = &ParseError{file: file, err: "bad initial origin name"}
