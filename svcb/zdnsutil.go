@@ -205,6 +205,9 @@ func dnsutilAbsolute(s, origin string) string {
 	if s == "@" {
 		return origin
 	}
+	if domainFunc != nil { // fork change, see FORK.md
+		s = domainFunc(s)
+	}
 	if dnsutilIsName(s) == false { // done to make the conversion via dnsutil_generate.go work, instead of !IsName(s)
 		return ""
 	}
@@ -222,3 +225,8 @@ func dnsutilAbsolute(s, origin string) string {
 
 // maxSerialIncrement is the maximum difference between two serial numbers. See RFC 1982.
 const maxSerialIncrement = 2147483647
+
+// domainFunc, when set, rewrites a name before it is validated. It is a fork change (see FORK.md):
+// this file is copied into other packages by dnsutil_generate.go, and only the root package's copy
+// is set, by SetDomainFunc.
+var domainFunc func(string) string
