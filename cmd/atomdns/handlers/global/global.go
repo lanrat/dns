@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"github.com/caddyserver/certmagic"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
 )
 
 type Global struct {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 // TypeToString converts the type to the text presentation, or to "TYPE"+value if the type is unknown.

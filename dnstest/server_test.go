@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 func TestServer(t *testing.T) {

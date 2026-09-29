@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 func TestSource(t *testing.T) {

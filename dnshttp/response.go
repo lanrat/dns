@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 // ResponseWriter is DOH capable [dns.ResponseWriter].

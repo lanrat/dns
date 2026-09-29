@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"codeberg.org/miekg/dns/dnsjson"
+	"github.com/lanrat/dns/dnsjson"
 	"golang.org/x/crypto/cryptobyte"
 )
 

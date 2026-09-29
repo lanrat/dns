@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnshttp"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnshttp"
 )
 
 // Server returns a new running (UDP) [dns.Server]. The returned cancel function shuts down the server. Any options should

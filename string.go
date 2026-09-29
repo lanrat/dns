@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/pkg/pool"
+	"github.com/lanrat/dns/pkg/pool"
 )
 
 func typeToString(t uint16) string {

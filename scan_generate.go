@@ -13,7 +13,7 @@ import (
 	"slices"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var skip = []string{"TSIG", "NULL", "TXT", "DELEG", "SVCB", "HIP", "LOC", "CERT",
@@ -29,9 +29,9 @@ package dns
 import (
 	"net/netip"
 
-    "codeberg.org/miekg/dns/rdata"
-    "codeberg.org/miekg/dns/internal/dnsstring"
-    "codeberg.org/miekg/dns/internal/dnslex"
+    "github.com/lanrat/dns/rdata"
+    "github.com/lanrat/dns/internal/dnsstring"
+    "github.com/lanrat/dns/internal/dnslex"
 )
 
 `

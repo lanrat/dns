@@ -4,8 +4,8 @@ import (
 	"context"
 	"math/rand/v2"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
 )
 
 type Random struct{}

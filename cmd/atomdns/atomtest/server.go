@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/atom"
+	"github.com/lanrat/dns/cmd/atomdns/atom"
 )
 
 // New returns a server suitable for testing. Use cancel to shutdown the server

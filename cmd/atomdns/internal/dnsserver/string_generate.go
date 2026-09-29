@@ -10,7 +10,7 @@ import (
 	"log"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/generate"
+	"github.com/lanrat/dns/cmd/atomdns/internal/generate"
 )
 
 const hdr = `

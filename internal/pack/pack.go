@@ -9,7 +9,7 @@ import (
 	"net/netip"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/ddd"
+	"github.com/lanrat/dns/internal/ddd"
 )
 
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer

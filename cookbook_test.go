@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
-	"codeberg.org/miekg/dns/rdata"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
+	"github.com/lanrat/dns/rdata"
 )
 
 // ExampleHeader_replace shows how to overwrite a header.

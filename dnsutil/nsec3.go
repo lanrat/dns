@@ -5,7 +5,7 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 // NSEC3Name returns the hashed owner name according to RFC 5155. The hash is always SHA-1, the only algorithm

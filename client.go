@@ -54,7 +54,7 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 //   - the response bit is not set on the reply.
 //
 // See [CompareName] for checking the question name the point to another possible check. See
-// [codeberg.org/miekg/dns/dnsutil.Randomize] to randomize the question name.
+// [github.com/lanrat/dns/dnsutil.Randomize] to randomize the question name.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
 		c.Transport = NewTransport()

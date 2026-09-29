@@ -10,7 +10,7 @@ import (
 	"log"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/generate"
+	"github.com/lanrat/dns/cmd/atomdns/internal/generate"
 )
 
 const hdr = `
@@ -26,7 +26,7 @@ var funcmap = template.FuncMap{
 
 var StringToHandler = template.Must(template.New("stringToHandler").Funcs(funcmap).Parse(`
 import (
-{{range .}} "codeberg.org/miekg/dns/cmd/atomdns/handlers/{{tolower .}}"
+{{range .}} "github.com/lanrat/dns/cmd/atomdns/handlers/{{tolower .}}"
 {{end}}
 )
 

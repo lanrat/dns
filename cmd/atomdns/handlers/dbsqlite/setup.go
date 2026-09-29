@@ -3,11 +3,11 @@ package dbsqlite
 import (
 	"path/filepath"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
-	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/dnsutil"
 	"modernc.org/sqlite"
 )
 

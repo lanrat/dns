@@ -10,7 +10,7 @@ import (
 	"crypto/rsa"
 	"math/big"
 
-	"codeberg.org/miekg/dns/internal/unpack"
+	"github.com/lanrat/dns/internal/unpack"
 )
 
 // Generate generates a DNSKEY of the given bit size. The public part is put inside the DNSKEY record.

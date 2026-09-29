@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (k *Kill) Setup(co *dnsserver.Controller) error {

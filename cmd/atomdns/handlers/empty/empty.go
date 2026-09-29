@@ -1,7 +1,7 @@
 package empty
 
 import (
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 type Empty int

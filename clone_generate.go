@@ -13,8 +13,8 @@ import (
 	"slices"
 	"strings"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var skip = []string{""}
@@ -27,9 +27,9 @@ package dns
 import (
 	"slices"
 
-    "codeberg.org/miekg/dns/rdata"
-    "codeberg.org/miekg/dns/svcb"
-    "codeberg.org/miekg/dns/deleg"
+    "github.com/lanrat/dns/rdata"
+    "github.com/lanrat/dns/svcb"
+    "github.com/lanrat/dns/deleg"
 )
 
 `

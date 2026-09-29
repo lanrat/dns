@@ -9,10 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/zlog"
-	"codeberg.org/miekg/dns/dnshttp"
 	"github.com/caddyserver/certmagic"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/zlog"
+	"github.com/lanrat/dns/dnshttp"
 )
 
 func (g *Global) SetupTLS(d *conffile.Dispenser) error {

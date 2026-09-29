@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 func TestDOH(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/atomtest"
 )
 
 func TestDbfileTransferOut(t *testing.T) {

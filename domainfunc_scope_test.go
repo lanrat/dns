@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // TestSetDomainFuncScope checks that the zone parser hook does not leak into the public dnsutil

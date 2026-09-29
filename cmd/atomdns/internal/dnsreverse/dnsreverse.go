@@ -6,8 +6,8 @@ import (
 	"net/netip"
 	"strings"
 
-	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/apparentlymart/go-cidr/cidr"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Zones return the reverse zones that are authoritative for each net in n.

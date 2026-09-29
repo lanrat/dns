@@ -5,9 +5,9 @@ import (
 	"runtime"
 	"strconv"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/num"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/num"
 )
 
 type Limits struct {

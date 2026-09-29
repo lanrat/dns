@@ -3,7 +3,7 @@ package chaos
 import (
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 const Version = "Served by atomdns, https://atomdns.miek.nl"

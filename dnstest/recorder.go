@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 // Recorder is a type of ResponseWriter that captures the the message written to it. It will never perform an

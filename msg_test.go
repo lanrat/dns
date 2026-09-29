@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnstest"
-	"codeberg.org/miekg/dns/internal/bin"
-	"codeberg.org/miekg/dns/internal/dnsfuzz"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnstest"
+	"github.com/lanrat/dns/internal/bin"
+	"github.com/lanrat/dns/internal/dnsfuzz"
 )
 
 func ExampleMsg() {

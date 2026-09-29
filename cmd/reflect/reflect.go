@@ -44,8 +44,8 @@ import (
 	"sync"
 	"syscall"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 var (

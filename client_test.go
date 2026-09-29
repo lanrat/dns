@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 func ExampleClient_Exchange() {

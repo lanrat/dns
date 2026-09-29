@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"os"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
 )
 
 func (s *Server) Reload() (err error) {

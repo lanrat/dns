@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (r *Root) Setup(co *dnsserver.Controller) error {

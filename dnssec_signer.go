@@ -9,7 +9,7 @@ import (
 	"math/big"
 	"sort"
 
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 // canonicalize will put the RR in Canonical form, see RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase

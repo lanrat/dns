@@ -11,10 +11,10 @@ import (
 	"sort"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/dbfile/zone"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnszone"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Sign signs the zone with origin from s. It returns the signed zone.

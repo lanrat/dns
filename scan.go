@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/dnslex"
-	"codeberg.org/miekg/dns/internal/dnsstring"
-	"codeberg.org/miekg/dns/rdata"
+	"github.com/lanrat/dns/internal/dnslex"
+	"github.com/lanrat/dns/internal/dnsstring"
+	"github.com/lanrat/dns/rdata"
 )
 
 // The maximum depth of $INCLUDE directives supported by the ZoneParser API.
@@ -97,7 +97,7 @@ type ttlState struct {
 // presentation format is also parsed back to EDNS0. In other words you can get an ENDS0 option code just from
 // a string.
 //
-// Or with [codeberg.org/miekg/dns/dnstest.New], if you are sure no error will occur.
+// Or with [github.com/lanrat/dns/dnstest.New], if you are sure no error will occur.
 //
 //	mx := dnstest.New("miek.nl.  IN MX 10 mx.miek.nl.")
 func New(s string) (RR, error) {

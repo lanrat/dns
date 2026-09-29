@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/dnstest"
+	"github.com/lanrat/dns/cmd/atomdns/atomtest"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/log"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/dnstest"
 )
 
 func TestLog(t *testing.T) {

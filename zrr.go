@@ -363,7 +363,7 @@ func RRToType(rr RR) uint16 {
 }
 
 // TypeToString is a map of strings for each RR type.
-// See [codeberg.org/miekg/dns/dnsutil.TypeToString] for a function that works better when the type is unknown.
+// See [github.com/lanrat/dns/dnsutil.TypeToString] for a function that works better when the type is unknown.
 var TypeToString = map[uint16]string{
 	TypeTSIG:       "TSIG",
 	TypeDELEG:      "DELEG",

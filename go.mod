@@ -1,4 +1,4 @@
-module codeberg.org/miekg/dns
+module github.com/lanrat/dns
 
 go 1.27.0
 

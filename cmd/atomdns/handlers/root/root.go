@@ -1,6 +1,6 @@
 package root
 
-import "codeberg.org/miekg/dns"
+import "github.com/lanrat/dns"
 
 type Root struct {
 	global string

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (d *Dbhost) Setup(co *dnsserver.Controller) error {

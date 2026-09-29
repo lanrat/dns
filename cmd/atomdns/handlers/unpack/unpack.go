@@ -3,7 +3,7 @@ package unpack
 import (
 	"context"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 type Unpack int

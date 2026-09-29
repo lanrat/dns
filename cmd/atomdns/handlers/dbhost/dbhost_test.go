@@ -5,9 +5,9 @@ import (
 	"net/netip"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
-	"codeberg.org/miekg/dns/dnstest"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/whoami"
+	"github.com/lanrat/dns/dnstest"
 )
 
 func TestDbhost(t *testing.T) {

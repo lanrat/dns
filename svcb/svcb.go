@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/ddd"
-	"codeberg.org/miekg/dns/internal/reverse"
+	"github.com/lanrat/dns/internal/ddd"
+	"github.com/lanrat/dns/internal/reverse"
 )
 
 // Keys as defined in RFC 9460.

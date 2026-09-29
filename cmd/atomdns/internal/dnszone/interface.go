@@ -1,6 +1,6 @@
 package dnszone
 
-import "codeberg.org/miekg/dns"
+import "github.com/lanrat/dns"
 
 // Interface defines the methods for each db* implementation. This is currently unused, and if used
 // this needs to live in the pkg/db or something, not tucked away here.

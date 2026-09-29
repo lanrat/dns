@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 // MimeType is the DOH mimetype.

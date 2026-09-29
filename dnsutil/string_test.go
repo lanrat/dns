@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 func TestToString(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"math/big"
 	"strconv"
 
-	"codeberg.org/miekg/dns/internal/unpack"
+	"github.com/lanrat/dns/internal/unpack"
 )
 
 const format = "Private-key-format: v1.3\n"

@@ -1,7 +1,7 @@
 package acl
 
 import (
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )

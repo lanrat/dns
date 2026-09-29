@@ -11,7 +11,7 @@ import (
 	"log"
 	"slices"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var hdr = `
@@ -50,7 +50,7 @@ func RRToType(rr RR) uint16 {
 
 var TypeToString = template.Must(template.New("typeToString").Parse(`
 // TypeToString is a map of strings for each RR type.
-// See [codeberg.org/miekg/dns/dnsutil.TypeToString] for a function that works better when the type is unknown.
+// See [github.com/lanrat/dns/dnsutil.TypeToString] for a function that works better when the type is unknown.
 var TypeToString = map[uint16]string{
 {{range .}}{{if (ne . "NSAPPTR")}}  Type{{.}}: "{{.}}",
 {{end}}{{end}}                    TypeNSAPPTR:    "NSAP-PTR",

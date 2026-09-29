@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 func TestRecorder(t *testing.T) {

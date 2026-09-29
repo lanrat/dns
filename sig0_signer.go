@@ -7,7 +7,7 @@ import (
 	"crypto/rsa"
 	"math/big"
 
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 type CryptoSIG0 struct {

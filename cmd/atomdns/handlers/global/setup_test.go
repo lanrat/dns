@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
 )
 
 func TestSetup(t *testing.T) {

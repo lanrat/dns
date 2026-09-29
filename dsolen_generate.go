@@ -10,7 +10,7 @@ import (
 	"log"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var hdr = `

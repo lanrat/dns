@@ -8,8 +8,8 @@ import (
 	"net"
 	"net/netip"
 
-	"codeberg.org/miekg/dns/internal/ddd"
-	"codeberg.org/miekg/dns/pkg/pool"
+	"github.com/lanrat/dns/internal/ddd"
+	"github.com/lanrat/dns/pkg/pool"
 	"golang.org/x/crypto/cryptobyte"
 )
 

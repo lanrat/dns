@@ -7,7 +7,7 @@ import (
 	"net/netip"
 	"strconv"
 
-	"codeberg.org/miekg/dns/internal/reverse"
+	"github.com/lanrat/dns/internal/reverse"
 	"golang.org/x/crypto/cryptobyte"
 )
 

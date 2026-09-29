@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsreverse"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsreverse"
 )
 
 // Parse parses the input just enough to group tokens, in order, by server block. No further parsing is performed.

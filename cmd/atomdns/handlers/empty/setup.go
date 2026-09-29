@@ -1,7 +1,7 @@
 package empty
 
 import (
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (e *Empty) Setup(co *dnsserver.Controller) error {

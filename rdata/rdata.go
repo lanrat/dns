@@ -1,5 +1,5 @@
 // Package rdata contains the rdata elements of all the resource records, i.e., each type that implements
-// [codeberg.org/miekg/dns.RR].
+// [github.com/lanrat/dns.RR].
 //
 // Each rdata element implements [codeberg.org/miek/dns.RDATA]. And thus the [fmt.Stringer] interface. To
 // full print the text reprentation of an RR use the following:
@@ -8,16 +8,16 @@
 //			       MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
 //	 fmt.Printf("%s %s\t%s", mx.Header(), dnsutil.TypeToString(dns.RRToType(mx)), mx.Data())
 //
-// Creating new rdata from a string can be done via [codeberg.org/miekg/dns.NewData]. See
-// [codeberg.org/miekg/dns.TypeToRDATA] for construction functions to set the rdata in an
-// [codeberg.org/miekg/dns.RR].
+// Creating new rdata from a string can be done via [github.com/lanrat/dns.NewData]. See
+// [github.com/lanrat/dns.TypeToRDATA] for construction functions to set the rdata in an
+// [github.com/lanrat/dns.RR].
 package rdata
 
 import (
 	"net/netip"
 
-	"codeberg.org/miekg/dns/deleg"
-	"codeberg.org/miekg/dns/svcb"
+	"github.com/lanrat/dns/deleg"
+	"github.com/lanrat/dns/svcb"
 )
 
 //go:generate go run len_generate.go
@@ -119,7 +119,7 @@ type SOA struct {
 	Ns string `dns:"cname"`
 	// MBox is the only name that contain escapes like \. as that is the norm in how to specific email
 	// addresses in a DNS zone. No other (looks-like-a-name) in this package has this feauture, so note
-	// that functions like [codeberg.org/miekg/dnsutil.Next] and [codeberg.org/miekg/dnsutil.Prev] will hit
+	// that functions like [github.com/lanrat/dnsutil.Next] and [github.com/lanrat/dnsutil.Prev] will hit
 	// the \. instead of jumping over it.
 	Mbox    string `dns:"mname"`
 	Serial  uint32

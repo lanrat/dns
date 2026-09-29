@@ -3,7 +3,7 @@ package random
 import (
 	"fmt"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (r *Random) Setup(co *dnsserver.Controller) error {

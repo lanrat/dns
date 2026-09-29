@@ -1,6 +1,6 @@
 package dnsutil
 
-import "codeberg.org/miekg/dns"
+import "github.com/lanrat/dns"
 
 // SetQuestion set the question section in the message m.
 // It generates an ID and sets the RecursionDesired (RD) bit to true. If c is given it's used as the class,
@@ -53,7 +53,7 @@ func SetReply(m, r *dns.Msg) *dns.Msg {
 
 // IsRRset reports whether a set of RRs is a valid RRset as defined by RFC 2181.
 // This means the RRs need to have the same type, name, and class. Duplicate RRs are not detected.
-// See [codeberg.org/miekg/dns.RRset] if you need to sort an RRset.
+// See [github.com/lanrat/dns.RRset] if you need to sort an RRset.
 func IsRRset(rrset []dns.RR) bool {
 	if len(rrset) == 0 {
 		return false

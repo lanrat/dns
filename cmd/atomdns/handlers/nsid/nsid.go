@@ -3,8 +3,8 @@ package nsid
 import (
 	"context"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
 )
 
 type Nsid struct {

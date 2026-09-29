@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/iface"
+	"github.com/lanrat/dns/cmd/atomdns/internal/iface"
 )
 
 // Dispenser is a type that dispenses tokens, similarly to a lexer, except that it can do so with some

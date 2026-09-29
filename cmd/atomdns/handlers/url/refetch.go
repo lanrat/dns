@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
 )
 
 func (u *Url) Refetch() error {

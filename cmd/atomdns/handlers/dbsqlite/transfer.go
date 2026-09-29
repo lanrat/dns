@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"path/filepath"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnszone"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 func (d *Dbsqlite) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {

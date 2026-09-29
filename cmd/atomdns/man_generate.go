@@ -10,10 +10,10 @@ import (
 	"os"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/generate"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/parser"
+	"github.com/lanrat/dns/cmd/atomdns/internal/generate"
 	"github.com/mmarkdown/mmark/v2/mparser"
 	"github.com/mmarkdown/mmark/v2/render/man"
 )

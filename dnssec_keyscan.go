@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/dnslex"
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/dnslex"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 // NewPrivate returns a crypto.PrivateKey by parsing the string s.

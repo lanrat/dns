@@ -3,10 +3,10 @@
 package dns
 
 import (
-	"codeberg.org/miekg/dns/deleg"
-	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/internal/unpack"
-	"codeberg.org/miekg/dns/svcb"
+	"github.com/lanrat/dns/deleg"
+	"github.com/lanrat/dns/internal/pack"
+	"github.com/lanrat/dns/internal/unpack"
+	"github.com/lanrat/dns/svcb"
 	"golang.org/x/crypto/cryptobyte"
 )
 

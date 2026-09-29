@@ -3,7 +3,7 @@ package dnstest
 import (
 	"io"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 // This is copied to zdnstest.go in the main package to also have access to these functions and not have an

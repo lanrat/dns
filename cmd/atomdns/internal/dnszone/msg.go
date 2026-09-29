@@ -1,8 +1,8 @@
 package dnszone
 
 import (
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Hints give a hint to the functions here on what type of answer we got. This could be (mostly?) be done in

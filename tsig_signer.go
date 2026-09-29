@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"hash"
 
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 // HmacTSIG is TSIGSigner and TSIGVerifier that does the default HMAC for TSIG, see RFC 8945.

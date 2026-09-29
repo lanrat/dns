@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/ddd"
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/ddd"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 // Parse parses the value b into the [Pair] p. Basic usage:

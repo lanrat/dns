@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/dbfile/zone"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 func (u *Url) Setup(co *dnsserver.Controller) error {

@@ -1,6 +1,6 @@
 package dns
 
-import "codeberg.org/miekg/dns/internal/dnslex"
+import "github.com/lanrat/dns/internal/dnslex"
 
 func (*OPT) parse(_ *dnslex.Lexer, _ string) *ParseError {
 	return &ParseError{err: "OPT records do not have a presentation format"}

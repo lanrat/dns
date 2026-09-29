@@ -3,8 +3,8 @@ package dnsutil
 import (
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnstest"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnstest"
 )
 
 func TestTrim(t *testing.T) {

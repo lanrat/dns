@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
+	"github.com/lanrat/dns/cmd/atomdns/atomtest"
 )
 
 // TestReadme parses all README.mds of the handler and checks if every example Conffile.

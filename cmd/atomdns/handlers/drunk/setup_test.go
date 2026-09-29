@@ -3,7 +3,7 @@ package drunk
 import (
 	"testing"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func TestSetup(t *testing.T) {

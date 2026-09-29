@@ -10,9 +10,9 @@ import (
 	"slices"
 	"strconv"
 
-	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/internal/unpack"
-	"codeberg.org/miekg/dns/rdata"
+	"github.com/lanrat/dns/internal/pack"
+	"github.com/lanrat/dns/internal/unpack"
+	"github.com/lanrat/dns/rdata"
 	"golang.org/x/crypto/cryptobyte"
 )
 

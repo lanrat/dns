@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/acl"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
-	"codeberg.org/miekg/dns/dnstest"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/atomtest"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/acl"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/dnstest"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 var testcases = []struct {

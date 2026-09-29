@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 type Keyer interface {

@@ -3,7 +3,7 @@ package cookie
 import (
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (c *Cookie) Setup(co *dnsserver.Controller) error {

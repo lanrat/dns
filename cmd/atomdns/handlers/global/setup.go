@@ -16,9 +16,9 @@ import (
 	"sync"
 	"time"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"github.com/caddyserver/certmagic"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 

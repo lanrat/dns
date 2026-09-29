@@ -10,7 +10,7 @@ import (
 	"html/template"
 	"log"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var hdr = `
@@ -19,7 +19,7 @@ var hdr = `
 package dns
 
 import "fmt"
-import "codeberg.org/miekg/dns/internal/dnslex"
+import "github.com/lanrat/dns/internal/dnslex"
 
 `
 

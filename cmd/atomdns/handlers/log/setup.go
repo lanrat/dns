@@ -11,8 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 var (

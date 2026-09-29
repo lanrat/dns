@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/dnslex"
+	"github.com/lanrat/dns/internal/dnslex"
 )
 
 func (o *ZONEVERSION) parse(c *dnslex.Lexer, _ string) error {

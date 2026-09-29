@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"codeberg.org/miekg/dns/internal/bin"
-	"codeberg.org/miekg/dns/internal/jump"
+	"github.com/lanrat/dns/internal/bin"
+	"github.com/lanrat/dns/internal/jump"
 )
 
 func TestName(t *testing.T) {

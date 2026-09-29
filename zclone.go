@@ -5,9 +5,9 @@ package dns
 import (
 	"slices"
 
-	"codeberg.org/miekg/dns/deleg"
-	"codeberg.org/miekg/dns/rdata"
-	"codeberg.org/miekg/dns/svcb"
+	"github.com/lanrat/dns/deleg"
+	"github.com/lanrat/dns/rdata"
+	"github.com/lanrat/dns/svcb"
 )
 
 func (rr *NULL) Clone() RR {

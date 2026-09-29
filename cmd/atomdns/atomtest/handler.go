@@ -4,9 +4,9 @@ import (
 	"context"
 	"io"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Echo is a [dns.HandlerFunc] that echos the message m. Any dnsctx.Funcs set in the context are run.

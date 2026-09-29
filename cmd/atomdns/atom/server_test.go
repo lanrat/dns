@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
+	"github.com/lanrat/dns/cmd/atomdns/atomtest"
 )
 
 func TestServer(t *testing.T) {

@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/dbfile/zone"
 )
 
 func (d *Dbfile) Retransfer() error {

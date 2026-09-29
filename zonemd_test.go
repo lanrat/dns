@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnstest"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnstest"
 )
 
 func TestZONEMD(t *testing.T) {

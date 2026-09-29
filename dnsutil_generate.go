@@ -13,7 +13,7 @@ import (
 	"log"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var hdr = `
@@ -38,7 +38,7 @@ func main() {
 	// remove import
 	newImports := []ast.Spec{}
 	for _, imp := range node.Imports {
-		if strings.Trim(imp.Path.Value, `"`) != "codeberg.org/miekg/dns" {
+		if strings.Trim(imp.Path.Value, `"`) != "github.com/lanrat/dns" {
 			newImports = append(newImports, imp)
 		}
 	}

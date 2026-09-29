@@ -3,8 +3,8 @@ package deleg_test
 import (
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnstest"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnstest"
 )
 
 func TestDELEG(t *testing.T) {

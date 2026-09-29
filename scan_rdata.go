@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/deleg"
-	"codeberg.org/miekg/dns/internal/dnslex"
-	"codeberg.org/miekg/dns/internal/dnsstring"
-	"codeberg.org/miekg/dns/rdata"
-	"codeberg.org/miekg/dns/svcb"
+	"github.com/lanrat/dns/deleg"
+	"github.com/lanrat/dns/internal/dnslex"
+	"github.com/lanrat/dns/internal/dnsstring"
+	"github.com/lanrat/dns/rdata"
+	"github.com/lanrat/dns/svcb"
 )
 
 func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, _ string) error {

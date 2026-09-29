@@ -71,11 +71,11 @@ func Run(t *testing.T, queries io.Reader, addr, network string, duration time.Du
 		// fake this a bit:
 		// goos: linux
 		// goarch: arm64
-		// pkg: codeberg.org/miekg/dns
+		// pkg: github.com/lanrat/dns
 		if i == 0 {
 			fmt.Printf(`goos: %s
 goarch: %s
-pkg: codeberg.org/miekg/dns
+pkg: github.com/lanrat/dns
 `, runtime.GOOS, runtime.GOARCH)
 		}
 

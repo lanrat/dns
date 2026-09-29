@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
-	"codeberg.org/miekg/dns/pkg/pool"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/dbfile/zone"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnszone"
+	"github.com/lanrat/dns/pkg/pool"
 )
 
 type Sign struct {

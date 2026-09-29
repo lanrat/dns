@@ -1,6 +1,6 @@
 package dns
 
-import "codeberg.org/miekg/dns/internal/reverse"
+import "github.com/lanrat/dns/internal/reverse"
 
 // StringToType is the reverse of [TypeToString].
 // Basic example how to convert between types and strings:

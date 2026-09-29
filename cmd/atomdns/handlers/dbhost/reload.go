@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"path/filepath"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnszone"
 )
 
 // Reload launches a reload routine that listens for _write_ events to the hosts file.

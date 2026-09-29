@@ -9,10 +9,10 @@ import (
 	"slices"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/localaddr"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns/cmd/atomdns/internal/localaddr"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Transfer holds all the information to perform in incoming or outgoing zone transfer.

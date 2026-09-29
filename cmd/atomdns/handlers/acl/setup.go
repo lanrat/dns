@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 	"github.com/phemmer/go-iptrie"
 )
 

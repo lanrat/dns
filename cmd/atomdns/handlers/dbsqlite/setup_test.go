@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/dbfile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func TestSetup(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"net/netip"
 	"strconv"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 // RemoteIP returns the IP address of the client making the request.

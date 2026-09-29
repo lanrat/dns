@@ -5,10 +5,10 @@ import (
 	"maps"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
-	"codeberg.org/miekg/dns/internal/dnsstring"
-	"codeberg.org/miekg/dns/rdata"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
+	"github.com/lanrat/dns/internal/dnsstring"
+	"github.com/lanrat/dns/rdata"
 )
 
 // Example on how get the text presentation of a [dns.RR].

@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"codeberg.org/miekg/dns/internal/dnslex"
-	"codeberg.org/miekg/dns/rdata"
+	"github.com/lanrat/dns/internal/dnslex"
+	"github.com/lanrat/dns/rdata"
 )
 
 // Packet formats

@@ -10,8 +10,8 @@
 package dnszone
 
 import (
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Retrieve looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the

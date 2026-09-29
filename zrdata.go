@@ -2,8 +2,8 @@
 
 package dns
 
-import "codeberg.org/miekg/dns/rdata"
-import "codeberg.org/miekg/dns/internal/dnslex"
+import "github.com/lanrat/dns/rdata"
+import "github.com/lanrat/dns/internal/dnslex"
 import "io"
 
 // TypeToRDATA is a map of functions for each RR type to set it's rdata.

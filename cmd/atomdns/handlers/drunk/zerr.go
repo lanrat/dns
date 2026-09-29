@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
 )
 
 func (d *Drunk) Err(err error) error { return fmt.Errorf("%s: %w", d.Key(), err) }

@@ -10,7 +10,7 @@ import (
 	"runtime/trace"
 	"time"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 var (

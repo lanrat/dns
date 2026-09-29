@@ -4,8 +4,8 @@ import (
 	"context"
 	"slices"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 //go:generate go run string_generate.go

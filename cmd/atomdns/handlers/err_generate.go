@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/generate"
+	"github.com/lanrat/dns/cmd/atomdns/internal/generate"
 )
 
 const hdr = `
@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
 )
 
 `

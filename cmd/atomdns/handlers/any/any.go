@@ -4,10 +4,10 @@ import (
 	"context"
 	"io"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 type Any int

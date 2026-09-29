@@ -19,6 +19,7 @@ The earlier fork of the v1 library (`github.com/miekg/dns`) is on the [v1 branch
 * `ResetErr()` added to the ZoneParser, allowing the parser to recover from errors
 * Classes and type mnemonics are accepted in any case, as RFC 1035 requires
 * `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
+* The module path is `github.com/lanrat/dns` (see [Using this fork](#using-this-fork))
 
 #### `ResetErr()`
 
@@ -46,15 +47,19 @@ Files: `domainfunc.go`, `domainfunc_test.go`, `domainfunc_scope_test.go`, 3 line
 
 ## Using this fork
 
-The module path is not renamed. It stays `codeberg.org/miekg/dns`, which keeps the diff against upstream small. Code imports `codeberg.org/miekg/dns` as normal, and the application's `go.mod` points that path at this fork:
+Like the v1 fork, the module path is renamed to `github.com/lanrat/dns`, so it is used like any other module:
 
-```text
-require codeberg.org/miekg/dns v0.6.117
-
-replace codeberg.org/miekg/dns => github.com/lanrat/dns <version>
+```shell
+go get github.com/lanrat/dns@main
 ```
 
-`<version>` is the pseudo-version of a commit on `main`, for example from `go list -m -json github.com/lanrat/dns@<commit>` run in the application's module. Go requires a replacement module's `go.mod` to declare the path it replaces, which this fork's does. A `replace` directive only applies in the main module, so this works for applications but not for libraries imported by other modules.
+```go
+import "github.com/lanrat/dns"
+```
+
+The rename is done by `rename-module.sh`, which rewrites `codeberg.org/miekg/dns` to `github.com/lanrat/dns` in `go.mod` and every Go file. The `v2/miekg` mirror and the feature branches keep the upstream path, so the script is run again after merging any of them into `main`.
+
+The `v1` branch has the same module path with the v1 API. Applications pick one by version: a pseudo-version of a `main` commit is the v2 fork, one of a `v1` commit is the v1 fork.
 
 ## Updating from upstream
 
@@ -74,7 +79,9 @@ git checkout main
 git merge v2/miekg
 git checkout --ours README.md
 git add README.md
-# fix any merge conflicts and failing tests
+# fix any merge conflicts; for conflicts only in import paths, take upstream's side
+# then rename the module path again in anything the merge brought in
+./rename-module.sh
 git add .
 go test ./...
 git commit
@@ -83,4 +90,4 @@ git push origin main
 
 If the merge conflicts in a generated `zdnsutil.go`, take upstream's version of the generated files, keep this fork's lines in `dnsutil/shared.go`, and run `go run dnsutil_generate.go` to regenerate them.
 
-To change a feature, commit on its branch and merge the branch into `main` again.
+To change a feature, commit on its branch, merge the branch into `main` again, and run `./rename-module.sh`.

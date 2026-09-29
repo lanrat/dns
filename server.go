@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"codeberg.org/miekg/dns/pkg/pool"
+	"github.com/lanrat/dns/pkg/pool"
 )
 
 // Default maximum number of TCP queries before we close the socket.

@@ -5,9 +5,9 @@ package dns
 import (
 	"net/netip"
 
-	"codeberg.org/miekg/dns/internal/dnslex"
-	"codeberg.org/miekg/dns/internal/dnsstring"
-	"codeberg.org/miekg/dns/rdata"
+	"github.com/lanrat/dns/internal/dnslex"
+	"github.com/lanrat/dns/internal/dnsstring"
+	"github.com/lanrat/dns/rdata"
 )
 
 func parseCNAME(rd *rdata.CNAME, c *dnslex.Lexer, o string) (err error) {

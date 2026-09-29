@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"codeberg.org/miekg/dns/deleg"
-	"codeberg.org/miekg/dns/internal/dnsfuzz"
-	"codeberg.org/miekg/dns/svcb"
+	"github.com/lanrat/dns/deleg"
+	"github.com/lanrat/dns/internal/dnsfuzz"
+	"github.com/lanrat/dns/svcb"
 )
 
 func TestNew(t *testing.T) {

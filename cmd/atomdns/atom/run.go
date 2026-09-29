@@ -13,9 +13,9 @@ import (
 	"strings"
 	"syscall"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/handlers"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
 )
 
 // Run starts a new atomdns server.

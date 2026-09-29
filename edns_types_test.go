@@ -7,8 +7,8 @@ import (
 	"io"
 	"log"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // This shows how to add an EDE option.

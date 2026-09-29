@@ -1,6 +1,6 @@
 package dns
 
-import "codeberg.org/miekg/dns/internal/dnslex"
+import "github.com/lanrat/dns/internal/dnslex"
 
 // ResetErr clears the current parse error so that parsing can resume with the next RR. The remaining
 // tokens of the RR that caused the error are discarded and returned. When the token that caused the

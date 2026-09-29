@@ -3,8 +3,8 @@ package dnsutil_test
 import (
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 func TestIsRRset(t *testing.T) {

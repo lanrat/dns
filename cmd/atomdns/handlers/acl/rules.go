@@ -5,9 +5,9 @@ import (
 	"net/netip"
 	"slices"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/dnsutil"
 	"github.com/phemmer/go-iptrie"
 )
 

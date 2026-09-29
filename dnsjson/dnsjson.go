@@ -1,5 +1,5 @@
 // Package dnsjson implements the RR and RRset as defined in RFC 8427. The message type is not implemented.
-// [codeberg.org/miekg/dns.MarshalJSON] and [codeberg.org/miekg/dns.UnmarshalJSON] are the primary interface of this package.
+// [github.com/lanrat/dns.MarshalJSON] and [github.com/lanrat/dns.UnmarshalJSON] are the primary interface of this package.
 // As an example the RRs:
 //
 //   - www.example.org. IN A 127.0.0.1
@@ -23,7 +23,7 @@
 //	}
 package dnsjson
 
-import "codeberg.org/miekg/dns/pkg/pool"
+import "github.com/lanrat/dns/pkg/pool"
 
 // RR represents a DNS RR as specified in RFC 8427.
 type RR struct {

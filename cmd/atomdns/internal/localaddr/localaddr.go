@@ -3,7 +3,7 @@ package localaddr
 import (
 	"net"
 
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Source returns the address from sources that matches the family. If none match, nil is returned.

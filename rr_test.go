@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnsutil"
 	"golang.org/x/crypto/cryptobyte"
 )
 

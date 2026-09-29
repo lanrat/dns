@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/ddd"
+	"github.com/lanrat/dns/internal/ddd"
 )
 
 // Dump dumps the slice p in a way to help debugging DNS wire-format.

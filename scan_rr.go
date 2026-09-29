@@ -3,8 +3,8 @@ package dns
 import (
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/ddd"
-	"codeberg.org/miekg/dns/internal/dnslex"
+	"github.com/lanrat/dns/internal/ddd"
+	"github.com/lanrat/dns/internal/dnslex"
 )
 
 func (rr *A) parse(c *dnslex.Lexer, o string) error    { return parseA(&rr.A, c, o) }

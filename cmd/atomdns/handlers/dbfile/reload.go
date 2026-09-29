@@ -5,8 +5,8 @@ import (
 	"maps"
 	"path/filepath"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/dbfile/zone"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnszone"
 )
 
 // Reload launches a reload routine that listens for _write_ events to the zone files.

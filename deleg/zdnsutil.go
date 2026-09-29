@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/miekg/dns/internal/dnsstring"
+	"github.com/lanrat/dns/internal/dnsstring"
 )
 
 // This is copied to zdnsutil.go in the main package to also have access to these functions and not have an

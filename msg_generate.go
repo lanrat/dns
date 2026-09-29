@@ -10,7 +10,7 @@ import (
 	"log"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var hdr = `
@@ -20,10 +20,10 @@ package dns
 
 import (
 	"golang.org/x/crypto/cryptobyte"
-	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/internal/unpack"
-	"codeberg.org/miekg/dns/deleg"
-	"codeberg.org/miekg/dns/svcb"
+	"github.com/lanrat/dns/internal/pack"
+	"github.com/lanrat/dns/internal/unpack"
+	"github.com/lanrat/dns/deleg"
+	"github.com/lanrat/dns/svcb"
 )
 
 `

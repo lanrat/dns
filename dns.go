@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"codeberg.org/miekg/dns/pkg/pool"
+	"github.com/lanrat/dns/pkg/pool"
 )
 
 //go:generate go run rr_generate.go
@@ -132,7 +132,7 @@ func (h *Header) Clone() RR       { return &Header{h.Name, h.TTL, h.Class} }
 // representation of just the header will show TYPE0 instead of the actual type. As this not that useful
 // the TYPE0 is not even added, leaving name, ttl and class.
 //
-// For correctly printing the header you need the RR type to correctly print it. See [codeberg.org/miekg/dns/dnsutil.TypeToString] among others.
+// For correctly printing the header you need the RR type to correctly print it. See [github.com/lanrat/dns/dnsutil.TypeToString] among others.
 // For a RR to be completely printed use:
 //
 //	s := rr.Header().String() + " " + dnsutil.TypeToString(dns.RRToType(rr)) + "\t" + rr.Data().String)

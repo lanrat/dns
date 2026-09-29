@@ -4,7 +4,7 @@ import (
 	"net"
 	"net/netip"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 const port = 40212

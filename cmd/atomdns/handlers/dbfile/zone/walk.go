@@ -1,9 +1,9 @@
 package zone
 
 import (
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnszone"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Walk walks the zone and calls fn on each element found, as long as f returns true the walk is continued.

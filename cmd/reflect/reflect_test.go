@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"codeberg.org/miekg/dns/internal/dnsperf"
+	"github.com/lanrat/dns/internal/dnsperf"
 )
 
 // TestReflect tests reflect's performance.

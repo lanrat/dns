@@ -6,10 +6,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 
-	"codeberg.org/miekg/dns/deleg"
-	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/pkg/pool"
-	"codeberg.org/miekg/dns/svcb"
+	"github.com/lanrat/dns/deleg"
+	"github.com/lanrat/dns/internal/pack"
+	"github.com/lanrat/dns/pkg/pool"
+	"github.com/lanrat/dns/svcb"
 )
 
 // comparename compares owernames in rdata, which is a difference compare that canonical because the

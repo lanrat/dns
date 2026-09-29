@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnstest"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/dnstest"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 func helloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {

@@ -1,7 +1,7 @@
 package geoip
 
 import (
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 	"github.com/oschwald/geoip2-golang/v2"
 )
 

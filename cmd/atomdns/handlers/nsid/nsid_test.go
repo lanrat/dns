@@ -5,10 +5,10 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
-	"codeberg.org/miekg/dns/dnstest"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/atomtest"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/nsid"
+	"github.com/lanrat/dns/dnstest"
 )
 
 func TestNsid(t *testing.T) {

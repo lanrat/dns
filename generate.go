@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/dnslex"
+	"github.com/lanrat/dns/internal/dnslex"
 )
 
 // Parse the $GENERATE statement as used in BIND9 zones.

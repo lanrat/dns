@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"codeberg.org/miekg/dns/pkg/pool"
-	"codeberg.org/miekg/dns/rdata"
+	"github.com/lanrat/dns/pkg/pool"
+	"github.com/lanrat/dns/rdata"
 )
 
 // ZONEMDption are options that are given to the signer and verifier.

@@ -1,6 +1,6 @@
 package dnsutil
 
-import "codeberg.org/miekg/dns"
+import "github.com/lanrat/dns"
 
 // Truncate helps ensure the reply message will fit into the requested buffer
 // size by removing all records and only leaving the question section and the pseudo section.

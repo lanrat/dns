@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/miekg/dns/internal/ddd"
-	"codeberg.org/miekg/dns/internal/dnsstring"
+	"github.com/lanrat/dns/internal/ddd"
+	"github.com/lanrat/dns/internal/dnsstring"
 )
 
 // cmToM takes a cm value expressed in RFC 1876 SIZE mantissa/exponent

@@ -17,9 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/internal/unpack"
-	"codeberg.org/miekg/dns/pkg/pool"
+	"github.com/lanrat/dns/internal/pack"
+	"github.com/lanrat/dns/internal/unpack"
+	"github.com/lanrat/dns/pkg/pool"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -315,7 +315,7 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 
 // Verify validates an RRSet with the signature and key. This is only the cryptographic test, the signature
 // validity period must be checked separately. The rrset is not checked for actually being an rrset. See
-// [codeberg.org/miekg/dns/dnsutil.IsRRset], and neither is checked if the RRSIG's TypeCovered matches the
+// [github.com/lanrat/dns/dnsutil.IsRRset], and neither is checked if the RRSIG's TypeCovered matches the
 // type in rrset.
 //
 // This function overwrites the rdata of some RRs (to lowercase domain names) for the validation to work. If

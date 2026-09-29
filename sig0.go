@@ -4,8 +4,8 @@ import (
 	"crypto"
 	"fmt"
 
-	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/internal/unpack"
+	"github.com/lanrat/dns/internal/pack"
+	"github.com/lanrat/dns/internal/unpack"
 )
 
 // SIG0Sign signs a dns.Msg. It fills the signature with the appropriate data.

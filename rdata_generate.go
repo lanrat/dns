@@ -9,7 +9,7 @@ import (
 	"go/ast"
 	"log"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var hdr = `
@@ -17,8 +17,8 @@ var hdr = `
 
 package dns
 
-import "codeberg.org/miekg/dns/rdata"
-import "codeberg.org/miekg/dns/internal/dnslex"
+import "github.com/lanrat/dns/rdata"
+import "github.com/lanrat/dns/internal/dnslex"
 import "io"
 
 `

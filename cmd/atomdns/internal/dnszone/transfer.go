@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 func TransferOut(z Interface, ctx context.Context, w dns.ResponseWriter, r *dns.Msg) error {

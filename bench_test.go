@@ -3,7 +3,7 @@ package dns
 import (
 	"testing"
 
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 // BenchmarkCreateMsg benchmarks the creation of a small Msg with a question section only.

@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"time"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
-	"codeberg.org/miekg/dns/dnshttp"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/global"
+	"github.com/lanrat/dns/cmd/atomdns/internal/reuse"
+	"github.com/lanrat/dns/dnshttp"
 	"golang.org/x/net/netutil"
 )
 

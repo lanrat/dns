@@ -1,7 +1,7 @@
 package kill
 
 import (
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 type Kill int

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"codeberg.org/miekg/dns/internal/jump"
-	"codeberg.org/miekg/dns/internal/pack"
+	"github.com/lanrat/dns/internal/jump"
+	"github.com/lanrat/dns/internal/pack"
 )
 
 // HMAC hashing codes. These are transmitted as domain names and as such need a closing dot.

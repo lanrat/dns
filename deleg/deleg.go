@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/reverse"
+	"github.com/lanrat/dns/internal/reverse"
 )
 
 // Keys as defined in the DELEG draft.

@@ -1,8 +1,8 @@
 package dbsqlite
 
 import (
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/dbfile"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 // Setup transfer handles the transfer options.

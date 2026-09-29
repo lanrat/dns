@@ -10,7 +10,7 @@ import (
 	"log"
 	"slices"
 
-	"codeberg.org/miekg/dns/internal/generate"
+	"github.com/lanrat/dns/internal/generate"
 )
 
 var skip = []string{"NSEC", "NSEC3", "OPT", "CSYNC"}

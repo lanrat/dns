@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"strconv"
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmetrics"
-	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/lanrat/dns"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsmetrics"
+	"github.com/lanrat/dns/dnsutil"
 )
 
 // Acl enforces access control policies on DNS queries.

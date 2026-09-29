@@ -3,8 +3,8 @@ package dnsserver
 import (
 	"path/filepath"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/global"
+	"github.com/lanrat/dns/cmd/atomdns/internal/conffile"
 )
 
 //go:generate go run string_generate.go

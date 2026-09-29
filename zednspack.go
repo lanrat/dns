@@ -7,8 +7,8 @@ import (
 	"net"
 	"net/netip"
 
-	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/internal/unpack"
+	"github.com/lanrat/dns/internal/pack"
+	"github.com/lanrat/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
 

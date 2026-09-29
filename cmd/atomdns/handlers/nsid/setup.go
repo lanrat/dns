@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (n *Nsid) Setup(co *dnsserver.Controller) error {

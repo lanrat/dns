@@ -3,7 +3,7 @@ package dnszone
 import (
 	"strings"
 
-	"codeberg.org/miekg/dns"
+	"github.com/lanrat/dns"
 )
 
 // Restart is used in the (recursive) calling of Retrieve to complete a CNAME chain. The i index is used to avoid loops

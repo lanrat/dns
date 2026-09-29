@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (m *Metrics) Setup(co *dnsserver.Controller) error {
