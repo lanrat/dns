@@ -21,6 +21,17 @@ kept in new files where possible for the same reason.
   fix worth sending upstream, after which this change can be dropped.
   Files: `internal/dnslex/fold.go`, `scan_case_test.go`, and small edits to `internal/dnslex/lex.go`
   and `scan_rdata.go`.
+- `SetDomainFunc(func(string) string)` sets a hook the zone parser applies to the origin and to every
+  name it reads, before the name is validated. zonetools uses it to lowercase names and convert UTF-8
+  names to punycode. Because it runs before validation, a UTF-8 label longer than 63 bytes whose
+  punycode form fits is accepted: for example the Thai label `ที่ปรึกษาธุรกิจ-แผนการตลาด` is 76 bytes in
+  UTF-8 and 42 as `xn----twfab7a0egkknqr9fcg7a9c1jid6anz6c8o7f`, a valid name that can be registered
+  and resolved. Without the hook such names fail with `dns: bad owner name` or `dns: bad NS Ns`.
+  The hook runs in `Absolute` in `dnsutil/shared.go`, which `dnsutil_generate.go` copies into
+  `zdnsutil.go` in the root, `deleg`, `svcb` and `rdata` packages, and in `NewZoneParser` in
+  `scan.go` for the origin. Only the root package's copy is set, so the public `dnsutil.Absolute` is
+  unaffected. Files: `domainfunc.go`, `domainfunc_test.go`, `domainfunc_scope_test.go`, 3 lines in
+  `dnsutil/shared.go` plus its generated copies, and 3 lines in `scan.go`.
 
 ## Using the fork
 
@@ -40,7 +51,8 @@ libraries imported by other modules.
 ## Branches
 
 - `miekg`: a mirror of upstream `main`. Never commit to it.
-- One feature branch per change, containing only that change (`parseRecover`, `caseInsensitive`).
+- One feature branch per change, containing only that change (`parseRecover`, `caseInsensitive`,
+  `domainFunc`).
 - `main`: `miekg` with every feature branch merged in, plus this file.
 
 ## Updating from upstream
@@ -62,51 +74,18 @@ go test ./...
 git push origin main
 ```
 
+If the merge conflicts in a generated `zdnsutil.go`, take upstream's version of the generated files,
+keep the fork's lines in `dnsutil/shared.go`, and run `go run dnsutil_generate.go` to regenerate
+them.
+
 To change a feature, commit on its branch and merge the branch into `main` again.
 
-## Features of the v1 fork that were not ported
+## Feature of the v1 fork that was not ported
 
-These existed in the v1 fork and were left out because the application no longer needs them. The
-notes are here so they can be re-added if that changes.
+This existed in the v1 fork and was left out because the application no longer needs it. The note is
+here so it can be re-added if that changes.
 
 ### TypeBitMap sorting
 
 The v1 fork sorted the `TypeBitMap` of NSEC, NSEC3 and CSYNC records while parsing. zonetools sorts
 these itself during normalization (`parser/normalize.go`), so the library change was redundant.
-
-### SetDomainFunc (domain name hook)
-
-The v1 fork had `SetDomainFunc(func(string) string)`, a package-level hook applied to the zone origin
-and to every domain name before it was validated. zonetools used it to lowercase names and convert
-UTF-8 names to punycode (`parser.CleanDomain`). It was dropped for v2 and zonetools now cleans names
-after parsing instead.
-
-**What the hook still did that post-parse cleaning cannot.** A name is validated before cleaning, so
-a raw UTF-8 label longer than 63 bytes is rejected even if its punycode form would fit. For example,
-the Thai label `ที่ปรึกษาธุรกิจ-แผนการตลาด` is 76 bytes in UTF-8 but valid as punycode. Any fully
-qualified name with such a label is rejected, as an owner name or in rdata, and the record is lost
-with an error such as:
-
-```text
-dns: bad owner name: "ที..." at line: 1:59
-dns: bad NS Ns: "ns.ที..." at line: 3:84
-```
-
-A relative name whose last label is too long does parse, because upstream `IsName` does not check
-the last label of a relative name before the origin is appended.
-
-**Why it was dropped.** Labels over 63 octets are invalid DNS (RFC 1035), and IDNs are published as
-A-labels (RFC 5890). Zones collected by AXFR or walking come from the wire, so they cannot contain
-such labels. Only text exports from registries (CZDS, FTP) could, and only if the export is buggy. In
-2026-09, a scan of the zone file archive found no raw non-ASCII names: every file collected on
-2026-09-25, all of 2020 to 2023, and one day each from 2024 and 2025.
-
-**How to re-add it.** Two hook points cover every name the zone parser reads:
-
-1. `NewZoneParser` in `scan.go`, applied to `origin` before `dnsutilFqdn`.
-2. `Absolute` in `dnsutil/shared.go`, applied to the name before it is validated. This function is
-   copied into `zdnsutil.go` in the root, `rdata`, `svcb` and `deleg` packages by
-   `dnsutil_generate.go`, so edit `dnsutil/shared.go` and run `go generate`. Do not edit the
-   generated copies.
-
-Put the hook variable and setter in a new file so upstream merges stay conflict-free.
