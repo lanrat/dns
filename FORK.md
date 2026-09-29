@@ -1,8 +1,10 @@
 # Fork of codeberg.org/miekg/dns
 
 This is a fork of [miekg's dns library](https://codeberg.org/miekg/dns) (v2) with a small set of
-changes needed to parse real-world zone files, which are often not clean. It replaces the v1 fork
-[github.com/lanrat/dns](https://github.com/lanrat/dns).
+changes needed to parse real-world zone files, which are often not clean. It lives on the `main`
+branch of [github.com/lanrat/dns](https://github.com/lanrat/dns). The earlier fork of the v1 library
+(`github.com/miekg/dns`) is on the `v1` branch of the same repository, with its support branches
+under their original names.
 
 The upstream `README.md` is left untouched so merges from upstream never conflict. Fork changes are
 kept in new files where possible for the same reason.
@@ -42,18 +44,25 @@ upstream to the files above. Code imports `codeberg.org/miekg/dns` as normal, an
 ```text
 require codeberg.org/miekg/dns v0.6.117
 
-replace codeberg.org/miekg/dns => <this fork's module location> <version>
+replace codeberg.org/miekg/dns => github.com/lanrat/dns <version>
 ```
+
+`<version>` is the pseudo-version of a commit on `main`, for example from
+`go list -m -json github.com/lanrat/dns@<commit>` run in the application's module. The fork's
+`go.mod` keeps `module codeberg.org/miekg/dns`, which is what Go requires of a replacement module.
 
 A `replace` directive only applies in the main module, so this works for applications but not for
 libraries imported by other modules.
 
 ## Branches
 
-- `miekg`: a mirror of upstream `main`. Never commit to it.
-- One feature branch per change, containing only that change (`parseRecover`, `caseInsensitive`,
-  `domainFunc`).
-- `main`: `miekg` with every feature branch merged in, plus this file.
+The v2 branches are prefixed with `v2/`, because the v1 fork's branches in this repository use the
+same names.
+
+- `v2/miekg`: a mirror of upstream `main`. Never commit to it.
+- One feature branch per change, containing only that change (`v2/parseRecover`,
+  `v2/caseInsensitive`, `v2/domainFunc`).
+- `main`: `v2/miekg` with every feature branch merged in, plus this file.
 
 ## Updating from upstream
 
@@ -63,13 +72,13 @@ git remote add upstream https://codeberg.org/miekg/dns.git
 
 # update the mirror branch
 git fetch upstream
-git checkout miekg
+git checkout v2/miekg
 git merge --ff-only upstream/main
-git push origin miekg
+git push origin v2/miekg
 
 # merge into main and verify
 git checkout main
-git merge miekg
+git merge v2/miekg
 go test ./...
 git push origin main
 ```
