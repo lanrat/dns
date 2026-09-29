@@ -1,240 +1,86 @@
-[![Go Doc](https://godoc.org/coreberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
-[![Build Status](https://codeberg.org/miekg/dns/badges/workflows/build.yaml/badge.svg)](https://codeberg.org/miekg/dns)
+# dns
 
-# Modern, lightweight DNS library
+## A more forgiving fork of [miekg/dns](https://codeberg.org/miekg/dns) (v2)
 
-> Less is more.
+This is a fork of [miekg's wonderful dns library](https://codeberg.org/miekg/dns) `codeberg.org/miekg/dns`, the v2 rewrite of `github.com/miekg/dns`.
 
-This work is partly funded by the [Nominet DNS Fund](https://nominet.uk/our-impact/nominet-dns-fund/).
+The `miekg/dns` library's policy is "garbage in, garbage out", which works well when your inputs are well sanitized and under control. Unfortunately some real-world use cases supply data in a non-ideal format, such as zone files published by registries.
 
-Complete and usable DNS library. All Resource Records are supported, including the DNSSEC types. It follows a
-lean and mean philosophy. Server side and client side programming is supported, i.e. you can build servers and
-resolvers with it.
+The [v2/miekg branch](https://github.com/lanrat/dns/tree/v2/miekg) of this repository is kept in sync with the [upstream main](https://codeberg.org/miekg/dns/src/branch/main) and used to keep this fork's `main` branch up to date.
 
-We try to keep the _main_ branch as sane as possible and at the bleeding edge of standards, avoiding
-breaking changes wherever reasonable. We rigorously follow upstream Go versions and use bleeding edge Go
-language features. But because this version is young, we allow ourselves some more headroom for
-making backwards incompatible changes.
+Individual feature branches of this repository (`v2/parseRecover`, `v2/caseInsensitive`, `v2/domainFunc`) are used to test single features that modify `miekg/dns` in a single way and one way only. After they have been proven stable they are merged into `main`. The goal is to have this fork pass all tests from `miekg/dns` and any additional tests that are added, and be fully backwards compatible with `miekg/dns`.
 
-Many convenience functions are included in _dns_, _dnstest_ or otherwise in _dnsutils_. The RR's resource data
-(RDATA) is split off into its own package: _rdata_. This means accessing the RR's header and rdata is much
-simpler now. [^a]
+Some features may be sent as a pull request upstream. If they are accepted then they are removed from the differences listed below.
 
-[^a]: A function is put in _dnsutils_, unless (due to cyclic imports) it is utterly impossible to put it there. Only then it is put in the main _dns_ package.
+The earlier fork of the v1 library (`github.com/miekg/dns`) is on the [v1 branch](https://github.com/lanrat/dns/tree/v1). Its support branches keep their original names, which is why the v2 branches are prefixed with `v2/`.
 
-Example programs are included _and_ benchmarked in
-[`cmd`](https://codeberg.org/miekg/dns/src/branch/main/cmd). And
-[`cmd/atomdns`](https://codeberg.org/miekg/dns/src/branch/main/cmd/atomdns/README.md) is a full blown
-production ready name server. Because of these we are depending on a lot more external packages - at some
-point these servers will be split off.
+### Differences from miekg/dns
 
-Also [see the Go documentation](https://pkg.go.dev/codeberg.org/miekg/dns).
+* `ResetErr()` added to the ZoneParser, allowing the parser to recover from errors
+* Classes and type mnemonics are accepted in any case, as RFC 1035 requires
+* `SetDomainFunc()` added to add a function to clean or sanitize zone/domain names as they are parsed
 
-This new version will not soon see a v1.0.0 release because I want to be able to still make changes. In a
-year or two (2028?) when things have stabilized it will be blessed with a v1.0.0.
+#### `ResetErr()`
 
-# Porting From v1
+Clears a parse error and discards the rest of the bad RR, so parsing continues with the next record instead of stopping at the first error. Unlike the v1 fork, it does not discard anything when the error token already ended the RR; the v1 version dropped the next good record in that case (for example after `b IN A` with no rdata).
 
-Everything from <https://github.com/miekg/dns> works. See
-[README-v1-to-v2.md](https://codeberg.org/miekg/dns/src/branch/main/_doc/README-v1-to-v2.md)
-for the differences, if you are porting your application, in `cookbook.go` are some common recipes.
+Files: `scan_reset.go`, `scan_reset_test.go`.
 
-Note that a design choice has been made to not supported `\DDD` and `\x` syntax in domain names. This archaic
-way of encoding names was useful way-back-when, nowadays DNS is pretty much a 7-bit protocol and things like
-[Punycode](https://en.wikipedia.org/wiki/Punycode) had to be invented. There is one exception to this and that
-is the SOA's mname can contain a `\.`, for the rest it is ignore and interpreted as `\` and `.`.
+#### Case-insensitive classes and types
 
-## Performance
+RFC 1035 Section 5.1 makes class and type mnemonics case-insensitive, and some published zone files are entirely lower case (`a. 3600 in soa ...`). Upstream looks up types case-insensitively, but not classes, the `TYPExxx` and `CLASSxxx` prefixes, RRSIG covered types, NSEC/NSEC3/CSYNC type bitmaps or the DSYNC type, so every line of such a file failed to parse.
 
-The performance should be roughly 2x across the board compared to v1 (also see below).
+Files: `internal/dnslex/fold.go`, `scan_case_test.go`, and small edits to `internal/dnslex/lex.go` and `scan_rdata.go`.
 
-- Serving DNS queries per second is \~2x (maybe more).
-- Parsing zones files in RRs per second is \~1.5x.
-- Memory usage can be \~0.5x due to rdata split off.
+#### `SetDomainFunc()`
 
-For developers please read the
-[developer README](https://codeberg.org/miekg/dns/src/branch/main/_doc/README-dev.md).
+Sets a hook the zone parser applies to the origin and to every name it reads, before the name is validated. Because it runs before validation, a name that is only valid after the hook's conversion is still accepted: for example the Thai label `ที่ปรึกษาธุรกิจ-แผนการตลาด` is 76 bytes in UTF-8, too long for a DNS label, but 42 as the punycode `xn----twfab7a0egkknqr9fcg7a9c1jid6anz6c8o7f`, a valid name that can be registered and resolved. Without the hook such names fail with `dns: bad owner name` or `dns: bad NS Ns`.
 
-# Goals
+The hook runs in `Absolute` in `dnsutil/shared.go`, which `dnsutil_generate.go` copies into `zdnsutil.go` in the root, `deleg`, `svcb` and `rdata` packages, and in `NewZoneParser` in `scan.go` for the origin. Only the root package's copy is set, so the public `dnsutil.Absolute` is unaffected.
 
-- KISS.
-- Everything is a resource record, EDNS0 pseudo RRs included.
-  - Easy way to access RR's header and resource data (_rdata_ package).
-- Small API.
-  - Package _dnsutil_ contains functions that help programmers, but are not necessarily in scope the _dns_ package.
-  - Package _dnstest_ contains functions and types that help you test, similar to the _httptest_ package.
-  - Package _dnsjson_ contains types for DNS RRs in JSON (RFC 8427).
-  - Package _svcb_ holds all details of the SVCB/HTTPS record (RFC 9460).
-  - Pacakge _deleg_ holds details for the DELEG record.
-  - Many helper/debug functions are moved into _internal_ packages, making the top-level much, much cleaner.
-- Fast.
-  - recvmmsg(2) and TCP pipe-lining support.
-  - The `cmd/reflect` server does ~420K/340K qps UDP/TCP respectively on the right hardware.
-    - Since a46996c I can get ~400K (UDP) qps on my laptop (M2/Asahi Linux), also see 1766e44, 86b53fe and 06e5e0f.
-    - On my Dell XPS 17 (Intel) it is similar-ish (~310K/250K qps UDP/TCP).
-    - On other Intel/AMD hardware it is lower (~200K (UDP) qps) - yet to understand why.
-  - See `cmd/reflect` and do a `go build; make new.txt` to redo the performance test. Requires `dnsperf` to be installed.
-  - The SE zone (8M RRs) is parsed in \~11s (\~730K RR/s), the CH zones (15M RRs) is parsed in \~14s (\~1M RR/s).
-    The main difference being that SE use algorithm 8, and CH algorithm 13 (shorter RRSIGs).
-    See `cmd/parse`, tested with M2/Asahi Linux.
+Files: `domainfunc.go`, `domainfunc_test.go`, `domainfunc_scope_test.go`, 3 lines in `dnsutil/shared.go` plus its generated copies, and 3 lines in `scan.go`.
 
-# Users
+### Not carried over from the v1 fork
 
-A not-so-up-to-date-list-that-may-be-actually-current:
+* `TypeBitMap` sorting when packing `CSYNC`, `NSEC`, and `NSEC3` types. zonetools sorts these itself during normalization, so the library change was redundant.
 
-- atomdns - included in [`cmd/atomdns`](https://codeberg.org/miekg/dns/src/branch/main/cmd/atomdns/) - a high performance DNS server, based on the principles of CoreDNS, but
-  faster and simpler.
-- [dnscrypt-proxy](https://github.com/DNSCrypt/dnscrypt-proxy) - a flexible DNS proxy, with support for
-  encrypted DNS protocols such as DNSCrypt v2, DOH, Anonymized DNSCrypt and
-  [ODOH](https://developers.cloudflare.com/1.1.1.1/encryption/oblivious-dns-over-https/).
-- [DNSControl](https://dnscontrol.org/) - DNSControl is an opinionated platform for seamlessly managing your DNS configuration across any number of DNS hosts,
-  both in the cloud or in your own infrastructure.
-- [Gonemaster](https://codeberg.org/pawal/gonemaster) - Gonemaster is a Go implementation of the DNS test framework Zonemaster engine and CLI.
-- [DNSieve](https://github.com/secu-tools/dnsieve) - a DNS filtering proxy that fans out queries to multiple upstream resolvers concurrently and enforces block-consensus.
+## Using this fork
 
-Send pull request if you want to be listed here.
+The module path is not renamed. It stays `codeberg.org/miekg/dns`, which keeps the diff against upstream small. Code imports `codeberg.org/miekg/dns` as normal, and the application's `go.mod` points that path at this fork:
 
-## Comments
+```text
+require codeberg.org/miekg/dns v0.6.117
 
-What users say:
+replace codeberg.org/miekg/dns => github.com/lanrat/dns <version>
+```
 
-> miekg/dns is probably my favorite Go module in the open source ecosystem. It is very complete (every DNS rtype is defined)
-> and strict (field names match the RFCs, etc). DNSControl has used miekg/dns since the first release.
+`<version>` is the pseudo-version of a commit on `main`, for example from `go list -m -json github.com/lanrat/dns@<commit>` run in the application's module. Go requires a replacement module's `go.mod` to declare the path it replaces, which this fork's does. A `replace` directive only applies in the main module, so this works for applications but not for libraries imported by other modules.
 
-- <https://codeberg.org/miekg/dns/issues/258#issue-2471506>
+## Updating from upstream
 
-> Your library is a blast and I cannot thank you enough 🙏.
+```shell
+# setup
+git remote add upstream https://codeberg.org/miekg/dns.git
+git pull origin main
+git pull origin v2/miekg
 
-- <https://infosec.exchange/@x_cli/115745919220339651>
+# update v2/miekg branch from upstream
+git checkout v2/miekg
+git pull upstream main
+git push origin v2/miekg
 
-# Features
+# merge into main
+git checkout main
+git merge v2/miekg
+git checkout --ours README.md
+git add README.md
+# fix any merge conflicts and failing tests
+git add .
+go test ./...
+git commit
+git push origin main
+```
 
-- UDP/TCP queries, recvmmsg(2), TCP query-pipelining, IPv4 and IPv6.
-- Fast.
-- RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE - for _all_ record types) is supported.
-- Server side programming (mimicking the net/http package), with `dns.Handle` and `dns.HandleFunc` allowing
-  for middleware servers.
-- Client side programming.
-- DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA, Ed25519 and ML-DSA-44.
-- EDNS0, NSID, Cookies, etc, as pseudo RRs in the (fake) pseudo section.
-- AXFR/IXFR.
-- TSIG, SIG(0).
-- DNS over TLS (DOT): encrypted connection between client and server over TCP.
-- DNS over HTTP (DOH), see the _dnshttp_ package.
-- Improved naming by embracing sub-packages.
-- Improved RRs, by having the rdata specified in an _rdata_ package.
-- Escapes (\DDD and \x) in domain names is not supported (anymore) - the overhead (50-100%) was too high.
-- Easy way for custom RRs and EDNS0 pseudo RRs.
+If the merge conflicts in a generated `zdnsutil.go`, take upstream's version of the generated files, keep this fork's lines in `dnsutil/shared.go`, and run `go run dnsutil_generate.go` to regenerate them.
 
-Have fun!
-
-Miek Gieben - 2026- - <miek@miek.nl>
-
-See [anonymous users asking for support](https://berthub.eu/articles/posts/anonymous-help/) on why these kind
-of requests/issues usually get closed pretty swiftly.
-
-# Building/developing
-
-This library uses Go modules and uses semantic versioning. Getting the code and working with the library is
-done via:
-
-    git clone git@codeberg.org:miekg/dns  # use https if you don't have a codeberg account
-    cd dns
-    # $EDTIOR *.go
-
-If you want to use codeberg/miekg/dns in your own project, just do a `go get codeberg.org/miekg/dns@latest`
-and import codeberg.org/miekg/dns in your Go files.
-
-## Examples
-
-A short "how to use the API" is at the beginning of `doc.go`. The cmd/ directory contains a reflect example
-program that is used for benchmarking, and further has atomdns which is full fledged DNS server that is
-developed in tandem with the library.
-
-## Supported RFCs
-
-_all of them_ and _then some_
-
-- 103{3,4,5} - DNS standard
-- <s>1348 - NSAP record</s>
-- 1982 - Serial Arithmetic
-- 1876 - LOC record
-- 1995 - IXFR
-- 1996 - DNS notify
-- 2136 - DNS Update (dynamic updates)
-- 2181 - RRset definition
-- 2537 - RSAMD5 DNS keys
-- 2065 - DNSSEC (updated in later RFCs)
-- 2671 - EDNS record
-- 2782 - SRV record
-- 2845 - TSIG record
-- 2915 - NAPTR record
-- 2929 - DNS IANA Considerations
-- 3110 - RSASHA1 DNS keys
-- 3123 - APL record
-- 3225 - DO bit (DNSSEC OK)
-- 340{1,2,3} - NAPTR record
-- 3445 - Limiting the scope of (DNS)KEY
-- 3596 - AAAA record
-- 3597 - Unknown RRs
-- 4025 - A Method for Storing IPsec Keying Material in DNS
-- 403{3,4,5} - DNSSEC
-- 4255 - SSHFP record
-- 4343 - Case insensitivity
-- 4408 - SPF record
-- 4509 - SHA256 Hash in DS
-- 4592 - Wildcards in the DNS
-- 4635 - HMAC SHA TSIG
-- 4701 - DHCID
-- 4892 - id.server
-- 5001 - NSID
-- 5155 - NSEC3 record
-- 5205 - HIP record
-- 5702 - SHA2 in the DNS
-- 5936 - AXFR
-- 5966 - TCP implementation recommendations
-- 6605 - ECDSA
-- 6672 - DNAME
-- 6725 - IANA Registry Update
-- 6742 - ILNP DNS
-- 6840 - Clarifications and Implementation Notes for DNS Security
-- 6844 - CAA record
-- 6891 - EDNS0 update
-- 6895 - DNS IANA considerations
-- 6944 - DNSSEC DNSKEY Algorithm Status
-- 6975 - Algorithm Understanding in DNSSEC
-- 7043 - EUI48/EUI64 records
-- 7314 - DNS (EDNS) EXPIRE Option
-- 7477 - CSYNC RR
-- 7828 - TCP-keepalive EDNS0 Option
-- 7553 - URI record
-- 7719 - DNS Terminology
-- 7858 - DNS over TLS: Initiation and Performance Considerations
-- 7871 - EDNS0 Client Subnet
-- 7873 - Domain Name System (DNS) Cookies
-- 8080 - EdDSA for DNSSEC
-- 8145 - EDNS0 key tag
-- 8427 - Representing DNS Messages in JSON
-- 8482 - Minimal Answers for ANY
-- 8484 - DOH
-- 8499 - DNS Terminology
-- 8509 - DNSSEC Trusted Key Sentinel
-- 8659 - DNS Certification Authority Authorization (CAA) Resource Record
-- 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
-- 8914 - Extended DNS Errors
-- 8976 - Message Digest for DNS Zones (ZONEMD RR)
-- 9250 - DOQ (not implemented, waiting until Go supports QUIC)
-- 9461 - Service Binding Mapping for DNS Servers
-- 9462 - Discovery of Designated Resolvers
-- 9460 - SVCB and HTTPS Records
-- 9499 - DNS Terminology
-- 9558 - GOST 2012 for DNSSEC
-- 9563 - SM2 for DNSSEC
-- 9567 - DNS Error Reporting
-- 9606 - DNS Resolver Information
-- 9660 - Zone version
-- 9715 - IP Fragmentation Avoidance in DNS over UDP
-- 9824 - Compact Denial of Existence in DNSSEC
-- 9859 - DSYNC RR
-- draft-ietf-deleg - DELEG RR
-- draft-westerbaan-dnssec-mldsa-04 - MLDSA for DNSSEC
+To change a feature, commit on its branch and merge the branch into `main` again.
