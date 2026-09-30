@@ -153,19 +153,24 @@ func TestTransfer(t *testing.T) {
 	}
 }
 
-func TestTransferIncrementalEdgeCases(t *testing.T) {
+// TestTransferTermination checks that TransferIn detects the end of a transfer by itself, i.e. from the
+// terminal SOA (AXFR) or the SOA countdown (IXFR), instead of relying on the server closing the
+// connection. Each element of answers is sent as a separate message and the server does not close
+// the connection, so a client that misses the end reads on and returns too many RRs.
+func TestTransferTermination(t *testing.T) {
 	testcases := []struct {
 		name    string
+		qtype   uint16
 		answers [][]dns.RR
 		serial  uint32
 		wantErr bool
 		want    int
 	}{
-		{"invalid", [][]dns.RR{{}}, 2009032802, true, 0},
-		{"not-soa", [][]dns.RR{{testTransferData[1]}}, 2009032802, true, 0},
-		{"single", [][]dns.RR{{testTransferData[0]}}, 2009032800, false, 1},
+		{"invalid", dns.TypeIXFR, [][]dns.RR{{}}, 2009032802, true, 0},
+		{"not-soa", dns.TypeIXFR, [][]dns.RR{{testTransferData[1]}}, 2009032802, true, 0},
+		{"single", dns.TypeIXFR, [][]dns.RR{{testTransferData[0]}}, 2009032800, false, 1},
 		{
-			"up-to-date", [][]dns.RR{
+			"up-to-date", dns.TypeIXFR, [][]dns.RR{
 				testTransferDataIncrementalData[:len(testTransferDataIncrementalData)/2],
 				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
 			}, 2009032802, false, 1,
@@ -174,18 +179,33 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 			// clientSerial (4200000000) is numerically > serverSerial (2009032802) but the
 			// difference exceeds 2^31, so per RFC 1982 the client is behind and must receive
 			// the full incremental transfer, not just the SOA.
-			"rfc1982-behind", [][]dns.RR{
+			"rfc1982-behind", dns.TypeIXFR, [][]dns.RR{
 				testTransferDataIncrementalData[:len(testTransferDataIncrementalData)/2],
 				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
 			}, 4200000000, false, 8,
+		},
+		// For the AXFR cases the last message is a complete zone the client must never read.
+		{
+			// The entire zone in a single message, the opening and terminal SOA are in the same message.
+			"axfr-single-message", dns.TypeAXFR, [][]dns.RR{testTransferData, testTransferData}, 0, false, 4,
+		},
+		{
+			"axfr-empty-zone", dns.TypeAXFR, [][]dns.RR{{testTransferData[0], testTransferData[3]}, testTransferData}, 0, false, 2,
+		},
+		{
+			// The first message only holds the opening SOA, it must not be seen as the terminal one.
+			"axfr-soa-only-first", dns.TypeAXFR, [][]dns.RR{testTransferData[:1], testTransferData[1:], testTransferData}, 0, false, 4,
+		},
+		{
+			"axfr-soa-only-last", dns.TypeAXFR, [][]dns.RR{testTransferData[:3], testTransferData[3:], testTransferData}, 0, false, 4,
 		},
 		{
 			// A server sends the complete IXFR diff inside a single TCP message. The client
 			// must recognise the transfer as done and return without falling back to io.Copy
 			// for a second read.
 			//
-			// Note this uses a different handler.
-			"changed-handler-double-write", [][]dns.RR{},
+			// Note this uses a different handler, which stays registered, so this case must be last.
+			"changed-handler-double-write", dns.TypeIXFR, [][]dns.RR{},
 			2009032800, false, 8,
 		},
 	}
@@ -237,8 +257,10 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 			defer cancel()
 
 			c := new(dns.Client)
-			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
-			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: tc.serial}}
+			m := dns.NewMsg(testTransferZone, tc.qtype)
+			if tc.qtype == dns.TypeIXFR {
+				m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: tc.serial}}
+			}
 
 			env, err := c.TransferIn(context.TODO(), m, addr, nil)
 			if err != nil {
@@ -263,7 +285,7 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 				t.Fatalf("unexpected error: %s", gotErr)
 			}
 			if i != tc.want {
-				t.Fatalf("bad ixfr: expected %d, got %d", tc.want, i)
+				t.Fatalf("bad transfer: expected %d, got %d", tc.want, i)
 			}
 		})
 	}
