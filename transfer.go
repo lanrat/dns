@@ -172,12 +172,17 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 
 		ch <- &Envelope{Answer: r.Answer}
 
+		// On the first message, skip index 0 (the opening SOA) — it is not the
+		// terminal SOA. On subsequent messages start from 0 so nothing is missed.
+		start := 0
+		if !tsigOptions.TimersOnly {
+			start = 1
+		}
+
 		// If there is a SOA RR as the last we're done
-		if tsigOptions.TimersOnly {
-			if len(r.Answer) > 0 {
-				if _, ok := r.Answer[len(r.Answer)-1].(*SOA); ok {
-					return
-				}
+		if len(r.Answer) > start {
+			if _, ok := r.Answer[len(r.Answer)-1].(*SOA); ok {
+				return
 			}
 		}
 
