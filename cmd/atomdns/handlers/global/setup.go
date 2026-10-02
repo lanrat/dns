@@ -100,9 +100,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
-					addrs, err := d.RemainingAddrs()
+					addrs, err := d.RemainingAddrsOrInterfaces()
 					if err != nil {
 						return d.PropErr(err)
+					}
+					if len(addrs) == 0 {
+						return d.PropErr(fmt.Errorf("no addresses found"))
 					}
 					g.Addrs = addrs
 				case "limits":
@@ -129,9 +132,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
-					addrs, err := d.RemainingAddrs()
+					addrs, err := d.RemainingAddrsOrInterfaces()
 					if err != nil {
 						return d.PropErr(err)
+					}
+					if len(addrs) == 0 {
+						return d.PropErr(fmt.Errorf("no addresses found"))
 					}
 					g.TlsAddrs = addrs
 				case "limits":
@@ -165,9 +171,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
-					addrs, err := d.RemainingAddrs()
+					addrs, err := d.RemainingAddrsOrInterfaces()
 					if err != nil {
 						return d.PropErr(err)
+					}
+					if len(addrs) == 0 {
+						return d.PropErr(fmt.Errorf("no addresses found"))
 					}
 					g.HttpAddrs = addrs
 				case "limits":

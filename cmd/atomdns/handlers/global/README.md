@@ -27,20 +27,20 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
     health [ADDRESS [LAMEDUCK]]
     pprof [FILE|ADDRESS]
     dns {
-        addr ADDRESS [ADDRESS]...
+        addr ADDRESS|IFACE [ADDRESS|IFACE]...
         limits {
             tcp EXPR
             run EXPR
         }
     }
     dot {
-        addr ADDRESS [ADDRESS]...
+        addr ADDRESS|IFACE [ADDRESS|IFACE]...
         limits {
             run EXPR
         }
     }
     doh {
-        addr ADDRESS [ADDRESS]...
+        addr ADDRESS|IFACE [ADDRESS|IFACE]...
         limits {
             run EXPR
             inflight EXPR
@@ -89,7 +89,8 @@ This is parsed in-order and some settings depend on `root` and/or `debug`, so se
 
 With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined are.
 
-- `addr` **ADDRESS**: listen on these addresses, default is `[::]:53`.
+- `addr` **ADDRESS** and/or **IFACE**: listen on these addresses or interfaces, default is `[::]:53`. Both allow
+  a port number to be added, i.e. "lo:53" is valid and means listen on the loopback interface on port 53.
 - `limits` set further limits:
   - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
   - `run` **EXPR**, run this many servers the default is `NumCPU()*3`, this can be a bare number,
@@ -102,7 +103,7 @@ With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined 
 
 With `dot` you control DNS TLS server options, defined are.
 
-- `addr` **ADDRESS**: listen on these addresses, default is `[::]:853`.
+- `addr` **ADDRESS** and/or **IFACE**: like that of `dns`, but the default is `[::]:853`.
 - `limits` set further limits:
   - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
   - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
@@ -115,7 +116,7 @@ This requires a `tls` setup too.
 
 With `doh` you set HTTP server options, defined are.
 
-- `addr` **ADDRESS**: listen on this addresses, default is `[::]:443`.
+- `addr` **ADDRESS** and/or **IFACE**: like that of `dns`, but the default is `[::]:443`.
 - `limits` set further limits:
   - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()*` may be spelled in lowercase.

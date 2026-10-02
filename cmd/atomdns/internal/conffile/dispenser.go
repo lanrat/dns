@@ -315,7 +315,7 @@ func (d *Dispenser) RemainingAddrs() ([]string, error) {
 	for i := range args {
 		addr, err := addr(args[i])
 		if err != nil {
-			return nil, err
+			return args, err
 		}
 		args[i] = addr
 	}
@@ -330,7 +330,29 @@ func addr(s string) (string, error) {
 		}
 		return net.JoinHostPort(s, "53"), nil
 	}
+	if net.ParseIP(addr) == nil {
+		return "", fmt.Errorf("failed to parse '%s' as IP", addr)
+	}
 	return net.JoinHostPort(addr, port), nil
+}
+
+// RemainingAddrsOrInterfaces calls RemainingAddrs, and if that fails checks if interface names are used and
+// returns the addresses on those.
+func (d *Dispenser) RemainingAddrsOrInterfaces() ([]string, error) {
+	addrs, err := d.RemainingAddrs()
+	if err == nil {
+		return addrs, nil
+	}
+
+	ifaddrs := []string{}
+	for i := range addrs {
+		ifa, err := iface.Addr(addrs[i])
+		if err != nil {
+			return nil, err
+		}
+		ifaddrs = append(ifaddrs, ifa...)
+	}
+	return ifaddrs, nil
 }
 
 // RemainingIPs calls RemainingArgs and return all IPs. If a arg does not look like an IP, it is assume to be
@@ -344,9 +366,12 @@ func (d *Dispenser) RemainingIPs() ([]string, error) {
 			ips = append(ips, args[i])
 			continue
 		}
-		ifips := iface.List(args[i])
+		ifips, err := iface.List(args[i])
+		if err != nil {
+			return args, err
+		}
 		if len(ifips) == 0 {
-			return nil, fmt.Errorf("failed to find routable IPs on '%s' interface", args[i])
+			return args, fmt.Errorf("failed to find routable IPs on '%s' interface", args[i])
 		}
 		ips = append(ips, ifips...)
 	}
