@@ -50,7 +50,7 @@ func Addr(name string) ([]string, error) {
 	if i > 0 {
 		port = name[i+1:]
 		if _, err := strconv.Atoi(port); err != nil {
-			return nil, fmt.Errorf("port '%s' isn't numerical: %w", err)
+			return nil, fmt.Errorf("port '%s' isn't numerical: %w", port, err)
 		}
 		name = name[:i]
 	}
