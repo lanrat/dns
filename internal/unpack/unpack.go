@@ -158,12 +158,11 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			if int(off) >= Offset(cs, msgBuf)-2 {
 				return "", &Error{"pointer not to prior occurrence of name"}
 			}
-			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
-			cs = msgBuf[off:]
-			ptrs++
-			if ptrs > maxCompressionPointers {
+			if ptrs++; ptrs > maxCompressionPointers {
 				return "", &Error{"too many compression pointers"}
 			}
+			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
+			cs = msgBuf[off:]
 
 		default: // 0x80 and 0x40 are reserved
 			return "", &Error{"reserved domain name label type"}
@@ -244,12 +243,11 @@ func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			if int(off) >= Offset(cs, msgBuf)-2 {
 				return "", &Error{"pointer not to prior occurrence of name"}
 			}
-			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
-			cs = msgBuf[off:]
-			ptrs++
-			if ptrs > maxCompressionPointers {
+			if ptrs++; ptrs > maxCompressionPointers {
 				return "", &Error{"too many compression pointers"}
 			}
+			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
+			cs = msgBuf[off:]
 
 		default: // 0x80 and 0x40 are reserved
 			return "", &Error{"reserved domain name label type"}
