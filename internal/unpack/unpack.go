@@ -130,13 +130,15 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return string(name), nil
 			}
 
-			if len(name)+int(c) >= maxNamePresentationLength {
+			ln := len(name)
+			if ln+int(c) >= maxNamePresentationLength {
 				return "", &Error{"name exceeded max wire-format octets"}
 			}
 
-			ln := len(name)
-			name = name[:ln+int(c)+1]          // extend slice
-			cs.CopyBytes(name[ln : ln+int(c)]) // copy label into correct place
+			name = name[:ln+int(c)+1]                // extend slice
+			if !cs.CopyBytes(name[ln : ln+int(c)]) { // copy label into correct place
+				return "", &Error{"overflow name"}
+			}
 			name[ln+int(c)] = '.'
 
 		case 0xC0: // pointer
@@ -195,13 +197,15 @@ func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return string(name), nil
 			}
 
-			if len(name)+int(c) >= maxNamePresentationLength {
-				return "", &Error{"name exceeded max wire-format octets: " + string(*s)}
+			ln := len(name)
+			if ln+int(c) >= maxNamePresentationLength {
+				return "", &Error{"name exceeded max wire-format octets"}
 			}
 
-			ln := len(name)
-			name = name[:ln+int(c)+1]          // extend slice
-			cs.CopyBytes(name[ln : ln+int(c)]) // copy label into correct place
+			name = name[:ln+int(c)+1]                // extend slice
+			if !cs.CopyBytes(name[ln : ln+int(c)]) { // copy label into correct place
+				return "", &Error{"overflow name"}
+			}
 
 			// if this names contains dots, it's embedded and should be escaped.
 			dots := bytes.Count(name[ln:], []byte{'.'})
