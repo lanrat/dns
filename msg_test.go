@@ -230,6 +230,16 @@ func TestMsgBinary(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"Label longer than the octets left",
+			[]byte{0, 1, 0x80, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 60, 0, 5, 2, 'a', 'b', 3, 0},
+			func(m *dns.Msg, unpackerr error) error {
+				if unpackerr == nil {
+					return fmt.Errorf("unpacking with label overflow should error")
+				}
+				return nil
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
