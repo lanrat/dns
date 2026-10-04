@@ -15,7 +15,8 @@ import (
 
 const (
 	maxNameWireOctets = 255 // See RFC 1035 section 2.3.4
-
+	// This is the maximum number of compression pointers we follow, while unpacking a name.
+	maxCompressionPointers = (maxNameWireOctets+1)/2 - 2
 	// This is the maximum length of a domain name in presentation format. The
 	// maximum wire length of a domain name is 255 octets (see above), with the
 	// maximum label length being 63. The wire format requires one extra byte over
@@ -107,7 +108,7 @@ func String(s *cryptobyte.String) (string, error) {
 // Name unpacks a name in a cryptobyte.String.
 func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	name := make([]byte, 0, maxNamePresentationLength)
-	var ptrs bool
+	ptrs := uint8(0)
 
 	// If we never see a pointer, we need to ensure that we advance s to our final position.
 	cs := *s
@@ -120,7 +121,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 		switch c & 0xC0 {
 		case 0x00: // literal string
 			if c == 0 { // If we see a zero-length label (root label), this is the end of the name.
-				if !ptrs {
+				if ptrs == 0 {
 					*s = cs
 				}
 				if len(name) == 0 {
@@ -147,7 +148,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return "", &Error{"overflow name"}
 			}
 			// If this is the first pointer we've seen, we need to advance s to our current position.
-			if !ptrs {
+			if ptrs == 0 {
 				*s = cs
 			}
 			// The pointer should always point backwards to an earlier part of the message. Technically it could work pointing
@@ -159,7 +160,10 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
 			cs = msgBuf[off:]
-			ptrs = true
+			ptrs++
+			if ptrs > maxCompressionPointers {
+				return "", &Error{"too many compression pointers"}
+			}
 
 		default: // 0x80 and 0x40 are reserved
 			return "", &Error{"reserved domain name label type"}
@@ -170,7 +174,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 // MName unpacks a name in a cryptobyte.String, while also taking care of escaped dots (\.).
 func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	name := make([]byte, 0, maxNamePresentationLength*2) // everything can be escaped...
-	var ptrs bool
+	ptrs := uint8(0)
 
 	// If we never see a pointer, we need to ensure that we advance s to our final position.
 	cs := *s
@@ -183,7 +187,7 @@ func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 		switch c & 0xC0 {
 		case 0x00: // literal string
 			if c == 0 { // If we see a zero-length label (root label), this is the end of the name.
-				if !ptrs {
+				if ptrs == 0 {
 					*s = cs
 				}
 				if len(name) == 0 {
@@ -230,7 +234,7 @@ func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return "", &Error{"overflow name"}
 			}
 			// If this is the first pointer we've seen, we need to advance s to our current position.
-			if !ptrs {
+			if ptrs == 0 {
 				*s = cs
 			}
 			// The pointer should always point backwards to an earlier part of the message. Technically it could work pointing
@@ -242,7 +246,10 @@ func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
 			cs = msgBuf[off:]
-			ptrs = true
+			ptrs++
+			if ptrs > maxCompressionPointers {
+				return "", &Error{"too many compression pointers"}
+			}
 
 		default: // 0x80 and 0x40 are reserved
 			return "", &Error{"reserved domain name label type"}
