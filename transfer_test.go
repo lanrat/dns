@@ -8,7 +8,6 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
-	"codeberg.org/miekg/dns/dnsutil"
 )
 
 var testTransferData = []dns.RR{
@@ -30,58 +29,6 @@ var testTransferDataIncrementalData = []dns.RR{
 }
 
 const testTransferZone = "miek.nl."
-
-func TestTransferEdgeCases(t *testing.T) {
-	single := false
-	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		r.Unpack()
-		w.Hijack()
-
-		env := make(chan *dns.Envelope)
-		c := new(dns.Client)
-
-		var wg sync.WaitGroup
-		wg.Go(func() {
-			c.TransferOut(w, r, env, nil)
-		})
-		if single {
-			env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
-		} else {
-			env <- &dns.Envelope{Answer: []dns.RR{}}
-		}
-		close(env)
-		w.Close()
-	})
-	defer dns.HandleRemove(testTransferZone)
-
-	for _, name := range []string{"invalid", "single"} {
-		t.Run(name, func(t *testing.T) {
-			if name == "single" {
-				single = true
-			}
-			cancel, addr, _ := dnstest.TCPServer(":0")
-			defer cancel()
-
-			c := new(dns.Client)
-			m := new(dns.Msg)
-			dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
-
-			env, err := c.TransferIn(context.TODO(), m, addr, nil)
-			if err != nil {
-				t.Fatal("failed to zone transfer in", err)
-			}
-
-			for e := range env {
-				if !single && e.Error == nil {
-					t.Fatal("expected error, got none")
-				}
-				if single && len(e.Answer) != 1 {
-					t.Fatalf("bad axfr: expected %d, got %d", 1, len(e.Answer))
-				}
-			}
-		})
-	}
-}
 
 func TestTransfer(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
@@ -153,11 +100,11 @@ func TestTransfer(t *testing.T) {
 	}
 }
 
-// TestTransferTermination checks that TransferIn detects the end of a transfer by itself, i.e. from the
+// TestTransferEdgeCases checks that TransferIn detects the end of a transfer by itself, i.e. from the
 // terminal SOA (AXFR) or the SOA countdown (IXFR), instead of relying on the server closing the
-// connection. Each element of answers is sent as a separate message and the server does not close
-// the connection, so a client that misses the end reads on and returns too many RRs.
-func TestTransferTermination(t *testing.T) {
+// connection. Each element of answers is sent as a separate message, so a client that misses the end
+// reads on and returns too many RRs.
+func TestTransferEdgeCases(t *testing.T) {
 	testcases := []struct {
 		name    string
 		qtype   uint16
@@ -184,7 +131,9 @@ func TestTransferTermination(t *testing.T) {
 				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
 			}, 4200000000, false, 8,
 		},
-		// For the AXFR cases the last message is a complete zone the client must never read.
+		{"axfr-invalid", dns.TypeAXFR, [][]dns.RR{{}}, 0, true, 0},
+		{"axfr-single", dns.TypeAXFR, [][]dns.RR{{testTransferData[0]}}, 0, false, 1},
+		// For the AXFR cases below the last message is a complete zone the client must never read.
 		{
 			// The entire zone in a single message, the opening and terminal SOA are in the same message.
 			"axfr-single-message", dns.TypeAXFR, [][]dns.RR{testTransferData, testTransferData}, 0, false, 4,
@@ -221,6 +170,7 @@ func TestTransferTermination(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Go(func() {
 			c.TransferOut(w, r, env, nil)
+			w.Close()
 		})
 
 		for _, ans := range answers {
