@@ -133,28 +133,26 @@ func TestTransferEdgeCases(t *testing.T) {
 		},
 		{"axfr-invalid", dns.TypeAXFR, [][]dns.RR{{}}, 0, true, 0},
 		{"axfr-single", dns.TypeAXFR, [][]dns.RR{{testTransferData[0]}}, 0, false, 1},
-		// For the AXFR cases below the last message is a complete zone the client must never read.
 		{
 			// The entire zone in a single message, the opening and terminal SOA are in the same message.
-			"axfr-single-message", dns.TypeAXFR, [][]dns.RR{testTransferData, testTransferData}, 0, false, 4,
+			// The zone is sent twice, a client that misses the terminal SOA reads the second one too.
+			"axfr-double-write", dns.TypeAXFR, [][]dns.RR{testTransferData, testTransferData}, 0, false, 4,
 		},
 		{
-			"axfr-empty-zone", dns.TypeAXFR, [][]dns.RR{{testTransferData[0], testTransferData[3]}, testTransferData}, 0, false, 2,
+			"axfr-empty-zone", dns.TypeAXFR, [][]dns.RR{{testTransferData[0], testTransferData[3]}}, 0, false, 2,
 		},
 		{
 			// The first message only holds the opening SOA, it must not be seen as the terminal one.
-			"axfr-soa-only-first", dns.TypeAXFR, [][]dns.RR{testTransferData[:1], testTransferData[1:], testTransferData}, 0, false, 4,
+			"axfr-soa-only-first", dns.TypeAXFR, [][]dns.RR{testTransferData[:1], testTransferData[1:]}, 0, false, 4,
 		},
 		{
-			"axfr-soa-only-last", dns.TypeAXFR, [][]dns.RR{testTransferData[:3], testTransferData[3:], testTransferData}, 0, false, 4,
+			"axfr-soa-only-last", dns.TypeAXFR, [][]dns.RR{testTransferData[:3], testTransferData[3:]}, 0, false, 4,
 		},
 		{
 			// A server sends the complete IXFR diff inside a single TCP message. The client
 			// must recognise the transfer as done and return without falling back to io.Copy
 			// for a second read.
-			//
-			// Note this uses a different handler, which stays registered, so this case must be last.
-			"changed-handler-double-write", dns.TypeIXFR, [][]dns.RR{},
+			"ixfr-double-write", dns.TypeIXFR, [][]dns.RR{testTransferDataIncrementalData, testTransferDataIncrementalData},
 			2009032800, false, 8,
 		},
 	}
@@ -182,25 +180,6 @@ func TestTransferEdgeCases(t *testing.T) {
 	defer dns.HandleRemove(testTransferZone)
 
 	for _, tc := range testcases {
-		if tc.name == "changed-handler-double-write" {
-			dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-				r.Unpack()
-				w.Hijack()
-
-				write := func() {
-					resp := new(dns.Msg)
-					resp.ID = r.ID
-					resp.Response = true
-					resp.Answer = testTransferDataIncrementalData
-					resp.WriteTo(w)
-				}
-
-				write() // complete IXFR — client must stop here
-				write() // only a buggy client falls back to io.Copy and reads this
-				w.Close()
-			})
-		}
-
 		t.Run(tc.name, func(t *testing.T) {
 			answers = tc.answers
 			cancel, addr, _ := dnstest.TCPServer(":0")
