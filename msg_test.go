@@ -197,6 +197,17 @@ func TestMsgBinary(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"unpack error type", // same as above, but check the error with errors.As.
+			[]byte{175, 231, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7, 101, 120, 97, 109, 112, 108, 101, 0, 0, 28},
+			func(m *dns.Msg, unpackerr error) error {
+				var ue *dns.UnpackError
+				if !errors.As(fmt.Errorf("wrapped: %w", unpackerr), &ue) {
+					return fmt.Errorf("expected *dns.UnpackError, got %T", unpackerr)
+				}
+				return nil
+			},
+		},
 		/*
 			;; OPT PSEUDOSECTION:
 			; EDNS: version 0; flags:; udp: 1232
