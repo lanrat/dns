@@ -85,7 +85,7 @@ scrape_configs:
   - job_name: atomdns
     metrics_path: /metrics
     static_configs:
-      - targets: ["atomdns"]
+      - targets: ["http://localhost"]
     relabel_configs:
       - target_label: __unix_socket__
         replacement: /run/atomdns/metrics.sock
