@@ -23,7 +23,7 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
         quiet
         disable
     }
-    metrics [/N] [ADDRRES]
+    metrics [/N] [ADDRRES|SOCKET]
     health [ADDRESS [LAMEDUCK]]
     pprof [FILE|ADDRESS]
     dns {
@@ -69,12 +69,16 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
   - With `quiet` the banner is not shown. Query logging is not affected.
   - And `disable` disables the logging so that it can be enabled with the SIGUSR1 signal, see atomdns-log(7).
     To enable logging for specific zone you need to enable the _log_ handler in that handler block.
-- The `metrics` property allows setting the listening **ADDRESS** for the prometheus metrics. This defaults to `localhost:9153`.
+- The `metrics` property allows setting the listening **ADDRESS|** or **SOCKET** for the prometheus metrics. This defaults to `localhost:9153`.
+  If a path is used (i.e. contains a slash) a Unix domain socket is assumed. See the atomdns-metrics(7) on how
+  to configure Prometheus in that case.
+
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global block.
   The optional **/N** tells the metric handler to monitor 1 in **N** queries. The default is 10. This needs to
   be a positive integer > 0. This is done to not impair performance too much.
   With the `metrics` handler you can enable/disable metrics on a per server basis.
+
 - With `health` you start a local web server that exports a /health endpoint on **ADDRESS** that returns 200 OK when
   everything is OK. When **LAMEDUCK** which should be a time.Duration in string form is given, the server' shutdown will be
   delayed for that duration. The default for **ADDRESS** is `:8080`. Every 2 seconds atomdns will query itself

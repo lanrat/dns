@@ -249,7 +249,11 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			}
 			g.OnStartup(func() error {
 				log().Info("Startup", "/metrics", addr, slog.Int64("/N", int64(g.MetricsN)))
-				ln, err := net.Listen("tcp", addr)
+				network := "tcp"
+				if strings.Contains(addr, "/") {
+					network = "unix"
+				}
+				ln, err := net.Listen(network, addr)
 				if err != nil {
 					return err
 				}
