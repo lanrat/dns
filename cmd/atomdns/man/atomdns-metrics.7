@@ -134,7 +134,7 @@ scrape\_configs:
       \- targets: ["http://localhost"]
     relabel\_configs:
       \- target\_label: \_\_unix\_socket\_\_
-        replacement: /run/atomdns/metrics.sock
+        replacement: /run/atomdns.sock
 
 .fi
 .RE

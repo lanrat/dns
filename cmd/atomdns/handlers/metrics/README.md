@@ -88,7 +88,7 @@ scrape_configs:
       - targets: ["http://localhost"]
     relabel_configs:
       - target_label: __unix_socket__
-        replacement: /run/atomdns/metrics.sock
+        replacement: /run/atomdns.sock
 ```
 
 # See Also

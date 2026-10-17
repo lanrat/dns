@@ -72,7 +72,6 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
 - The `metrics` property allows setting the listening **ADDRESS|** or **SOCKET** for the prometheus metrics. This defaults to `localhost:9153`.
   If a path is used (i.e. contains a slash) a Unix domain socket is assumed. See the atomdns-metrics(7) on how
   to configure Prometheus in that case.
-
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global block.
   The optional **/N** tells the metric handler to monitor 1 in **N** queries. The default is 10. This needs to
