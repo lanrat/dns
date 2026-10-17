@@ -257,6 +257,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				if err != nil {
 					return err
 				}
+				if network == "unix" {
+					os.Chmod(addr, 0666)
+				}
 				mux := http.NewServeMux()
 				mux.Handle("/metrics", promhttp.Handler())
 				server := &http.Server{Handler: mux, ReadTimeout: 5 * time.Second}

@@ -83,12 +83,11 @@ If you export the metrics via a Unix domain socket (`metrics /10 /run/atomdns/me
 ```yaml
 scrape_configs:
   - job_name: atomdns
-    metrics_path: /metrics
     static_configs:
-      - targets: ["http://localhost"]
+      - targets: ["localhost"]
     relabel_configs:
       - target_label: __unix_socket__
-        replacement: /run/atomdns/metrics.sock
+        replacement: /run/atomdns/atomdns.sock
 ```
 
 # See Also
