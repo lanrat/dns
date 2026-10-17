@@ -129,12 +129,11 @@ If you export the metrics via a Unix domain socket (\fB\fCmetrics /10 /run/atomd
 .nf
 scrape\_configs:
   \- job\_name: atomdns
-    metrics\_path: /metrics
     static\_configs:
-      \- targets: ["http://localhost"]
+      \- targets: ["localhost"]
     relabel\_configs:
       \- target\_label: \_\_unix\_socket\_\_
-        replacement: /run/atomdns.sock
+        replacement: /run/atomdns/atomdns.sock
 
 .fi
 .RE
