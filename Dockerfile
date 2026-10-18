@@ -1,5 +1,5 @@
 ARG BUILD_IMAGE=golang:latest
-ARG BASE=debian:bookworm-slim
+ARG BASE=alpine:latest
 
 FROM --platform=$BUILDPLATFORM ${BUILD_IMAGE} AS build
 RUN mkdir -p /tmp/build
@@ -11,6 +11,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 RUN cp atomdns /tmp/atomdns
 
 FROM ${BASE}
-COPY --from=build /tmp/atomdns /usr/bin/atomdns
+COPY --from=build /tmp/atomdns /atomdns
 WORKDIR /
-ENTRYPOINT ["/usr/bin/atomdns"]
+EXPOSE 53 53/udp 443
+ENTRYPOINT ["/atomdns"]

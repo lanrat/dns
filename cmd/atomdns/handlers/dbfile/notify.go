@@ -28,6 +28,9 @@ type Transfer struct {
 }
 
 func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	if d.From == nil {
+		return // ignore request
+	}
 	if !slices.Contains(d.From.IPs, dnsutil.RemoteIP(w)) {
 		return // ignore request
 	}

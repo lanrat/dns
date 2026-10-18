@@ -1,7 +1,6 @@
 package dbsqlite
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -39,7 +38,7 @@ func (z *Zone) Walk(fn func(*dnszone.Node) bool) {
 	// err := z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE '%.?' COLLATE canonical`, z.origin)
 	// this does:
 	names := []string{}
-	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.origin))
+	err := z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE %%.? COLLATE canonical OR name = ? ORDER BY name COLLATE canonical`, z.origin, z.origin)
 	if err != nil {
 		return
 	}
@@ -57,7 +56,7 @@ func (z *Zone) Walk(fn func(*dnszone.Node) bool) {
 func (z *Zone) AuthoritativeWalk(fn func(*dnszone.Node, bool) bool) {
 	// See comment in Walk, we keep track of delegations, also see dbfile/zone.Walk.
 	names := []string{}
-	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.origin))
+	err := z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE %%.? COLLATE canonical OR name = ? ORDER BY name COLLATE canonical`, z.origin, z.origin)
 	if err != nil {
 		return
 	}
@@ -139,7 +138,7 @@ func (z *Zone) Get(name string) (*dnszone.Node, bool) {
 
 	// nothing found, check for empty non-terminals, if this returns a wildcard? Should we exclude wildcards? TODO(miek).
 	names := []string{}
-	err = z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical`, name))
+	err = z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.?' COLLATE canonical`, name)
 	if err != nil {
 		return nil, false
 	}
