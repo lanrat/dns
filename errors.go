@@ -1,6 +1,9 @@
 package dns
 
-import "codeberg.org/miekg/dns/internal/unpack"
+import (
+	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
+)
 
 // Error represents a DNS error.
 type Error struct {
@@ -8,6 +11,9 @@ type Error struct {
 }
 
 func (e *Error) Error() string { return "dns: " + e.err }
+
+// PackError represents a packing error.
+type PackError = pack.Error
 
 // UnpackError represents an unpacking error.
 type UnpackError = unpack.Error

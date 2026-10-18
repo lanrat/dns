@@ -264,6 +264,16 @@ func TestMsgBinary(t *testing.T) {
 	}
 }
 
+func TestMsgPackError(t *testing.T) {
+	m := dns.NewMsg("example.", dns.TypeAAAA)
+	m.Question[0].Header().Name = "example" // not fully qualified
+	err := m.Pack()
+	var pe *dns.PackError
+	if !errors.As(fmt.Errorf("wrapped: %w", err), &pe) {
+		t.Fatalf("expected *dns.PackError, got %T", err)
+	}
+}
+
 func TestMsg(t *testing.T) {
 	const msgArcount = 10 // offset in the message where the Arcount is, 2 octets long.
 	a := new(dns.RFC3597)
