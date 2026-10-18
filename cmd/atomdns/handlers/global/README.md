@@ -69,7 +69,7 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
   - With `quiet` the banner is not shown. Query logging is not affected.
   - And `disable` disables the logging so that it can be enabled with the SIGUSR1 signal, see atomdns-log(7).
     To enable logging for specific zone you need to enable the _log_ handler in that handler block.
-- The `metrics` property allows setting the listening **ADDRESS|** or **SOCKET** for the prometheus metrics. This defaults to `localhost:9153`.
+- The `metrics` property allows setting the listening **ADDRESS** or **SOCKET** for the prometheus metrics. This defaults to `localhost:9153`.
   If a path is used (i.e. contains a slash) a Unix domain socket is assumed. See the atomdns-metrics(7) on how
   to configure Prometheus in that case.
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
