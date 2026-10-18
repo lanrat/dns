@@ -38,10 +38,10 @@ UNIQUE (name, type, data)
 ```
 
 You can just add RRs to this table for _any_ zone and _dbsqlite_ will happily use them. Relative names will be
-made not be made into fully qualified ones, and for some queries that will not be matched and silently _not_ included.
+made **not** be made into fully qualified ones, and for some queries that will not be matched and silently _not_ included.
 
     sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
-    sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
+    sqlite> insert into rrs values ( 'subdel.example.', 'ns', 'ns.example.com.', 3600);
 
 This one database can be safely used for all zones you have. Note that you still have to make sure the handler
 gets queries for new zones.
