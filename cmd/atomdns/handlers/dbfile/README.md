@@ -96,7 +96,7 @@ www     IN A     127.0.0.1
 
 Or use a single zone file for multiple zones:
 
-```conffile
+```
 example.org example.net {
     dbfile example.org.signed {
         transfer {
