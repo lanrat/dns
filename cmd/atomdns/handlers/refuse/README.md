@@ -12,5 +12,5 @@ It is never needed to specify this handler in the configuration, it is added aut
 For documentation purposes the syntax is shown here.
 
 ```txt
-refused
+refuse
 ```
