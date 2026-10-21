@@ -4,6 +4,7 @@ package dns
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
@@ -104,14 +105,17 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		return nil, time.Since(t), err
 	}
 
+	// A reply to another query is not parsed.
+	if len(r.Data) >= 2 {
+		if id := binary.BigEndian.Uint16(r.Data); id != m.ID {
+			return r, time.Since(t), fmt.Errorf("%w: %d != %d", ErrID, id, m.ID)
+		}
+	}
 	if err = r.Unpack(); err != nil {
 		return r, time.Since(t), err
 	}
 	if !r.Response {
 		return r, time.Since(t), &Error{err: "response bit is not set"}
-	}
-	if r.ID != m.ID {
-		return r, time.Since(t), fmt.Errorf("%w: %d != %d", ErrID, r.ID, m.ID)
 	}
 
 	return r, time.Since(t), nil

@@ -2,8 +2,12 @@ package dns_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net"
+	"testing"
+	"time"
 
 	"codeberg.org/miekg/dns"
 )
@@ -55,5 +59,36 @@ func ExampleClient_Exchange_edns0() {
 			fmt.Printf("NSID returned from server: %s\n", nsid.Nsid)
 			break
 		}
+	}
+}
+
+func TestExchangeWithConnIDBeforeUnpack(t *testing.T) {
+	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pc.Close()
+	go func() {
+		buf := make([]byte, 512)
+		_, addr, err := pc.ReadFrom(buf)
+		if err != nil {
+			return
+		}
+		pc.WriteTo(answerMsg(126, 4096), addr) // ID 1, past the follow budget
+	}()
+
+	conn, err := net.Dial("udp", pc.LocalAddr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+
+	m := dns.NewMsg("a.", dns.TypeA)
+	m.ID = 2
+	m.UDPSize = 4096
+	c := dns.NewClient()
+	c.ReadTimeout = 5 * time.Second // real socket
+	if _, _, err := c.ExchangeWithConn(context.Background(), m, conn); !errors.Is(err, dns.ErrID) {
+		t.Fatalf("expected %v, got %v", dns.ErrID, err)
 	}
 }
