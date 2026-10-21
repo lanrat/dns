@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"io"
 	"log"
+	"strings"
+	"testing"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -62,5 +64,14 @@ func ExamplePADDING() {
 			return
 		}
 		io.Copy(w, m)
+	}
+}
+
+func TestMQTYPEString(t *testing.T) {
+	types := []uint16{dns.TypeA, dns.TypeAAAA, dns.TypeHTTPS}
+	for _, o := range []dns.EDNS0{&dns.MQQUERY{Types: types}, &dns.MQRESPONSE{Types: types}} {
+		if s := o.String(); !strings.HasSuffix(s, "A AAAA HTTPS") {
+			t.Errorf("expected %T to end in %q, got %q", o, "A AAAA HTTPS", s)
+		}
 	}
 }

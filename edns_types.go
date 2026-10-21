@@ -446,7 +446,7 @@ func (o *MQQUERY) String() string {
 		sb.WriteString(typeToString(o.Types[0]))
 		return sb.String()
 	default:
-		typeToString(o.Types[0])
+		sb.WriteString(typeToString(o.Types[0]))
 	}
 	for _, t := range o.Types[1:] {
 		sb.WriteByte(' ')
