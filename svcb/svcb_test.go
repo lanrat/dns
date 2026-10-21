@@ -3,7 +3,7 @@ package svcb
 import (
 	"testing"
 
-	"golang.org/x/crypto/cryptobyte"
+	"codeberg.org/miekg/dns/pkg/dnsnet"
 )
 
 // This tests everything valid about SVCB but parsing. Parsing tests belong to parse_test.go.
@@ -60,7 +60,7 @@ func TestSVCB(t *testing.T) {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", o.key, o.data, str)
 		}
 
-		sc := cryptobyte.String(b[4:]) // skip the TLV
+		sc := dnsnet.String{String: b[4:]} // skip the TLV
 		err = _unpack(pair, &sc)
 		if err != nil {
 			t.Error("failed to unpack value of svc pair: ", o.key, err)

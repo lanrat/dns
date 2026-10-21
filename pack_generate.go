@@ -21,8 +21,7 @@ package dns
 import (
 	"fmt"
 
-	"codeberg.org/miekg/dns/internal/unpack"
-	"golang.org/x/crypto/cryptobyte"
+	"codeberg.org/miekg/dns/pkg/dnsnet"
 )
 
 `
@@ -45,14 +44,14 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 
 var unpackFunc = template.Must(template.New("unpackFunc").Parse(`
 // zunpack calls the unpack methods for each RR.
-func zunpack(rr RR, data cryptobyte.String, msgBuf unpack.Buf) error {
+func zunpack(rr RR, s *dnsnet.String, msgBuf []byte) error {
 	switch x := rr.(type) {
 {{range .}}  case *{{.}}:
-	return x.unpack(data, msgBuf)
+	return x.unpack(s, msgBuf)
 {{end}} }
 	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := rr.(Packer); ok {
-		return x.Unpack(data)
+		return x.Unpack(s.String)
 	}
 	return fmt.Errorf("dns: no unpack defined")
 }

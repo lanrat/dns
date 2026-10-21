@@ -12,8 +12,8 @@ import (
 
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
+	"codeberg.org/miekg/dns/pkg/dnsnet"
 	"codeberg.org/miekg/dns/rdata"
-	"golang.org/x/crypto/cryptobyte"
 )
 
 // ID by default returns a 16-bit random number to be used as a message id. The
@@ -118,23 +118,20 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	return headerEnd, len(msg), pack.Errorf("inconsistent rdata length")
 }
 
-func unpackRR(msg *cryptobyte.String, msgBuf unpack.Buf) (RR, error) {
+func unpackRR(msg *dnsnet.String, msgBuf []byte) (RR, error) {
 	h := &Header{}
 	typ, rdlength, err := unpackHeader(h, msg, msgBuf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Directly use the existing buffer by slicing the cryptobyte.String
-	// 1. Verify sufficient bytes remain
-	if len(*msg) < int(rdlength) {
+	if len(msg.String) < int(rdlength) {
 		return nil, unpack.ErrTruncatedMessage
 	}
-
-	// was: msg.ReadBytes(&data, int(rdlength)), but we want to save the buffer we allocated for that.
-	data := (*msg)[:rdlength]
-	*msg = (*msg)[rdlength:]
-	msgBuf = msgBuf.Upto(unpack.Offset(*msg, msgBuf.Data))
+	// Narrow msg to the rdata while it is unpacked.
+	rest := msg.String[rdlength:]
+	msg.String = msg.String[:rdlength]
+	msgBuf = msgBuf[:unpack.Offset(rest, msgBuf)]
 
 	var rr RR
 	if newFn, ok := TypeToRR[typ]; ok {
@@ -144,15 +141,11 @@ func unpackRR(msg *cryptobyte.String, msgBuf unpack.Buf) (RR, error) {
 		rr = &RFC3597{Hdr: *h, RRType: typ}
 	}
 
-	if rdlength == 0 {
-		return rr, nil
+	if rdlength > 0 {
+		err = zunpack(rr, msg, msgBuf)
 	}
-
-	if err := zunpack(rr, cryptobyte.String(data), msgBuf); err != nil {
-		return rr, err
-	}
-
-	return rr, nil
+	msg.String = rest
+	return rr, err
 }
 
 // Reset resets the message's answer, ns, extra and pseudo sections to a zero length slice, thereby emptying
@@ -306,7 +299,7 @@ func (m *Msg) Pack() error {
 }
 
 // We only allow a single question in the question section.
-func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf unpack.Buf) (RR, error) {
+func (m *Msg) unpackQuestion(msg *dnsnet.String, msgBuf []byte) (RR, error) {
 	name, err := unpack.Name(msg, msgBuf)
 	if err != nil {
 		return nil, err
@@ -328,7 +321,7 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf unpack.Buf) (RR, err
 	return rr, nil
 }
 
-func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf unpack.Buf) ([]RR, error) {
+func (m *Msg) unpackQuestions(cnt uint16, msg *dnsnet.String, msgBuf []byte) ([]RR, error) {
 	// We don't preallocate dst according to cnt as that value may be attacker
 	// controlled. A malicious adversary could send us as 12-byte packet
 	// containing only the header that claims to contain 65535 questions. As
@@ -345,7 +338,7 @@ func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf unpack.
 	return dst, nil
 }
 
-func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf unpack.Buf) ([]RR, error) {
+func unpackRRs(cnt uint16, msg *dnsnet.String, msgBuf []byte) ([]RR, error) {
 	if cnt == 0 {
 		return nil, nil
 	}
@@ -367,7 +360,7 @@ func (m *Msg) Unpack() (err error) {
 	if len(m.Data) < MsgHeaderSize {
 		return fmt.Errorf("dns: message size can not be smaller than %d", MsgHeaderSize)
 	}
-	s := cryptobyte.String(m.Data)
+	s := dnsnet.New(m.Data)
 	var (
 		counts uint64 // read all counters into 64 bits and slice the 16 bits values out of it
 		bits   uint16
@@ -375,7 +368,6 @@ func (m *Msg) Unpack() (err error) {
 	if !s.ReadUint16(&m.ID) || !s.ReadUint16(&bits) || !s.ReadUint64(&counts) {
 		return unpack.Errorf("overflow %s", "MsgHeader")
 	}
-	buf := unpack.NewBuf(m.Data)
 	m.Response = bits&_QR != 0
 	m.Opcode = uint8(bits>>11) & 0xF
 	m.Authoritative = bits&_AA != 0
@@ -398,28 +390,28 @@ func (m *Msg) Unpack() (err error) {
 		goto Rest
 	}
 
-	if m.Question, err = m.unpackQuestions(uint16((counts>>48)&0xFFFF), &s, buf); err != nil {
+	if m.Question, err = m.unpackQuestions(uint16((counts>>48)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
-		m.offset = uint16(len(m.Data) - len(s))
+		m.offset = uint16(len(m.Data) - len(s.String))
 		return nil
 	}
 
 Rest:
 	m.offset = 0 // reset offset here, as it has done its purpose
-	if m.Answer, err = unpackRRs(uint16((counts>>32)&0xFFFF), &s, buf); err != nil {
+	if m.Answer, err = unpackRRs(uint16((counts>>32)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return nil
 	}
 
-	if m.Ns, err = unpackRRs(uint16((counts>>16)&0xFFFF), &s, buf); err != nil {
+	if m.Ns, err = unpackRRs(uint16((counts>>16)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 
-	if m.Extra, err = unpackRRs(uint16(counts&0xFFFF), &s, buf); err != nil {
+	if m.Extra, err = unpackRRs(uint16(counts&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 
@@ -465,7 +457,7 @@ Rest:
 		}
 	}
 	if !s.Empty() {
-		return unpack.Errorf("%d more octets", len(s))
+		return unpack.Errorf("%d more octets", len(s.String))
 	}
 
 	// TODO(miek): might it be possible, to do this in the loop - I've tried, but switching elements while
