@@ -365,7 +365,6 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 // Unpack unpacks a binary message that sits in m.Data to a Msg structure.
 func (m *Msg) Unpack() (err error) {
 	if len(m.Data) < MsgHeaderSize {
-		// ignore remaining data
 		return fmt.Errorf("dns: message size can not be smaller than %d", MsgHeaderSize)
 	}
 	s := cryptobyte.String(m.Data)
