@@ -55,7 +55,7 @@ func TestName(t *testing.T) {
 	}
 }
 
-func TestNameFollowBudget(t *testing.T) {
+func TestNameFollow(t *testing.T) {
 	// "a." at 0, a pointer to it at 3.
 	buf := []byte{1, 'a', 0, 0xC0, 0}
 	s := dnsnet.New(buf)

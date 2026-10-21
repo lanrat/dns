@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-func TestFollowBudget(t *testing.T) {
+func TestFollowed(t *testing.T) {
 	testcases := []struct {
 		size    int
 		follows int
 	}{
 		{5, minFollows},
-		{2000, 2000 * followsPerOctet},
+		{2000, 2000 * octetFollows},
 	}
 	for _, tc := range testcases {
 		t.Run(fmt.Sprintf("size %d", tc.size), func(t *testing.T) {
