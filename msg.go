@@ -364,6 +364,10 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 
 // Unpack unpacks a binary message that sits in m.Data to a Msg structure.
 func (m *Msg) Unpack() (err error) {
+	if len(m.Data) < MsgHeaderSize {
+		// ignore remaining data
+		return fmt.Errorf("dns: message size can not be smaller than %d", MsgHeaderSize)
+	}
 	s := cryptobyte.String(m.Data)
 	var (
 		counts uint64 // read all counters into 64 bits and slice the 16 bits values out of it
@@ -774,10 +778,6 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	l := uint16(0)
 	if err := binary.Read(r, binary.BigEndian, &l); err != nil {
 		return 0, err
-	}
-	if l < MsgHeaderSize {
-		// ignore remaining data
-		return int64(l), fmt.Errorf("dns: message size %d, can not be smaller than %d", l, MsgHeaderSize)
 	}
 
 	li := int(l)
