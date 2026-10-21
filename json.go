@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"codeberg.org/miekg/dns/dnsjson"
+	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -103,7 +104,7 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := zunpack(rrs[0], cryptobyte.String(buf[:n]), nil); err != nil {
+		if err := zunpack(rrs[0], cryptobyte.String(buf[:n]), unpack.Buf{}); err != nil {
 			return nil, err
 		}
 	default:
@@ -122,7 +123,7 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 			if err != nil {
 				return nil, err
 			}
-			if err := zunpack(rrs[i], cryptobyte.String(buf[:n]), nil); err != nil {
+			if err := zunpack(rrs[i], cryptobyte.String(buf[:n]), unpack.Buf{}); err != nil {
 				return nil, err
 			}
 		}

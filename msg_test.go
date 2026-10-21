@@ -623,3 +623,50 @@ func TestMsgReadAll(t *testing.T) {
 		t.Fatal("expected io.ReadAll to complete, but hung")
 	}
 }
+
+// answerMsg returns at most size octets: a chain of k questions, then A records owned by its last name.
+func answerMsg(k, size int) []byte {
+	b := []byte{0, 1, 0x84, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	head := len(b)
+	b = append(b, 1, 'a', 0, 0, 1, 0, 1)
+	for range k - 1 {
+		prev := head
+		head = len(b)
+		b = append(b, 1, 'a', 0xC0|byte(prev>>8), byte(prev), 0, 1, 0, 1)
+	}
+	an := 0
+	for len(b)+16 <= size {
+		b = append(b, 0xC0|byte(head>>8), byte(head), 0, 1, 0, 1, 0, 0, 0x0e, 0x10, 0, 4, 192, 0, 2, byte(an))
+		an++
+	}
+	binary.BigEndian.PutUint16(b[4:], uint16(k))
+	binary.BigEndian.PutUint16(b[6:], uint16(an))
+	return b
+}
+
+func TestMsgCompressionBudget(t *testing.T) {
+	m := &dns.Msg{Data: answerMsg(1, dns.MaxMsgSize)}
+	if err := m.Unpack(); err != nil {
+		t.Fatal(err)
+	}
+	if len(m.Answer) != 4094 {
+		t.Errorf("expected 4094 answers, got %d", len(m.Answer))
+	}
+
+	m = &dns.Msg{Data: answerMsg(126, dns.MaxMsgSize)}
+	if err := m.Unpack(); err == nil || err.Error() != "dns unpack: too many compression pointers in message" {
+		t.Errorf("expected the message budget to fail, got %v", err)
+	}
+}
+
+func BenchmarkMsgUnpackCompression(b *testing.B) {
+	for _, k := range []int{1, 126} {
+		data := answerMsg(k, dns.MaxMsgSize)
+		b.Run(fmt.Sprintf("chain %d", k), func(b *testing.B) {
+			for b.Loop() {
+				m := &dns.Msg{Data: data}
+				m.Unpack()
+			}
+		})
+	}
+}

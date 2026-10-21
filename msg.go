@@ -118,7 +118,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	return headerEnd, len(msg), pack.Errorf("inconsistent rdata length")
 }
 
-func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
+func unpackRR(msg *cryptobyte.String, msgBuf unpack.Buf) (RR, error) {
 	h := &Header{}
 	typ, rdlength, err := unpackHeader(h, msg, msgBuf)
 	if err != nil {
@@ -134,7 +134,7 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	// was: msg.ReadBytes(&data, int(rdlength)), but we want to save the buffer we allocated for that.
 	data := (*msg)[:rdlength]
 	*msg = (*msg)[rdlength:]
-	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
+	msgBuf = msgBuf.Upto(unpack.Offset(*msg, msgBuf.Data))
 
 	var rr RR
 	if newFn, ok := TypeToRR[typ]; ok {
@@ -306,7 +306,7 @@ func (m *Msg) Pack() error {
 }
 
 // We only allow a single question in the question section.
-func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
+func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf unpack.Buf) (RR, error) {
 	name, err := unpack.Name(msg, msgBuf)
 	if err != nil {
 		return nil, err
@@ -328,7 +328,7 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 	return rr, nil
 }
 
-func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
+func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf unpack.Buf) ([]RR, error) {
 	// We don't preallocate dst according to cnt as that value may be attacker
 	// controlled. A malicious adversary could send us as 12-byte packet
 	// containing only the header that claims to contain 65535 questions. As
@@ -345,7 +345,7 @@ func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte)
 	return dst, nil
 }
 
-func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
+func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf unpack.Buf) ([]RR, error) {
 	if cnt == 0 {
 		return nil, nil
 	}
@@ -375,6 +375,7 @@ func (m *Msg) Unpack() (err error) {
 	if !s.ReadUint16(&m.ID) || !s.ReadUint16(&bits) || !s.ReadUint64(&counts) {
 		return unpack.Errorf("overflow %s", "MsgHeader")
 	}
+	buf := unpack.NewBuf(m.Data)
 	m.Response = bits&_QR != 0
 	m.Opcode = uint8(bits>>11) & 0xF
 	m.Authoritative = bits&_AA != 0
@@ -397,7 +398,7 @@ func (m *Msg) Unpack() (err error) {
 		goto Rest
 	}
 
-	if m.Question, err = m.unpackQuestions(uint16((counts>>48)&0xFFFF), &s, m.Data); err != nil {
+	if m.Question, err = m.unpackQuestions(uint16((counts>>48)&0xFFFF), &s, buf); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
@@ -407,18 +408,18 @@ func (m *Msg) Unpack() (err error) {
 
 Rest:
 	m.offset = 0 // reset offset here, as it has done its purpose
-	if m.Answer, err = unpackRRs(uint16((counts>>32)&0xFFFF), &s, m.Data); err != nil {
+	if m.Answer, err = unpackRRs(uint16((counts>>32)&0xFFFF), &s, buf); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return nil
 	}
 
-	if m.Ns, err = unpackRRs(uint16((counts>>16)&0xFFFF), &s, m.Data); err != nil {
+	if m.Ns, err = unpackRRs(uint16((counts>>16)&0xFFFF), &s, buf); err != nil {
 		return err
 	}
 
-	if m.Extra, err = unpackRRs(uint16(counts&0xFFFF), &s, m.Data); err != nil {
+	if m.Extra, err = unpackRRs(uint16(counts&0xFFFF), &s, buf); err != nil {
 		return err
 	}
 

@@ -193,7 +193,7 @@ if rr.%s != "-" {
 		// Unpack functions
 		//
 
-		fmt.Fprintf(b, "func (rr *%s) unpack(s cryptobyte.String, msgBuf []byte) (err error) {\n", rrname)
+		fmt.Fprintf(b, "func (rr *%s) unpack(s cryptobyte.String, msgBuf unpack.Buf) (err error) {\n", rrname)
 
 		if generate.IsEmbedded(strct) {
 			fmt.Fprintf(b, "return rr.%s.unpack(s, msgBuf)\n}\n", strct.Fields.List[0].Type)

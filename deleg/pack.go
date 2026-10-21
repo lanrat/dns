@@ -106,7 +106,7 @@ func (s *SERVERNAME) pack(msg []byte, off int) (int, error) {
 
 func (s *SERVERNAME) unpack(sc *cryptobyte.String) error {
 	if !sc.Empty() {
-		hostname, err := unpack.Name(sc, nil)
+		hostname, err := unpack.Name(sc, unpack.Buf{})
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ func (s *INCLUDEDELEGPARAM) pack(msg []byte, off int) (int, error) {
 
 func (s *INCLUDEDELEGPARAM) unpack(sc *cryptobyte.String) error {
 	if !sc.Empty() {
-		domain, err := unpack.Name(sc, nil)
+		domain, err := unpack.Name(sc, unpack.Buf{})
 		if err != nil {
 			return err
 		}

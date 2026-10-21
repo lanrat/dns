@@ -22,7 +22,25 @@ const (
 	// maximum label length being 63. The wire format requires one extra byte over
 	// the presentation format.
 	maxNamePresentationLength = maxNameWireOctets - 1
+	// Pointer follows one message may spend, per octet and at least.
+	followsPerOctet = 2
+	minFollows      = 2048
 )
+
+// Buf is the message names are unpacked from, with the pointer follows it has left.
+type Buf struct {
+	Data []byte
+	left *int
+}
+
+// NewBuf returns a Buf for msg with a follow budget proportional to its length.
+func NewBuf(msg []byte) Buf {
+	left := max(followsPerOctet*len(msg), minFollows)
+	return Buf{Data: msg, left: &left}
+}
+
+// Upto returns b cut at off, sharing its budget.
+func (b Buf) Upto(off int) Buf { return Buf{Data: b.Data[:off], left: b.left} }
 
 func A(s *cryptobyte.String) (netip.Addr, error) {
 	var in []byte
@@ -106,7 +124,7 @@ func String(s *cryptobyte.String) (string, error) {
 // which is where the next record or record field will start. We enforce that pointers always point backwards into the message.
 
 // Name unpacks a name in a cryptobyte.String.
-func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
+func Name(s *cryptobyte.String, msgBuf Buf) (string, error) {
 	name := make([]byte, 0, maxNamePresentationLength)
 	ptrs := uint8(0)
 
@@ -142,7 +160,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			name[ln+int(c)] = '.'
 
 		case 0xC0: // pointer
-			if msgBuf == nil {
+			if msgBuf.Data == nil {
 				return "", &Error{"pointer in uncompressable name"}
 			}
 			var c1 byte
@@ -157,14 +175,17 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior
 			// occurrence".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= Offset(cs, msgBuf)-2 {
+			if int(off) >= Offset(cs, msgBuf.Data)-2 {
 				return "", &Error{"pointer not to prior occurrence of name"}
 			}
 			if ptrs++; ptrs > maxCompressionPointers {
 				return "", &Error{"too many compression pointers"}
 			}
+			if *msgBuf.left--; *msgBuf.left < 0 {
+				return "", &Error{"too many compression pointers in message"}
+			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
-			cs = msgBuf[off:]
+			cs = msgBuf.Data[off:]
 
 		default: // 0x80 and 0x40 are reserved
 			return "", &Error{"reserved domain name label type"}
@@ -173,7 +194,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 }
 
 // MName unpacks a name in a cryptobyte.String, while also taking care of escaped dots (\.).
-func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
+func MName(s *cryptobyte.String, msgBuf Buf) (string, error) {
 	name := make([]byte, 0, maxNamePresentationLength*2) // everything can be escaped...
 	ptrs := uint8(0)
 
@@ -229,7 +250,7 @@ func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			name[ln+int(c)+dots] = '.'
 
 		case 0xC0: // pointer
-			if msgBuf == nil {
+			if msgBuf.Data == nil {
 				return "", &Error{"pointer in uncompressable name"}
 			}
 			var c1 byte
@@ -244,14 +265,17 @@ func MName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior
 			// occurrence".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= Offset(cs, msgBuf)-2 {
+			if int(off) >= Offset(cs, msgBuf.Data)-2 {
 				return "", &Error{"pointer not to prior occurrence of name"}
 			}
 			if ptrs++; ptrs > maxCompressionPointers {
 				return "", &Error{"too many compression pointers"}
 			}
+			if *msgBuf.left--; *msgBuf.left < 0 {
+				return "", &Error{"too many compression pointers in message"}
+			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
-			cs = msgBuf[off:]
+			cs = msgBuf.Data[off:]
 
 		default: // 0x80 and 0x40 are reserved
 			return "", &Error{"reserved domain name label type"}
@@ -291,7 +315,7 @@ func StringHex(s *cryptobyte.String, len int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func Names(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
+func Names(s *cryptobyte.String, msgBuf Buf) ([]string, error) {
 	var names []string
 	for !s.Empty() {
 		name, err := Name(s, msgBuf)

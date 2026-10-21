@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"codeberg.org/miekg/dns/internal/unpack"
 	"codeberg.org/miekg/dns/pkg/pool"
 )
 
@@ -333,7 +334,7 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 		return nil
 	}
 
-	return rr.unpack(buf[headerEnd:], buf)
+	return rr.unpack(buf[headerEnd:], unpack.NewBuf(buf))
 }
 
 // fromRFC3597 converts an unknown RR representation from RFC 3597 to the known RR type.
@@ -352,7 +353,7 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 	if len(msg) == 0 { // no rdata
 		return nil
 	}
-	return zunpack(r, msg, msg)
+	return zunpack(r, msg, unpack.NewBuf(msg))
 }
 
 const msgArcount = 10 // offset in the message where the Arcount is, 2 octets long.

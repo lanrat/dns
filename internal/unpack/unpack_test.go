@@ -37,9 +37,9 @@ func TestName(t *testing.T) {
 			s := cryptobyte.String(tc.buf[tc.start:])
 			sl := (len(s))
 			if tc.mname {
-				name, err = MName(&s, tc.buf)
+				name, err = MName(&s, NewBuf(tc.buf))
 			} else {
-				name, err = Name(&s, tc.buf)
+				name, err = Name(&s, NewBuf(tc.buf))
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -49,6 +49,35 @@ func TestName(t *testing.T) {
 			}
 			if name != tc.name {
 				t.Errorf("expected name %s, got %s", tc.name, name)
+			}
+		})
+	}
+}
+
+func TestNameFollowBudget(t *testing.T) {
+	testcases := []struct {
+		size    int
+		follows int
+	}{
+		{5, minFollows},
+		{2000, 2000 * followsPerOctet},
+	}
+	for _, tc := range testcases {
+		t.Run(fmt.Sprintf("size %d", tc.size), func(t *testing.T) {
+			// "a." at 0, a pointer to it at 3.
+			buf := make([]byte, tc.size)
+			copy(buf, []byte{1, 'a', 0, 0xC0, 0})
+			msgBuf := NewBuf(buf)
+			for i := range tc.follows {
+				s := cryptobyte.String(buf[3:5])
+				if _, err := Name(&s, msgBuf); err != nil {
+					t.Fatalf("follow %d: %v", i+1, err)
+				}
+			}
+			s := cryptobyte.String(buf[3:5])
+			_, err := Name(&s, msgBuf)
+			if err == nil || err.Error() != "dns unpack: too many compression pointers in message" {
+				t.Fatalf("follow %d: got %v", tc.follows+1, err)
 			}
 		})
 	}
