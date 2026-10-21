@@ -78,7 +78,7 @@ scrape_configs:
       - targets: ["localhost:9153"]
 ```
 
-If you export the metrics via a Unix domain socket (`metrics /10 /run/atomdns/metrics.sock`), it will look like:
+If you export the metrics via a Unix domain socket (`metrics /10 /run/atomdns/atomdns.sock`), it will look like:
 
 ```yaml
 scrape_configs:
