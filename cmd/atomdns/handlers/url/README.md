@@ -5,7 +5,8 @@ _url_ - serve zone data from an URL
 # Description
 
 The _url_ handler is used for serving zone data that is fetched from an URL. The most prominent example of
-this is downloading the root zone from <https://www.internic.net/domain/root.zone>.
+this is downloading the root zone from <https://www.internic.net/domain/root.zone>. There is a 8 MiB limit on
+the size of the downloaded zone. The root zone in 2026 was ~3 MiB in size.
 
 The server will reply with minimal responses by default. The _url_ handler will watch the zone file and when
 it receives a (kernel) notify it will reload the zone after 2 seconds.

@@ -1,6 +1,7 @@
 package url
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 )
 
@@ -39,29 +41,37 @@ func (u *Url) Fetch() error {
 	for _, url := range u.URLs {
 		resp, err := c.Get(url)
 		if err != nil {
-			return err
+			continue
 		}
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("status code was not %d: %d", http.StatusOK, resp.StatusCode)
+			continue
 		}
-		buf, err := io.ReadAll(resp.Body)
+		lr := &io.LimitedReader{R: resp.Body, N: 8 * 1024 * 1024}
+		body, err := io.ReadAll(lr)
 		if err != nil {
 			return err
 		}
-		if len(buf) == 0 {
-			return fmt.Errorf("zero buffer read")
+		if len(body) == 0 {
+			continue
 		}
 		resp.Body.Close()
+
+		zp := dns.NewZoneParser(bytes.NewReader(body), ".", "-")
+		for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+		}
+		if zp.Err() != nil {
+			return fmt.Errorf("failed to parse zone %s with origin %s: %s ", "-", ".", zp.Err())
+		}
+
 		f, err := os.CreateTemp(filepath.Dir(u.Path), "xxxxx.transferred")
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(f.Name(), buf, 0600); err != nil {
+		if err := os.WriteFile(f.Name(), body, 0600); err != nil {
 			return err
 		}
 		defer f.Close()
 		defer os.Remove(f.Name())
-		// first url downloaded wins
 		return os.Rename(f.Name(), u.Path)
 	}
 	return fmt.Errorf("failed to fetch from all URLs")
