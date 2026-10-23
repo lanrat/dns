@@ -171,7 +171,12 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	if !r.Response {
 		return r, time.Since(t), &Error{err: "response bit is not set"}
 	}
-	if !c.done(m, w) {
+
+	c.mu.Lock()
+	ok := c.done(m, w)
+	c.mu.Unlock()
+
+	if !ok {
 		return r, time.Since(t), fmt.Errorf("%w: response ID %d does not match", ErrID, m.ID)
 	}
 
