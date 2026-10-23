@@ -44,7 +44,11 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 	for _, policy := range policies {
 		switch {
 		case policy.net != nil:
-			ip := netip.MustParseAddr(dnsutil.RemoteIP(w))
+			ip, err := netip.ParseAddr(dnsutil.RemoteIP(w))
+			if err != nil {
+				// remote is not add network address (unix socket?), continue
+				continue
+			}
 			if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
 				ip = x
 			}
