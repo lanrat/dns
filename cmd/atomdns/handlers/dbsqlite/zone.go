@@ -154,7 +154,7 @@ func (z *Zone) Apex() *dnszone.Node {
 	if node != nil {
 		return node
 	}
-	return &dnszone.Node{}
+	return nil
 }
 
 var builderPool = pool.NewBuilder()

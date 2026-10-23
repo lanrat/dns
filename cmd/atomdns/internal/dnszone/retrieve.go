@@ -18,8 +18,12 @@ import (
 // correct places. In case of NXDOMAIN or NODATA response the message will also contain the correct
 // information. The optional Restart is used to generate the correct CNAME chains.
 // When calling Retrieve for the first time re should be nil. The returned message has been copied from m and
-// shares its buffer.
+// shares its buffer. Retrieve returns nil if the zone is not loaded yet.
 func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
+	if z.Apex() == nil {
+		return nil
+	}
+
 	// If here, we are guaranteed that this zone has the correct origin and the qname falls in this zone.
 	// so we should be able to Prev to the first label that should fall in this zone.
 	r := m.Copy()
