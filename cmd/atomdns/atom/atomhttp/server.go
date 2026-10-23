@@ -41,11 +41,11 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 	}
 	ll := l
 	if x := global.HttpLimits.MaxInflight; x > 0 {
-		ll = netutil.LimitListener(l, x)
+		ll = netutil.LimitListener(ll, x)
 	}
 	lt := ll
 	if global.TlsConfig != nil {
-		lt = tls.NewListener(l, global.TlsConfig)
+		lt = tls.NewListener(lt, global.TlsConfig)
 	}
 	if global.TlsCertConfig != nil {
 		tlsConfig := global.TlsCertConfig.TLSConfig()
@@ -71,7 +71,7 @@ func New(addr string, mux *dns.ServeMux, fn dns.InvalidMsgFunc) *Server {
 	s := new(Server)
 	h := newHandler(mux, fn)
 	logger := slog.NewLogLogger(slog.Default().Handler(), slog.LevelError)
-	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger, ReadTimeout: 5 * time.Second}
+	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger, ReadTimeout: 3 * time.Second, WriteTimeout: 3 * time.Second}
 	return s
 }
 
