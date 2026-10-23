@@ -10,6 +10,7 @@
 The \fIdbsqlite\fP handler reads zone data from a data and serves that to clients. If the database contains
 signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is supported. You can
 create the database completely off\-line, if it holds the correct data, \fIdbsqlite\fP will happily serve from it.
+The first record to exist in the database should be the SOA record for the zone.
 
 .PP
 The \fIsign\fP handler does \fInot\fP support databases, so you need something like ldns\-signzone to sign and resign
@@ -179,3 +180,7 @@ If you want \fIeverything\fP to end up in \fIdbsqlite\fP, you might be tempted t
 .PP
 But this fails, \fIunless\fP you are actually authoritative for \fB\fC.\fR (the root zone), this because the named zones are
 used to find those in the database.
+
+.SH "BUGS"
+.PP
+Inserting relative names in the database will crash the server.
