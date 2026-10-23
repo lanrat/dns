@@ -2,6 +2,7 @@ package dns
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -121,7 +122,10 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		if _, err := io.Copy(r, conn); err != nil {
 			// the response writer or actual conn is closed, just return, or some other error, we may
 			// not be sure someone is still listening on this channel.
-			return
+			if errors.Is(err, io.EOF) {
+				return
+			}
+			ch <- &Envelope{Error: err}
 		}
 		if err := ctx.Err(); err != nil {
 			ch <- &Envelope{Error: err}
