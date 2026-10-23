@@ -52,14 +52,14 @@ UNIQUE (name, type, data)
 
 .PP
 You can just add RRs to this table for \fIany\fP zone and \fIdbsqlite\fP will happily use them. Relative names will be
-made not be made into fully qualified ones, and for some queries that will not be matched and silently \fInot\fP included.
+made \fBnot\fP be made into fully qualified ones, and for some queries that will not be matched and silently \fInot\fP included.
 
 .PP
 .RS
 
 .nf
 sqlite> insert into rrs values ( '\_ssh.\_tcp.host1.example.', 'srv', '10 5 43 example', 3600);
-sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
+sqlite> insert into rrs values ( 'subdel.example.', 'ns', 'ns.example.com.', 3600);
 
 .fi
 .RE
