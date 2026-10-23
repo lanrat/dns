@@ -8,7 +8,6 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
-	"codeberg.org/miekg/dns/dnsutil"
 )
 
 var testTransferData = []dns.RR{
@@ -30,58 +29,6 @@ var testTransferDataIncrementalData = []dns.RR{
 }
 
 const testTransferZone = "miek.nl."
-
-func TestTransferEdgeCases(t *testing.T) {
-	single := false
-	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		r.Unpack()
-		w.Hijack()
-
-		env := make(chan *dns.Envelope)
-		c := new(dns.Client)
-
-		var wg sync.WaitGroup
-		wg.Go(func() {
-			c.TransferOut(w, r, env, nil)
-		})
-		if single {
-			env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
-		} else {
-			env <- &dns.Envelope{Answer: []dns.RR{}}
-		}
-		close(env)
-		w.Close()
-	})
-	defer dns.HandleRemove(testTransferZone)
-
-	for _, name := range []string{"invalid", "single"} {
-		t.Run(name, func(t *testing.T) {
-			if name == "single" {
-				single = true
-			}
-			cancel, addr, _ := dnstest.TCPServer(":0")
-			defer cancel()
-
-			c := new(dns.Client)
-			m := new(dns.Msg)
-			dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
-
-			env, err := c.TransferIn(context.TODO(), m, addr, nil)
-			if err != nil {
-				t.Fatal("failed to zone transfer in", err)
-			}
-
-			for e := range env {
-				if !single && e.Error == nil {
-					t.Fatal("expected error, got none")
-				}
-				if single && len(e.Answer) != 1 {
-					t.Fatalf("bad axfr: expected %d, got %d", 1, len(e.Answer))
-				}
-			}
-		})
-	}
-}
 
 func TestTransfer(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
@@ -153,19 +100,24 @@ func TestTransfer(t *testing.T) {
 	}
 }
 
-func TestTransferIncrementalEdgeCases(t *testing.T) {
+// TestTransferEdgeCases checks that TransferIn detects the end of a transfer by itself, i.e. from the
+// terminal SOA (AXFR) or the SOA countdown (IXFR), instead of relying on the server closing the
+// connection. Each element of answers is sent as a separate message, so a client that misses the end
+// reads on and returns too many RRs.
+func TestTransferEdgeCases(t *testing.T) {
 	testcases := []struct {
 		name    string
+		qtype   uint16
 		answers [][]dns.RR
 		serial  uint32
 		wantErr bool
 		want    int
 	}{
-		{"invalid", [][]dns.RR{{}}, 2009032802, true, 0},
-		{"not-soa", [][]dns.RR{{testTransferData[1]}}, 2009032802, true, 0},
-		{"single", [][]dns.RR{{testTransferData[0]}}, 2009032800, false, 1},
+		{"invalid", dns.TypeIXFR, [][]dns.RR{{}}, 2009032802, true, 0},
+		{"not-soa", dns.TypeIXFR, [][]dns.RR{{testTransferData[1]}}, 2009032802, true, 0},
+		{"single", dns.TypeIXFR, [][]dns.RR{{testTransferData[0]}}, 2009032800, false, 1},
 		{
-			"up-to-date", [][]dns.RR{
+			"up-to-date", dns.TypeIXFR, [][]dns.RR{
 				testTransferDataIncrementalData[:len(testTransferDataIncrementalData)/2],
 				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
 			}, 2009032802, false, 1,
@@ -174,18 +126,33 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 			// clientSerial (4200000000) is numerically > serverSerial (2009032802) but the
 			// difference exceeds 2^31, so per RFC 1982 the client is behind and must receive
 			// the full incremental transfer, not just the SOA.
-			"rfc1982-behind", [][]dns.RR{
+			"rfc1982-behind", dns.TypeIXFR, [][]dns.RR{
 				testTransferDataIncrementalData[:len(testTransferDataIncrementalData)/2],
 				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
 			}, 4200000000, false, 8,
+		},
+		{"axfr-invalid", dns.TypeAXFR, [][]dns.RR{{}}, 0, true, 0},
+		{"axfr-single", dns.TypeAXFR, [][]dns.RR{{testTransferData[0]}}, 0, false, 1},
+		{
+			// The entire zone in a single message, the opening and terminal SOA are in the same message.
+			// The zone is sent twice, a client that misses the terminal SOA reads the second one too.
+			"axfr-double-write", dns.TypeAXFR, [][]dns.RR{testTransferData, testTransferData}, 0, false, 4,
+		},
+		{
+			"axfr-empty-zone", dns.TypeAXFR, [][]dns.RR{{testTransferData[0], testTransferData[3]}}, 0, false, 2,
+		},
+		{
+			// The first message only holds the opening SOA, it must not be seen as the terminal one.
+			"axfr-soa-only-first", dns.TypeAXFR, [][]dns.RR{testTransferData[:1], testTransferData[1:]}, 0, false, 4,
+		},
+		{
+			"axfr-soa-only-last", dns.TypeAXFR, [][]dns.RR{testTransferData[:3], testTransferData[3:]}, 0, false, 4,
 		},
 		{
 			// A server sends the complete IXFR diff inside a single TCP message. The client
 			// must recognise the transfer as done and return without falling back to io.Copy
 			// for a second read.
-			//
-			// Note this uses a different handler.
-			"changed-handler-double-write", [][]dns.RR{},
+			"ixfr-double-write", dns.TypeIXFR, [][]dns.RR{testTransferDataIncrementalData, testTransferDataIncrementalData},
 			2009032800, false, 8,
 		},
 	}
@@ -201,6 +168,7 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Go(func() {
 			c.TransferOut(w, r, env, nil)
+			w.Close()
 		})
 
 		for _, ans := range answers {
@@ -212,33 +180,16 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 	defer dns.HandleRemove(testTransferZone)
 
 	for _, tc := range testcases {
-		if tc.name == "changed-handler-double-write" {
-			dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-				r.Unpack()
-				w.Hijack()
-
-				write := func() {
-					resp := new(dns.Msg)
-					resp.ID = r.ID
-					resp.Response = true
-					resp.Answer = testTransferDataIncrementalData
-					resp.WriteTo(w)
-				}
-
-				write() // complete IXFR — client must stop here
-				write() // only a buggy client falls back to io.Copy and reads this
-				w.Close()
-			})
-		}
-
 		t.Run(tc.name, func(t *testing.T) {
 			answers = tc.answers
 			cancel, addr, _ := dnstest.TCPServer(":0")
 			defer cancel()
 
 			c := new(dns.Client)
-			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
-			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: tc.serial}}
+			m := dns.NewMsg(testTransferZone, tc.qtype)
+			if tc.qtype == dns.TypeIXFR {
+				m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), Ns: ".", Mbox: ".", Serial: tc.serial}}
+			}
 
 			env, err := c.TransferIn(context.TODO(), m, addr, nil)
 			if err != nil {
@@ -263,7 +214,7 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 				t.Fatalf("unexpected error: %s", gotErr)
 			}
 			if i != tc.want {
-				t.Fatalf("bad ixfr: expected %d, got %d", tc.want, i)
+				t.Fatalf("bad transfer: expected %d, got %d", tc.want, i)
 			}
 		})
 	}
