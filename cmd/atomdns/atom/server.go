@@ -311,6 +311,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Addrs:      []string{"[::]:53"},
 		Limits:     global.Limits{MaxTCPQueries: dns.MaxTCPQueries, Servers: runtime.NumCPU() * 3},
 	}
+	global.OnReset(func() { global.Reset() })
 
 	return global, s.Setup(conf, global, blocks)
 }
