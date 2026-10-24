@@ -22,8 +22,8 @@ type Geoip struct {
 func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
-		if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
-			log().Debug("Using 'ecs/address'", slog.String("address", x.String()))
+		if x := dnsctx.Addr(ctx, "ecs/addr"); x.IsValid() {
+			log().Debug("Using 'ecs/addr'", slog.String("address", x.String()))
 			ip = x
 		}
 
@@ -57,25 +57,25 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				}
 			}
 		}
-		if city.HasData() {
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "city"), city.City.Names.English)
+		if city != nil && city.HasData() {
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "city"), city.City.Names.English)
 			regions := make([]string, len(city.Subdivisions))
 			for i, region := range city.Subdivisions {
 				regions[i] = region.ISOCode
 			}
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "city/region"), regions)
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "country"), city.Country.ISOCode)
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "country/eu"), city.Country.IsInEuropeanUnion)
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "continent"), city.Continent.Code)
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "timezone"), city.Location.TimeZone)
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "city/region"), regions)
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "country"), city.Country.ISOCode)
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "country/eu"), city.Country.IsInEuropeanUnion)
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "continent"), city.Continent.Code)
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "timezone"), city.Location.TimeZone)
 			if city.Location.HasCoordinates() {
-				dnsctx.WithValue(ctx, dnsctx.Key(g, "latitude"), *city.Location.Latitude)
-				dnsctx.WithValue(ctx, dnsctx.Key(g, "longitude"), *city.Location.Longitude)
+				ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "latitude"), *city.Location.Latitude)
+				ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "longitude"), *city.Location.Longitude)
 			}
 		}
-		if asn.HasData() {
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "asn"), asn.AutonomousSystemNumber)
-			dnsctx.WithValue(ctx, dnsctx.Key(g, "asn/organization"), asn.AutonomousSystemOrganization)
+		if asn != nil && asn.HasData() {
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "asn"), asn.AutonomousSystemNumber)
+			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "asn/organization"), asn.AutonomousSystemOrganization)
 		}
 		next.ServeDNS(ctx, w, r)
 	})

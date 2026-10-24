@@ -35,6 +35,8 @@ var defaultTransport = Transport{
 // read and write timeout set to 2s.
 func NewTransport() *Transport {
 	d := defaultTransport
+	dialer := *defaultTransport.Dialer
+	d.Dialer = &dialer
 	return &d
 }
 

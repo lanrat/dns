@@ -113,5 +113,7 @@ See atomdns-ecs(7) that can add a better source address.
 
 # Bugs
 
-_acl_ should also check TSIG and other signed messages, see https://codeberg.org/miekg/dns/issues/426 for the
+_acl_ should also check TSIG and other signed messages, <see https://codeberg.org/miekg/dns/issues/426> for the
 remaining work.
+
+A `::/0` prefix will also match IPv4 addresses.

@@ -43,7 +43,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 		}
 		_, err = db.Exec(`
 CREATE TABLE IF NOT EXISTS rrs (
-name  VARCHAR(255),
+name  VARCHAR(255) COLLATE NOCASE,
 type  VARCHAR(10),
 data  VARCHAR(65535),
 ttl   INTEGER,

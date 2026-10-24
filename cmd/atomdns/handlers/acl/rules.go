@@ -39,7 +39,11 @@ type policyCtx struct {
 
 const MsgFilter = dns.MsgAcceptAction(10)
 
+// msgNoMatch is returned by match when none of the policies matched, the next rule must then be tried.
+const msgNoMatch = dns.MsgAcceptAction(11)
+
 // match matches the DNS message with a list of ACL polices and returns suitable action against the message.
+// If no policy matches msgNoMatch is returned.
 func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.Msg) dns.MsgAcceptAction {
 	for _, policy := range policies {
 		switch {
@@ -49,7 +53,7 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 				// remote is not add network address (unix socket?), continue
 				continue
 			}
-			if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
+			if x := dnsctx.Addr(ctx, "ecs/addr"); x.IsValid() {
 				ip = x
 			}
 
@@ -76,5 +80,5 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 			}
 		}
 	}
-	return dns.MsgAccept
+	return msgNoMatch
 }

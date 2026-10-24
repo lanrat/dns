@@ -31,6 +31,10 @@ func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		z := d.Zones[dns.Zone(ctx)]
+		if z == nil {
+			next.ServeDNS(ctx, w, r)
+			return
+		}
 		m := dnszone.Retrieve(z, r, nil)
 		if m == nil { // call refused guard
 			next.ServeDNS(ctx, w, r)
@@ -41,6 +45,7 @@ func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
 			dnslog.PackFail(ctx, log(), Err(err))
+			return
 		}
 		io.Copy(w, m)
 	})
