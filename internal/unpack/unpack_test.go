@@ -27,6 +27,12 @@ func TestName(t *testing.T) {
 		{[]byte{16, 's', 'u', 'p', 'p', 'o', 'r', 't', '.', 'n', 'o', 'r', 'r', 'l', 'a', 'n', 'd', 10, 'n', 'o', 'r', 'd', 'l', 'o', '.', 'c', 'o', 'm', 0}, 0, `support\.norrland.nordlo\.com.`, 29, true},
 		// Wire: 16 "support.norrland" 10 "nordlo.com" 0
 		{[]byte{16, 's', 'u', 'p', 'p', 'o', 'r', 't', '.', 'n', 'o', 'r', 'r', 'l', 'a', 'n', 'd', 10, 'n', 'o', 'r', 'd', 'l', 'o', '.', 'c', 'o', 'm', 0}, 0, `support\.norrland.nordlo\.com.`, 29, true},
+		// Wire: 2 ".a" 1 "x" 0, the dot is the first octet of the label
+		{[]byte{2, '.', 'a', 1, 'x', 0}, 0, `\.a.x.`, 6, true},
+		// Wire: 1 "x" 2 ".a" 0
+		{[]byte{1, 'x', 2, '.', 'a', 0}, 0, `x.\.a.`, 6, true},
+		// Wire: 1 "x" 4 "..a." 1 "y" 0
+		{[]byte{1, 'x', 4, '.', '.', 'a', '.', 1, 'y', 0}, 0, `x.\.\.a\..y.`, 10, true},
 	}
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {

@@ -71,6 +71,10 @@ func (zp *ZoneParser) generate(l dnslex.Lex) (RR, bool) {
 		}
 		sb.WriteString(l.Token)
 	}
+	if sb.Len() == 0 {
+		builderPool.Put(sb)
+		return zp.setParseError("bad data in $GENERATE directive", l)
+	}
 
 	r := &generateReader{
 		s: sb.String(),
