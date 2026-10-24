@@ -145,6 +145,17 @@ func TestNew(t *testing.T) {
 			},
 		},
 		{
+			"IPN",
+			`ipn.example.org. 3600 IN IPN 18446744073709551615`,
+			func(rr RR) error {
+				exp := "ipn.example.org.\t3600\tIN\tIPN\t18446744073709551615"
+				if x := rr.String(); x != exp {
+					return fmt.Errorf("expected %q, got %q", exp, x)
+				}
+				return nil
+			},
+		},
+		{
 			"CERT",
 			`cert.test. CERT PKIX 0 0 Y2VydGlmaWNhdGUtZGF0YQ==`,
 			func(rr RR) error {
