@@ -8,6 +8,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmetrics"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -50,7 +51,10 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Rcode = dns.RcodeRefused
 				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorBlocked}}
 
-				m.Pack()
+				if err := m.Pack(); err != nil {
+					dnslog.PackFail(ctx, log(), Err(err))
+					return
+				}
 				io.Copy(w, m)
 
 				if dnsmetrics.Should(&a.i, a.N) {
@@ -64,7 +68,10 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Rcode = dns.RcodeRefused
 				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorFiltered}}
 
-				m.Pack()
+				if err := m.Pack(); err != nil {
+					dnslog.PackFail(ctx, log(), Err(err))
+					return
+				}
 				io.Copy(w, m)
 
 				if dnsmetrics.Should(&a.i, a.N) {

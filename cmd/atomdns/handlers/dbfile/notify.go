@@ -38,7 +38,10 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 	dnsutil.SetReply(m, r)
 	m.Authoritative = true
 	m.Data = r.Data
-	m.Pack()
+	if err := m.Pack(); err != nil {
+		dnslog.PackFail(ctx, log(), Err(err))
+		return
+	}
 	io.Copy(w, m)
 
 	z := d.Zone(dns.Zone(ctx))

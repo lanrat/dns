@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -19,7 +20,10 @@ func (d *Dbfile) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, 
 		m.Rcode = dns.RcodeRefused
 		m.Data = r.Data
 
-		m.Pack()
+		if err := m.Pack(); err != nil {
+			dnslog.PackFail(ctx, log(), Err(err))
+			return
+		}
 		io.Copy(w, m)
 		return
 	}
