@@ -1,9 +1,11 @@
 package deleg_test
 
 import (
+	"bytes"
 	"testing"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/dnstest"
 )
 
@@ -36,4 +38,18 @@ func TestDELEG(t *testing.T) {
 			t.Errorf("test %d, expected %s, got %s", i, rr, tc.exp)
 		}
 	}
+}
+
+func TestDELEGPack(t *testing.T) {
+	infos := []deleg.Info{&deleg.SERVERNAME{Hostnames: []string{"."}}, &deleg.INCLUDEDELEGPARAM{Domains: []string{"."}}}
+	msg := make([]byte, 32)
+	off, err := deleg.Pack(infos, msg, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	exp := []byte{0, 3, 0, 1, 0, 0, 4, 0, 1, 0}
+	if !bytes.Equal(msg[:off], exp) {
+		t.Errorf("expected %v, got %v", exp, msg[:off])
+	}
+	// TODO(miek): Extend with more?
 }
