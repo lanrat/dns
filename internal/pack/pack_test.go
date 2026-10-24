@@ -69,6 +69,8 @@ func TestMName(t *testing.T) {
 		{`a\.b.example.org.`, "\x03a.b\x07example\x03org\x00"},
 		// The rname of the .mil SOA, which carries four escaped dots in a single label.
 		{`DISA\.COLUMBUS\.NS\.MBX\.HOSTMASTER-DOD-NIC.MAIL.mil.`, "\x27DISA.COLUMBUS.NS.MBX.HOSTMASTER-DOD-NIC\x04MAIL\x03mil\x00"},
+		{`\\\.a.example.org.`, "\x04\\\\.a\x07example\x03org\x00"},
+		{`a\b\.c.example.org.`, "\x05a\\b.c\x07example\x03org\x00"},
 		{`a\.b\.c.`, "\x05a.b.c\x00"},
 		{`\.a.example.org.`, ""},
 		{`.example.org.`, ""},

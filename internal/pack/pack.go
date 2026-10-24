@@ -338,7 +338,7 @@ func MName(s string, msg []byte, off int) (off1 int, err error) {
 		// slow(er) copy path to skip the escaped dot
 		l := 1
 		for k := begin; k < i; k++ {
-			if s[k] == '\\' {
+			if s[k] == '\\' && s[k+1] == '.' {
 				continue
 			}
 			msg[off+l] = s[k]
