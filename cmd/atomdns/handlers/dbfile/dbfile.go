@@ -39,6 +39,11 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		z := d.Zone(dns.Zone(ctx))
+		if z == nil {
+			next.ServeDNS(ctx, w, r) // call refused guard
+			return
+		}
+
 		m := dnszone.Retrieve(z, r, nil)
 		if m == nil { // call refused guard
 			next.ServeDNS(ctx, w, r)

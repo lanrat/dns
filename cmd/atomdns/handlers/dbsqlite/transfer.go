@@ -13,7 +13,9 @@ import (
 )
 
 func (d *Dbsqlite) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-	if d.To == nil || dnsutil.Network(w) == "udp" {
+	z := d.Zones[dns.Zone(ctx)]
+
+	if d.To == nil || z == nil || dnsutil.Network(w) == "udp" {
 		m := new(dns.Msg)
 		dnsutil.SetReply(m, r)
 		m.Rcode = dns.RcodeRefused
@@ -26,7 +28,6 @@ func (d *Dbsqlite) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter
 		io.Copy(w, m)
 		return
 	}
-	z := d.Zones[dns.Zone(ctx)]
 	if err := dnszone.TransferOut(z, ctx, w, r); err != nil {
 		log().Debug("Failure to transfer out", Err(err))
 		return
