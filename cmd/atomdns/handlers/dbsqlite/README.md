@@ -29,8 +29,10 @@ The server will reply with minimal responses by default.
 The schema used for the database is:
 
 ```sql
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
 CREATE TABLE rrs (
-name VARCHAR(255),
+name VARCHAR(255) COLLATE NOCASE,
 type VARCHAR(10),
 data VARCHAR(65535),
 ttl INTEGER,
