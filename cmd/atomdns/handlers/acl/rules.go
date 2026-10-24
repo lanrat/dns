@@ -53,7 +53,7 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 				// remote is not add network address (unix socket?), continue
 				continue
 			}
-			if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
+			if x := dnsctx.Addr(ctx, "ecs/addr"); x.IsValid() {
 				ip = x
 			}
 
