@@ -2,6 +2,7 @@ package acl_test
 
 import (
 	"context"
+	"net/netip"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -105,6 +106,26 @@ var testcases = []struct {
 				block geoip/city Cambridge
 				allow geoip/country/eu true
 			}`,
+	},
+	{
+		name: "ctx: block client subnet address",
+		setup: func() context.Context {
+			return context.WithValue(context.TODO(), "ecs/addr", netip.MustParseAddr("192.0.2.1"))
+		},
+		config: `acl {
+                 block 192.0.2.0/24
+            }`,
+		rcode:         dns.RcodeRefused,
+		extendedError: dns.ExtendedErrorBlocked,
+	},
+	{
+		name: "ctx: client subnet address takes precedence",
+		setup: func() context.Context {
+			return context.WithValue(context.TODO(), "ecs/addr", netip.MustParseAddr("192.0.2.1"))
+		},
+		config: `acl {
+                 block 198.51.100.0/16
+           }`,
 	},
 	{
 		name: "block opcode QUERY",
