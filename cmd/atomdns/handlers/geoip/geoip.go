@@ -57,7 +57,7 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				}
 			}
 		}
-		if city.HasData() {
+		if city != nil && city.HasData() {
 			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "city"), city.City.Names.English)
 			regions := make([]string, len(city.Subdivisions))
 			for i, region := range city.Subdivisions {
@@ -73,7 +73,7 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "longitude"), *city.Location.Longitude)
 			}
 		}
-		if asn.HasData() {
+		if asn != nil && asn.HasData() {
 			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "asn"), asn.AutonomousSystemNumber)
 			ctx = dnsctx.WithValue(ctx, dnsctx.Key(g, "asn/organization"), asn.AutonomousSystemOrganization)
 		}
