@@ -417,10 +417,10 @@ func StringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func Names(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
+func Names(names []string, msg []byte, off int, compression map[string]uint16) (int, error) {
 	var err error
 	for i := range names {
-		off, err = Name(names[i], msg, off, compress, false)
+		off, err = Name(names[i], msg, off, compression, false)
 		if err != nil {
 			return len(msg), err
 		}
