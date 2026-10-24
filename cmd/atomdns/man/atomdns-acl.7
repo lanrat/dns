@@ -166,5 +166,8 @@ See atomdns\-ecs(7) that can add a better source address.
 
 .SH "BUGS"
 .PP
-\fIacl\fP should also check TSIG and other signed messages, see https://codeberg.org/miekg/dns/issues/426 for the
+\fIacl\fP should also check TSIG and other signed messages, <see https://codeberg.org/miekg/dns/issues/426> for the
 remaining work.
+
+.PP
+A \fB\fC::/0\fR prefix will also match IPv4 addresses.
