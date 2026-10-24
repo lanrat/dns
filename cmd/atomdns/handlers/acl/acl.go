@@ -37,6 +37,8 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		for _, rule := range a.Rules {
 			action := match(ctx, rule.policies, w, r)
 			switch action {
+			case msgNoMatch:
+				continue // nothing in this rule matched, try the next one
 			case dns.MsgAccept:
 				break Rules
 			case dns.MsgIgnore:
