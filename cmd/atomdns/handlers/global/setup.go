@@ -384,13 +384,13 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			return d.PropErr()
 		}
 	}
-	g.OnReset(func() {
-		g.onceStartup = sync.Once{}
-		g.onStartup = []func() error{}
-
-		g.onceShutdown = sync.Once{}
-		g.onShutdown = []func() error{}
-	})
-
+	g.OnReset(func() { g.Reset() })
 	return nil
+}
+
+func (g *Global) Reset() {
+	g.onceStartup = sync.Once{}
+	g.onStartup = []func() error{}
+	g.onceShutdown = sync.Once{}
+	g.onShutdown = []func() error{}
 }
