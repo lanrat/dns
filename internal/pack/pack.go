@@ -78,14 +78,8 @@ func StringAny(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+// Strings packs the character-strings in s. An empty s packs nothing and needs no room in msg.
 func Strings(s []string, msg []byte, off int) (int, error) {
-	if len(s) == 0 {
-		if off >= len(msg) {
-			return len(msg), ErrBuf
-		}
-		msg[off] = 0
-		return off, nil
-	}
 	var err error
 	for i := range s {
 		off, err = String(s[i], msg, off)

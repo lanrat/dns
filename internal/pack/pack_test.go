@@ -94,3 +94,35 @@ func TestMName(t *testing.T) {
 		})
 	}
 }
+
+func TestStrings(t *testing.T) {
+	testcases := []struct {
+		in   []string
+		size int // length of the buffer given to Strings
+		ok   bool
+		wire string
+	}{
+		{[]string{"a", "bc"}, 5, true, "\x01a\x02bc"},
+		{[]string{""}, 1, true, "\x00"},
+		{[]string{"a", "bc"}, 4, false, ""},
+		{[]string{""}, 0, false, ""},
+		// No character-strings pack to nothing, also when there is no room left in the buffer.
+		{nil, 0, true, ""},
+		{[]string{}, 0, true, ""},
+	}
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			buf := make([]byte, tc.size)
+			off, err := Strings(tc.in, buf, 0)
+			if (err == nil) != tc.ok {
+				t.Fatalf("expected error %t for strings %q, got %v", !tc.ok, tc.in, err)
+			}
+			if !tc.ok {
+				return
+			}
+			if got := string(buf[:off]); got != tc.wire {
+				t.Errorf("expected wire %q, got %q", tc.wire, got)
+			}
+		})
+	}
+}
