@@ -62,11 +62,11 @@ func TestZoneParser(t *testing.T) {
 		},
 		{"openescape", "example.net IN CNAME example.net.", nil, nil},
 		{"bad-openescape", "example.net IN CNAME example.org\\", nil, &Error{err: "bad owner name:"}},
-		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{err: "missing TTL with no"}},
-		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{err: "missing TTL with no"}},
-		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{err: "missing TTL with no"}},
-		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{err: "missing TTL with no"}},
 		{"overflow-ttl", "example. 4294967296  IN A 127.0.0.1", nil, &Error{err: "not a TTL: "}},
+		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{err: "expected data"}},
+		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{err: "bad SVCB Target"}},
+		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{err: "bad MX Mx"}},
+		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{err: "bad SRV Target"}},
 		{
 			"border-fit-ttl",
 			"example. 4294967295  IN A 127.0.0.1",
@@ -90,6 +90,7 @@ func TestZoneParser(t *testing.T) {
 				}
 				i++
 			}
+
 			if tc.err != nil {
 				if !strings.Contains(zp.Err().Error(), tc.err.Error()) {
 					t.Errorf("expected err to be %s, got %s", tc.err, zp.Err())

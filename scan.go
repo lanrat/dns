@@ -200,7 +200,7 @@ type ZoneParser struct {
 //
 // The string file is used in error reporting and to resolve relative $INCLUDE directives. The string origin
 // is used as the initial origin, as if the file would start with an $ORIGIN directive.
-// IncludeAllowFunc is set to [DefaultIncludeAllowFunc].
+// IncludeAllowFunc is set to [DefaultIncludeAllowFunc], the starting TTL is 3600.
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	var pe *ParseError
 	if origin != "" {
@@ -423,12 +423,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			if zp.c.Peek().Token == "" {
-				// This is a dynamic update rr.
-				if err := dnslex.Discard(zp.c); err != nil {
-					return zp.setParseError(err.Err, err.Lex)
-				}
-
-				return rr, true
+				return zp.setParseError("expected data", l)
 			} else if l.Value == dnslex.Newline {
 				return zp.setParseError("unexpected newline", l)
 			}
