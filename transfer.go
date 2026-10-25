@@ -126,6 +126,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 				return
 			}
 			ch <- &Envelope{Error: err}
+			return
 		}
 		if err := ctx.Err(); err != nil {
 			ch <- &Envelope{Error: err}
@@ -222,6 +223,9 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		if _, err := io.Copy(r, conn); err != nil {
 			// the response writer or actual conn is closed, just return, or some other error, we may
 			// not be sure someone is still listening on this channel.
+			if errors.Is(err, io.EOF) {
+				return
+			}
 			return
 		}
 		if err := ctx.Err(); err != nil {
