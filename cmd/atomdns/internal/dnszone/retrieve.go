@@ -67,15 +67,15 @@ Search:
 
 		} else {
 			// Skip a label to the right again and replace with '*', this should work by definition. If we
-			// find a wildcard label here we keep track of what we found, but we need to search below to see
-			// if there is a more specific match.
+			// find a wildcard label here we keep track of what we found.
 			j, _ := dnsutil.Next(qname[i:], 0)
 			node, ok := z.Get("*." + qname[i+j:])
 			if ok {
 				sosynthesis = node
 				hint = hintWildcard
-				break Search
 			}
+			// Nothing can exist, see RFC 8020.
+			break Search
 		}
 
 		if start {
