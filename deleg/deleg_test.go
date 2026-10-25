@@ -2,6 +2,7 @@ package deleg_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -29,8 +30,14 @@ func TestDELEG(t *testing.T) {
 		},
 	}
 	for i, tc := range testcases {
-		rr, err := dns.New(tc.in)
-		if err != nil {
+		zp := dns.NewZoneParser(strings.NewReader(tc.in), "", "")
+		zp.SetDefaultTTL(3600)
+		var rr dns.RR
+		for r := range zp.All() {
+			rr = r
+			break
+		}
+		if err := zp.Err(); err != nil {
 			t.Fatal(err)
 		}
 		t.Logf("%s\n", rr)
