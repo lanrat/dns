@@ -39,26 +39,26 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 		ch <- err
 		return
 	}
-	ll := l
+
 	if x := global.HttpLimits.MaxInflight; x > 0 {
-		ll = netutil.LimitListener(ll, x)
+		l = netutil.LimitListener(l, x)
 	}
-	lt := ll
+
 	if global.TlsConfig != nil {
-		lt = tls.NewListener(lt, global.TlsConfig)
+		l = tls.NewListener(l, global.TlsConfig)
 	}
 	if global.TlsCertConfig != nil {
 		tlsConfig := global.TlsCertConfig.TLSConfig()
 		tlsConfig.NextProtos = append(tlsConfig.NextProtos, dnshttp.NextProtos...)
-		lt = tls.NewListener(l, tlsConfig)
+		l = tls.NewListener(l, tlsConfig)
 	}
 	go func() {
-		if err := s.server.Serve(lt); err != nil {
+		if err := s.server.Serve(l); err != nil {
 			ch <- err
 			return
 		}
 	}()
-	s.Listener = lt
+	s.Listener = l
 	ch <- nil
 }
 
