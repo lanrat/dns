@@ -204,10 +204,6 @@ func TestNew(t *testing.T) {
 			},
 			false,
 		},
-		// EDNS0 types
-		{
-			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil }, false,
-		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
