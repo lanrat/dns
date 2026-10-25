@@ -66,7 +66,6 @@ func TestZoneParser(t *testing.T) {
 		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{err: "missing TTL with no"}},
 		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{err: "missing TTL with no"}},
 		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{err: "missing TTL with no"}},
-		{"nsid-truncated", " NSID :", nil, &Error{err: "bad NSID Nsid"}},
 		{"overflow-ttl", "example. 4294967296  IN A 127.0.0.1", nil, &Error{err: "not a TTL: "}},
 		{
 			"border-fit-ttl",
@@ -379,37 +378,6 @@ func TestZoneParserEscapedStringOffset(t *testing.T) {
 				i, tc.input, tc.inputOffset, outputOK, tc.expectedOK,
 			)
 		}
-	}
-}
-
-func TestZoneParserEDNS0(t *testing.T) {
-	testcases := []struct {
-		name string
-		in   EDNS0
-		exp  string
-	}{
-		{
-			"zoneversion", &ZONEVERSION{Labels: 4, Type: 0, Version: []byte{1, 2, 3, 4}},
-			".  CLASS0 ZONEVERSION 4 SOA-SERIAL 16909060",
-		},
-		{
-			"ede-extratext", &EDE{InfoCode: 15, ExtraText: "bla"},
-			`.  CLASS0 EDE 15 "Blocked": "bla"`,
-		},
-		{
-			"ede", &EDE{InfoCode: 15},
-			`.  CLASS0 EDE 15 "Blocked": ""`,
-		},
-	}
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			ednsrr := tc.in.String()
-			parsed := dnstestNew(ednsrr)
-			s := strings.ReplaceAll(parsed.String(), "\t", " ")
-			if s != tc.exp {
-				t.Errorf("expected %s, got %s", tc.exp, s)
-			}
-		})
 	}
 }
 

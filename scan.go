@@ -68,7 +68,6 @@ func (e *ParseError) Unwrap() error { return e.wrappedErr }
 
 const (
 	asRR       uint8 = iota // parse the string as an RR.
-	asCode                  // parse the string as an EDNS RR.
 	asStateful              // TODO, but parse the string as an DSO RR.
 )
 
@@ -92,10 +91,6 @@ type ttlState struct {
 // instead of:
 //
 //	mx := New("miek.nl. 0 IN MX 10 mx.miek.nl.")
-//
-// In this library EDNS0 option codes have a presentation format, which you see when you print them. This
-// presentation format is also parsed back to EDNS0. In other words you can get an ENDS0 option code just from
-// a string.
 //
 // Or with [codeberg.org/miekg/dns/dnstest.New], if you are sure no error will occur.
 //
@@ -420,13 +415,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				} else {
 					rr = &RFC3597{zp.h, rdata.RFC3597{RRType: zp.t}}
 				}
-			case asCode:
-				newFn, ok := CodeToRR[zp.t]
-				if !ok {
-					return zp.setParseError("unknown EDNS0 type", l)
-				}
-				rr = newFn()
-				*rr.Header() = zp.h
 			}
 
 			if zp.c.Peek().Token == "" {

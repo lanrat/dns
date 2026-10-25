@@ -356,6 +356,7 @@ canon := dns.CanonicalName(name)   | canon := dnsutil.Canonical(name)
 ```
 
 Validating hostnames and counting labels
+
 ```
 OLD                                      | NEW
                                          |
@@ -370,7 +371,6 @@ OLD                                      | NEW
                                          |
 dns.IsSubDomain(domain, hostname)        | dnsutil.IsBelow(domain, hostname)
 ```
-
 
 ## Server
 
