@@ -118,11 +118,14 @@ func TestNew(t *testing.T) {
 			false,
 		},
 		{
-			"A no rdata", `www.example.org. IN A`,
+			"A no data", `www.example.org. IN A`,
 			func(rr RR) error {
+				if rr != nil {
+					return fmt.Errorf("expected error and empty RR, got %v", rr)
+				}
 				return nil
 			},
-			false,
+			true,
 		},
 		{
 			"NSEC3",
