@@ -625,9 +625,8 @@ func (m *Msg) Len() int {
 	l := MsgHeaderSize
 
 	for i := range m.Question {
-		// See Header.Len() too, we always add a +1, even if the name is the root label.
 		// 4 is for the type and class
-		l += len(m.Question[i].Header().Name) + 1 + 4
+		l += len(m.Question[i].Header().Name) + dnsutilIsRoot(m.Question[i].Header().Name) + 4
 		break
 	}
 	for i := range m.Answer {
