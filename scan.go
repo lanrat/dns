@@ -213,6 +213,7 @@ func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	return &ZoneParser{
 		c:                dnslex.New(r, StringToType, StringToClass),
 		IncludeAllowFunc: DefaultIncludeAllowFunc,
+		defttl:           &ttlState{3600, false},
 		Directives:       true,
 		parseErr:         pe,
 		origin:           origin,

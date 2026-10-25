@@ -31,7 +31,6 @@ func TestDELEG(t *testing.T) {
 	}
 	for i, tc := range testcases {
 		zp := dns.NewZoneParser(strings.NewReader(tc.in), "", "")
-		zp.SetDefaultTTL(3600)
 		var rr dns.RR
 		for r := range zp.All() {
 			rr = r
