@@ -97,7 +97,9 @@ Specs:
 						fmt.Fprintf(b, "if !algOk {\n")
 						fmt.Fprintf(b, `return &ParseError{err: "bad %s Algorithm", lex: l}`+"\n", rrname)
 						fmt.Fprintf(b, "}\n")
-						blank = func() { fmt.Fprintln(b, "\nc.Next() // dnslex.Blank\n") }
+
+						blank = func() { blankfunc(b, rrname, fieldname) }
+
 						continue
 					} else {
 						fmt.Fprintf(b, "rd.%s, err = dnsstring.AtoiUint8(l.Token)\n", fieldname)
@@ -161,8 +163,7 @@ Specs:
 			fmt.Fprintf(b, `return &ParseError{err: "bad %s %s", lex: l}`+"\n", rrname, fieldname)
 			fmt.Fprintf(b, "}\n")
 
-			//			blank = func() { fmt.Fprintln(b, "\nc.Next() // dnslex.Blank\n") }
-			blank = func() { blancfunc(b, rrname, fieldname) }
+			blank = func() { blankfunc(b, rrname, fieldname) }
 		}
 		fmt.Fprintln(b, "return toParseError(dnslex.Discard(c))")
 		fmt.Fprint(b, "}\n\n")
@@ -171,10 +172,11 @@ Specs:
 	generate.Write(b, out)
 }
 
-var blancfunc = func(b *bytes.Buffer, rrname, fieldname string) {
+var blankfunc = func(b *bytes.Buffer, rrname, fieldname string) {
 	fmt.Fprintf(b, `l, _ = c.Next()
-if l.Value != dnslex.Value {
+if l.Value != dnslex.Blank {
 			return &ParseError{err: "bad %s %s", lex: l}
 }
-}\n`, rrname, fieldname)
+
+`, rrname, fieldname)
 }
