@@ -186,7 +186,12 @@ type EXPIRE struct {
 	Expire uint32
 }
 
-func (o *EXPIRE) Len() int    { return tlv + 4 }
+func (o *EXPIRE) Len() int {
+	if o.Expire == 0 {
+		return tlv
+	}
+	return tlv + 4
+}
 func (o *EXPIRE) Data() RDATA { return o }
 func (o *EXPIRE) String() string {
 	sb := sprintOptionHeader(o)
