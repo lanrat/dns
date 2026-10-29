@@ -74,28 +74,25 @@ func Run(version string) {
 		os.Exit(1)
 	}
 
-	go func() {
-		// dies with process
-		sigchan := make(chan os.Signal, 1)
-		signal.Notify(sigchan, syscall.SIGHUP)
-		for sig := range sigchan {
-			slog.Info("Received signal, reloading", "signal", sig)
-			if err := s.Reload(); err != nil {
-				slog.Error("Failed to reload server", dnslog.Error(err))
-			}
-			signal.Notify(sigchan, syscall.SIGHUP)
-			if !s.global.Quiet {
-				fmt.Fprintln(os.Stderr, banner(s.version))
-			}
-		}
-	}()
-
 	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	if !s.global.Quiet {
 		fmt.Println(banner(version))
 	}
+wait:
 	sig := <-sigchan
+	if sig == syscall.SIGHUP {
+		slog.Info("Received signal, reloading", "signal", sig)
+		if err := s.Reload(); err != nil {
+			slog.Error("Failed to reload server", dnslog.Error(err))
+		}
+		if !s.global.Quiet {
+			fmt.Fprintln(os.Stderr, banner(s.version))
+		}
+		signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+		goto wait
+	}
+
 	s.Shutdown(context.TODO())
 	slog.Info("Received signal, stopping", "signal", sig)
 }

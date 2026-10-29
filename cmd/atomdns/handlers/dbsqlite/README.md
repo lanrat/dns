@@ -7,6 +7,7 @@ _dbsqilte_ - serve zone data from a SQLite database
 The _dbsqlite_ handler reads zone data from a data and serves that to clients. If the database contains
 signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is supported. You can
 create the database completely off-line, if it holds the correct data, _dbsqlite_ will happily serve from it.
+The first record to exist in the database should be the SOA record for the zone.
 
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
 your zones and put the generated records in the database.
@@ -28,8 +29,10 @@ The server will reply with minimal responses by default.
 The schema used for the database is:
 
 ```sql
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
 CREATE TABLE rrs (
-name VARCHAR(255),
+name VARCHAR(255) COLLATE NOCASE,
 type VARCHAR(10),
 data VARCHAR(65535),
 ttl INTEGER,
@@ -38,10 +41,10 @@ UNIQUE (name, type, data)
 ```
 
 You can just add RRs to this table for _any_ zone and _dbsqlite_ will happily use them. Relative names will be
-made not be made into fully qualified ones, and for some queries that will not be matched and silently _not_ included.
+made **not** be made into fully qualified ones, and for some queries that will not be matched and silently _not_ included.
 
     sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
-    sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
+    sqlite> insert into rrs values ( 'subdel.example.', 'ns', 'ns.example.com.', 3600);
 
 This one database can be safely used for all zones you have. Note that you still have to make sure the handler
 gets queries for new zones.
@@ -115,3 +118,7 @@ If you want _everything_ to end up in _dbsqlite_, you might be tempted to:
 
 But this fails, _unless_ you are actually authoritative for `.` (the root zone), this because the named zones are
 used to find those in the database.
+
+# Bugs
+
+Inserting relative names in the database will crash the server.

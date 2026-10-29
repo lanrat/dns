@@ -3,10 +3,11 @@ package dns
 import (
 	"github.com/lanrat/dns/internal/pack"
 	"github.com/lanrat/dns/internal/unpack"
+	"github.com/lanrat/dns/pkg/dnsnet"
 	"golang.org/x/crypto/cryptobyte"
 )
 
-func unpackNSEC(s *cryptobyte.String) ([]uint16, error) {
+func unpackNSEC(s *dnsnet.String) ([]uint16, error) {
 	var nsec []uint16
 	lastwindow := -1
 	for !s.Empty() {

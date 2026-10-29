@@ -42,12 +42,13 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 			d.Zones[dnsutil.Canonical(z)] = &Zone{db: db, labels: dnsutil.Labels(z), origin: dnsutil.Canonical(z)}
 		}
 		_, err = db.Exec(`
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
 CREATE TABLE IF NOT EXISTS rrs (
-name  VARCHAR(255),
+name  VARCHAR(255) COLLATE NOCASE,
 type  VARCHAR(10),
 data  VARCHAR(65535),
 ttl   INTEGER,
-date  DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 UNIQUE (name, type, data)
 );
 	`)

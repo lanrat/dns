@@ -78,6 +78,18 @@ scrape_configs:
       - targets: ["localhost:9153"]
 ```
 
+If you export the metrics via a Unix domain socket (`metrics /10 /run/atomdns/atomdns.sock`), it will look like:
+
+```yaml
+scrape_configs:
+  - job_name: atomdns
+    static_configs:
+      - targets: ["localhost"]
+    relabel_configs:
+      - target_label: __unix_socket__
+        replacement: /run/atomdns/atomdns.sock
+```
+
 # See Also
 
 [Getting Started with Prometheus](https://prometheus.io/docs/prometheus/latest/getting_started/).

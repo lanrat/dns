@@ -15,6 +15,7 @@ func TestNew(t *testing.T) {
 		name string
 		in   string
 		fn   func(RR) error
+		err  bool
 	}{
 		{
 			"SVCB/ALPN", `. 1 IN SVCB 10 one.test. alpn=h2`,
@@ -25,6 +26,7 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
+			false,
 		},
 		{
 			"SVCB/ALPN", `. 2 IN SVCB 20 two.test. alpn=h2,h3-19`,
@@ -38,6 +40,7 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
+			false,
 		},
 		{
 			"SVCB/ALPN", `. 5 IN SVCB 50 five.test. alpn=part1\,\p\a\r\t2\044part3\092,part4\092\\`,
@@ -51,6 +54,27 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
+			false,
+		},
+		{
+			"HTTPS", `alice.example.org. HTTPS 1 `,
+			func(rr RR) error {
+				if rr != nil {
+					return fmt.Errorf("expected error and empty RR, got %v", rr)
+				}
+				return nil
+			},
+			true,
+		},
+		{
+			"HTTPS", `alice.example.org. HTTPS 1\"x.\nbob.example.org. 300 IN A 192.0.2.66\nalice.example.org. HTTPS 1`,
+			func(rr RR) error {
+				if rr != nil {
+					return fmt.Errorf("expected error and empty RR, got %v", rr)
+				}
+				return nil
+			},
+			true,
 		},
 		{
 			"DSYNC", `child._dsync.example. IN DSYNC CDS NOTIFY 5300 rr-endpoint.example.`,
@@ -67,6 +91,7 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
+			false,
 		},
 		{
 			"DELEG", "example.org. IN DELEG server-ipv4=192.0.2.1 server-ipv6=2001:DB8::1",
@@ -78,6 +103,7 @@ func TestNew(t *testing.T) {
 				_ = v1.(*deleg.SERVERIPV6)
 				return nil
 			},
+			false,
 		},
 		{
 			"DELEG", `example.org. IN DELEG server-ipv4="192.0.2.1" server-ipv6="2001:DB8::1"`,
@@ -89,12 +115,17 @@ func TestNew(t *testing.T) {
 				_ = v1.(*deleg.SERVERIPV6)
 				return nil
 			},
+			false,
 		},
 		{
-			"A no rdata", `www.example.org. IN A`,
+			"A no data", `www.example.org. IN A`,
 			func(rr RR) error {
+				if rr != nil {
+					return fmt.Errorf("expected error and empty RR, got %v", rr)
+				}
 				return nil
 			},
+			true,
 		},
 		{
 			"NSEC3",
@@ -112,6 +143,7 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
+			false,
 		},
 
 		{
@@ -121,6 +153,7 @@ func TestNew(t *testing.T) {
 				// TODO(miek)
 				return nil
 			},
+			false,
 		},
 		{
 			"DS",
@@ -132,6 +165,7 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
+			false,
 		},
 		{
 			"RFC3597",
@@ -143,6 +177,19 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
+			false,
+		},
+		{
+			"IPN",
+			`ipn.example.org. 3600 IN IPN 18446744073709551615`,
+			func(rr RR) error {
+				exp := "ipn.example.org.\t3600\tIN\tIPN\t18446744073709551615"
+				if x := rr.String(); x != exp {
+					return fmt.Errorf("expected %q, got %q", exp, x)
+				}
+				return nil
+			},
+			false,
 		},
 		{
 			"CERT",
@@ -158,16 +205,13 @@ func TestNew(t *testing.T) {
 				}
 				return nil
 			},
-		},
-		// EDNS0 types
-		{
-			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil },
+			false,
 		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			rr, err := New(tc.in)
-			if err != nil {
+			if err != nil && !tc.err {
 				t.Fatal(err)
 			}
 			if err = tc.fn(rr); err != nil {

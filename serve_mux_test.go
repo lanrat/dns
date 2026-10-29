@@ -22,6 +22,11 @@ func TestServeMux(t *testing.T) {
 		{"child.miek.nl.", TypeDS, "miek.nl."},
 		{"grand.child.miek.nl.", TypeDS, "child.miek.nl."},
 		{"miek.nl.", TypeDS, "miek.nl."},
+		{".", TypeDS, "."},
+		// Names below an apex are not redirected, their DS (or the proof it does not exist) is in the child.
+		{"foo.grand.child.miek.nl.", TypeDS, "grand.child.miek.nl."},
+		{"foo.child.miek.nl.", TypeDS, "child.miek.nl."},
+		{"foo.miek.nl.", TypeDS, "miek.nl."},
 		//
 		{"child.miek.nl.", TypeA, "child.miek.nl."},
 		{"foo.child.miek.nl.", TypeA, "child.miek.nl."},

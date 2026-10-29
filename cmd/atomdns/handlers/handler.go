@@ -47,10 +47,6 @@ type Teardowner interface {
 
 // Compile takes the Handlers hs and creates a wrapped handle func.
 func Compile(hs []Handler) dns.HandlerFunc {
-	if len(hs) < 1 {
-		panic("atomdns: need something compile")
-	}
-
 	wrapped := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {}
 	for _, h := range slices.Backward(hs) { // loop in reverse to preserve middleware order
 		wrapped = h.HandlerFunc(wrapped)

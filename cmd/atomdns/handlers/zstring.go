@@ -21,6 +21,7 @@ import (
 	"github.com/lanrat/dns/cmd/atomdns/handlers/log"
 	"github.com/lanrat/dns/cmd/atomdns/handlers/metrics"
 	"github.com/lanrat/dns/cmd/atomdns/handlers/nsid"
+	"github.com/lanrat/dns/cmd/atomdns/handlers/panic"
 	"github.com/lanrat/dns/cmd/atomdns/handlers/random"
 	"github.com/lanrat/dns/cmd/atomdns/handlers/refuse"
 	"github.com/lanrat/dns/cmd/atomdns/handlers/root"
@@ -51,6 +52,7 @@ var StringToHandler = map[string]func() Handler{
 	"log":      func() Handler { return new(log.Log) },
 	"metrics":  func() Handler { return new(metrics.Metrics) },
 	"nsid":     func() Handler { return new(nsid.Nsid) },
+	"panic":    func() Handler { return new(panic.Panic) },
 	"random":   func() Handler { return new(random.Random) },
 	"refuse":   func() Handler { return new(refuse.Refuse) },
 	"root":     func() Handler { return new(root.Root) },

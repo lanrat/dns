@@ -39,26 +39,26 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 		ch <- err
 		return
 	}
-	ll := l
+
 	if x := global.HttpLimits.MaxInflight; x > 0 {
-		ll = netutil.LimitListener(l, x)
+		l = netutil.LimitListener(l, x)
 	}
-	lt := ll
+
 	if global.TlsConfig != nil {
-		lt = tls.NewListener(l, global.TlsConfig)
+		l = tls.NewListener(l, global.TlsConfig)
 	}
 	if global.TlsCertConfig != nil {
 		tlsConfig := global.TlsCertConfig.TLSConfig()
 		tlsConfig.NextProtos = append(tlsConfig.NextProtos, dnshttp.NextProtos...)
-		lt = tls.NewListener(l, tlsConfig)
+		l = tls.NewListener(l, tlsConfig)
 	}
 	go func() {
-		if err := s.server.Serve(lt); err != nil {
+		if err := s.server.Serve(l); err != nil {
 			ch <- err
 			return
 		}
 	}()
-	s.Listener = lt
+	s.Listener = l
 	ch <- nil
 }
 
@@ -71,7 +71,7 @@ func New(addr string, mux *dns.ServeMux, fn dns.InvalidMsgFunc) *Server {
 	s := new(Server)
 	h := newHandler(mux, fn)
 	logger := slog.NewLogLogger(slog.Default().Handler(), slog.LevelError)
-	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger, ReadTimeout: 5 * time.Second}
+	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger, ReadTimeout: 3 * time.Second, WriteTimeout: 3 * time.Second}
 	return s
 }
 

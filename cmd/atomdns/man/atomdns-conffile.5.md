@@ -66,11 +66,12 @@ Is a valid configuration and is supported by `atomdns`.
 
 # Global
 
-A Conffile must have a global block, this is a block without a zone and holds server wide
+A Conffile can have a global block, this is a block without a zone and holds server wide
 options, like how many instances to run, if you want DOH and DOT servers, etc. etc. For each server type
 (DNS - plain DNS, DOT - DNS over TLS, DOH - DNS over HTTP, and DOU - DNS over Unix sockets)
 you have a section `dns`, `dot`, `doh` and `dou` where you can configure the server, most notably the
-address and port you want to listen on.
+address and port you want to listen on. Without a global block you get the default, DNS on port 53, and
+nothing else.
 
 ```txt
 {

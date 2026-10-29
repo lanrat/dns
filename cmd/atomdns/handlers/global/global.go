@@ -29,16 +29,16 @@ type Global struct {
 	PprofListener net.Listener
 	PprofWriter   io.WriteCloser
 	// dns
-	Addr   string
+	Addrs  []string
 	Limits Limits
 	// doh
-	HttpAddr   string
+	HttpAddrs  []string
 	HttpLimits Limits
 	// dot
-	TlsAddr   string
+	TlsAddrs  []string
 	TlsLimits Limits
 	// dou
-	UnixAddr   string
+	UnixAddrs  []string
 	UnixLimits Limits
 	// tls
 	TlsConfig     *tls.Config // manual

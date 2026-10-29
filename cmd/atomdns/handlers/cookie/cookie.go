@@ -8,6 +8,7 @@ import (
 
 	"github.com/lanrat/dns"
 	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
 	"github.com/lanrat/dns/dnsutil"
 )
 
@@ -23,7 +24,10 @@ func (c *Cookie) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 					m := r.Copy()
 					dnsutil.SetReply(m, r)
 					m.Rcode = dns.RcodeFormatError
-					m.Pack()
+					if err := m.Pack(); err != nil {
+						dnslog.PackFail(ctx, log(), Err(err))
+						return
+					}
 					io.Copy(w, m)
 					return
 				}

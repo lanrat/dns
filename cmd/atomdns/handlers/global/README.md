@@ -23,31 +23,31 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
         quiet
         disable
     }
-    metrics [/N] [ADDRRES]
+    metrics [/N] [ADDRRES|SOCKET]
     health [ADDRESS [LAMEDUCK]]
     pprof [FILE|ADDRESS]
     dns {
-        addr ADDRESS
+        addr ADDRESS|IFACE [ADDRESS|IFACE]...
         limits {
             tcp EXPR
             run EXPR
         }
     }
     dot {
-        addr ADDRESS
+        addr ADDRESS|IFACE [ADDRESS|IFACE]...
         limits {
             run EXPR
         }
     }
     doh {
-        addr ADDRESS
+        addr ADDRESS|IFACE [ADDRESS|IFACE]...
         limits {
             run EXPR
             inflight EXPR
         }
     }
     dou {
-        addr SOCKET
+        addr SOCKET [SOCKET]...
     }
     tls ISSUER {
         cert CERT KEY
@@ -69,12 +69,15 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
   - With `quiet` the banner is not shown. Query logging is not affected.
   - And `disable` disables the logging so that it can be enabled with the SIGUSR1 signal, see atomdns-log(7).
     To enable logging for specific zone you need to enable the _log_ handler in that handler block.
-- The `metrics` property allows setting the listening **ADDRESS** for the prometheus metrics. This defaults to `localhost:9153`.
+- The `metrics` property allows setting the listening **ADDRESS** or **SOCKET** for the prometheus metrics. This defaults to `localhost:9153`.
+  If a path is used (i.e. contains a slash) a Unix domain socket is assumed. See the atomdns-metrics(7) on how
+  to configure Prometheus in that case.
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global block.
   The optional **/N** tells the metric handler to monitor 1 in **N** queries. The default is 10. This needs to
   be a positive integer > 0. This is done to not impair performance too much.
   With the `metrics` handler you can enable/disable metrics on a per server basis.
+
 - With `health` you start a local web server that exports a /health endpoint on **ADDRESS** that returns 200 OK when
   everything is OK. When **LAMEDUCK** which should be a time.Duration in string form is given, the server' shutdown will be
   delayed for that duration. The default for **ADDRESS** is `:8080`. Every 2 seconds atomdns will query itself
@@ -89,7 +92,8 @@ This is parsed in-order and some settings depend on `root` and/or `debug`, so se
 
 With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined are.
 
-- `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
+- `addr` **ADDRESS** and/or **IFACE**: listen on these addresses or interfaces, default is `[::]:53`. Both allow
+  a port number to be added, i.e. "lo:53" is valid and means listen on the loopback interface on port 53.
 - `limits` set further limits:
   - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
   - `run` **EXPR**, run this many servers the default is `NumCPU()*3`, this can be a bare number,
@@ -102,7 +106,7 @@ With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined 
 
 With `dot` you control DNS TLS server options, defined are.
 
-- `addr` **ADDRESS**: listen on this address, default is `[::]:853`.
+- `addr` **ADDRESS** and/or **IFACE**: like that of `dns`, but the default is `[::]:853`.
 - `limits` set further limits:
   - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
   - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
@@ -115,7 +119,7 @@ This requires a `tls` setup too.
 
 With `doh` you set HTTP server options, defined are.
 
-- `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
+- `addr` **ADDRESS** and/or **IFACE**: like that of `dns`, but the default is `[::]:443`.
 - `limits` set further limits:
   - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()*` may be spelled in lowercase.
@@ -133,7 +137,7 @@ This requires a `tls` setup too.
 
 With `dou` you configure an Unix domain socket to listen on, defined are.
 
-- `addr` **SOCKET**: listen on this Unix domain socket. Note there are OS limits on the length of the socket's file name.
+- `addr` **SOCKET**: listen on these Unix domain sockets. Note there are OS limits on the length of the socket's file name.
   If this is a relative name the path from `root` will be prepended.
 
 Querying over a Unix domain socket needs to be done using the TCP packet format, for example:

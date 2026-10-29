@@ -8,6 +8,7 @@ import (
 
 	"github.com/lanrat/dns"
 	"github.com/lanrat/dns/cmd/atomdns/internal/dnsctx"
+	"github.com/lanrat/dns/cmd/atomdns/internal/dnslog"
 	"github.com/lanrat/dns/cmd/atomdns/internal/dnsmetrics"
 	"github.com/lanrat/dns/dnsutil"
 )
@@ -24,8 +25,8 @@ type Acl struct {
 func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		fam := dnsutil.Family(w)
-		if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
-			log().Debug("Using 'ecs/address'", slog.String("address", x.String()))
+		if x := dnsctx.Addr(ctx, "ecs/addr"); x.IsValid() {
+			log().Debug("Using 'ecs/addr'", slog.String("address", x.String()))
 			fam = dnsutil.IPv6Family
 			if x.Is4() {
 				fam = dnsutil.IPv4Family
@@ -36,6 +37,8 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		for _, rule := range a.Rules {
 			action := match(ctx, rule.policies, w, r)
 			switch action {
+			case msgNoMatch:
+				continue // nothing in this rule matched, try the next one
 			case dns.MsgAccept:
 				break Rules
 			case dns.MsgIgnore:
@@ -50,7 +53,10 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Rcode = dns.RcodeRefused
 				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorBlocked}}
 
-				m.Pack()
+				if err := m.Pack(); err != nil {
+					dnslog.PackFail(ctx, log(), Err(err))
+					return
+				}
 				io.Copy(w, m)
 
 				if dnsmetrics.Should(&a.i, a.N) {
@@ -64,7 +70,10 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Rcode = dns.RcodeRefused
 				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorFiltered}}
 
-				m.Pack()
+				if err := m.Pack(); err != nil {
+					dnslog.PackFail(ctx, log(), Err(err))
+					return
+				}
 				io.Copy(w, m)
 
 				if dnsmetrics.Should(&a.i, a.N) {

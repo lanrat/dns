@@ -102,7 +102,7 @@ func (s *Server) Start() error {
 	for i := range s.unixservers {
 		opt := func(srv *dns.Server) (err error) {
 			srv.Net = "unix"
-			srv.Listener, err = net.Listen("unix", s.global.UnixAddr)
+			srv.Listener, err = net.Listen("unix", s.unixservers[i].Addr)
 			return err
 		}
 		go Serve(s.unixstarted, s.unixservers[i], opt)
@@ -113,33 +113,39 @@ func (s *Server) Start() error {
 			return fmt.Errorf("dou: %w", err)
 		}
 	}
-	roles := []slog.Attr{}
-	const r = "role"
-	if addr := s.Addr(); len(addr) > 0 {
-		roles = append(roles, slog.String(r, "DNS:"+addr[0]))
+
+	attrs := []slog.Attr{}
+	for _, addr := range s.Addr() {
+		attrs = append(attrs, slog.String("dns", addr))
 	}
 
 	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
 		if s.global.HttpLimits.Servers > 0 {
-			roles = append(roles, slog.String(r, "DOH:"+s.HttpAddr()[0]))
+			for _, addr := range s.HttpAddr() {
+				attrs = append(attrs, slog.String("doh", addr))
+			}
 		}
 		if s.global.TlsLimits.Servers > 0 {
-			roles = append(roles, slog.String(r, "DOT:"+s.TlsAddr()[0]))
+			for _, addr := range s.TlsAddr() {
+				attrs = append(attrs, slog.String("dot", addr))
+			}
 		}
 	}
 	if s.global.UnixLimits.Servers > 0 {
-		roles = append(roles, slog.String(r, "DOU:"+s.UnixAddr()[0]))
+		for _, addr := range s.UnixAddr() {
+			attrs = append(attrs, slog.String("dou", addr))
+		}
 	}
 
 	// bit of a cop out, but if roles is empty, we have nothing to run
-	if len(roles) == 0 {
+	if len(attrs) == 0 {
 		return fmt.Errorf("no servers defined, nothing to do")
 	}
 
 	if bi := builtinfo(); len(bi) == 4 {
 		slog.Info("Build", bi[0], bi[1], bi[2], bi[3])
 	}
-	slog.Info("Listening", "total", len(roles), "roles", slog.GroupValue(roles...))
+	slog.Info("Listening", "total", len(attrs), "listen", attrs)
 	slog.Info("Launched", "config", s.global.Config, "PID", os.Getpid(), "version", "v"+s.version, "dns", dns.Version, "zones", len(s.global.Registered))
 	return nil
 }
@@ -197,53 +203,49 @@ func New(conf string, r io.Reader) (*Server, error) {
 	s.global = global
 
 	// dns servers
-	s.servers = make([]*dns.Server, global.Limits.Servers*2) // *2=udp/tcp
-	s.started = make(chan error, len(s.servers))
-	for j := range s.servers {
-		net := "tcp"
-		if j < len(s.servers)/2 {
-			net = "udp"
+	for _, net := range []string{"udp", "tcp"} {
+		for k := range global.Addrs {
+			server := &dns.Server{
+				ReuseAddr: true, ReusePort: true,
+				Handler: s.mux, Net: net, Addr: global.Addrs[k], MaxTCPQueries: global.Limits.MaxTCPQueries,
+			}
+			msgInvalidFunc(server, global.MetricsN)
+			server.NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
+			s.servers = append(s.servers, server)
 		}
-		s.servers[j] = &dns.Server{
-			ReuseAddr: true, ReusePort: true,
-			Handler: s.mux, Net: net, Addr: global.Addr, MaxTCPQueries: global.Limits.MaxTCPQueries,
-		}
-		msgInvalidFunc(s.servers[j], global.MetricsN)
-		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
 	}
+	s.started = make(chan error, len(s.servers))
 
 	// dot server
-	s.tlsservers = make([]*dns.Server, global.TlsLimits.Servers)
-	s.tlsstarted = make(chan error, len(s.tlsservers))
-	for j := range s.tlsservers {
-		tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
-		if global.TlsConfig != nil {
-			tlsConfig = global.TlsConfig.Clone()
-		}
-		if global.TlsCertConfig != nil {
-			tlsConfig = global.TlsCertConfig.TLSConfig().Clone()
-		}
-		tlsConfig.NextProtos = dns.NextProtos
-		s.tlsservers[j] = &dns.Server{
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	if global.TlsConfig != nil {
+		tlsConfig = global.TlsConfig.Clone()
+	}
+	if global.TlsCertConfig != nil {
+		tlsConfig = global.TlsCertConfig.TLSConfig().Clone()
+	}
+	tlsConfig.NextProtos = dns.NextProtos
+	for k := range global.TlsAddrs {
+		server := &dns.Server{
 			ReuseAddr:     true,
 			ReusePort:     true,
 			TLSConfig:     tlsConfig,
 			Handler:       s.mux,
 			Net:           "tcp",
-			Addr:          global.TlsAddr,
+			Addr:          global.TlsAddrs[k],
 			MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
 		}
-		msgInvalidFunc(s.tlsservers[j], global.MetricsN)
-		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
+		msgInvalidFunc(server, global.MetricsN)
+		server.NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
+		s.tlsservers = append(s.tlsservers, server)
 	}
+	s.tlsstarted = make(chan error, len(s.tlsservers))
 
 	// doh servers
-	s.httpservers = make([]*atomhttp.Server, global.HttpLimits.Servers)
-	s.httpstarted = make(chan error, len(s.httpservers))
-	for j := range s.httpservers {
+	for k := range global.HttpAddrs {
 		var i atomic.Uint64
 		N := global.MetricsN
-		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux, func(_ *dns.Msg, _ error) {
+		server := atomhttp.New(global.HttpAddrs[k], s.mux, func(_ *dns.Msg, _ error) {
 			if N == 0 {
 				return
 			}
@@ -251,27 +253,38 @@ func New(conf string, r io.Reader) (*Server, error) {
 				metrics.Dropped.Inc()
 			}
 		})
+		s.httpservers = append(s.httpservers, server)
 	}
+	s.httpstarted = make(chan error, len(s.httpservers))
 
 	// dou servers
-	s.unixservers = make([]*dns.Server, global.UnixLimits.Servers)
-	s.unixstarted = make(chan error, len(s.unixservers))
-	for j := range s.unixservers {
-		s.unixservers[j] = &dns.Server{
+	for k := range global.UnixAddrs {
+		server := &dns.Server{
 			Handler:       s.mux,
 			Net:           "unix",
-			Addr:          global.UnixAddr,
+			Addr:          global.UnixAddrs[k],
 			MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
 		}
-		msgInvalidFunc(s.unixservers[j], global.MetricsN)
-		s.unixservers[j].NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
+		msgInvalidFunc(server, global.MetricsN)
+		server.NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
+		s.unixservers = append(s.unixservers, server)
 	}
+	s.unixstarted = make(chan error, len(s.unixservers))
 
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
 	if global.TlsCertConfig != nil {
-		h, p, _ := net.SplitHostPort(global.HttpAddr)
-		if p != "0" && p != "443" {
-			addr := net.JoinHostPort(h, "443")
+		host := ""
+		for k := range global.HttpAddrs {
+			h, p, _ := net.SplitHostPort(global.HttpAddrs[k])
+			host = h
+			if p == "443" {
+				host = ""
+				break
+			}
+		}
+
+		if host != "" {
+			addr := net.JoinHostPort(host, "443")
 			slog.With("handler", "global").Info("Startup", "ACME", "[::]:443", "run", 1)
 			s.httpservers = append(
 				s.httpservers,
@@ -295,10 +308,10 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Registered: make(map[conffile.ZoneClass]struct{}),
 		Config:     conf,
 		Root:       func() string { wd, _ := os.Getwd(); return wd }(),
-		Addr:       "[::]:53",
+		Addrs:      []string{"[::]:53"},
 		Limits:     global.Limits{MaxTCPQueries: dns.MaxTCPQueries, Servers: runtime.NumCPU() * 3},
-		TlsAddr:    "[::]:853",
 	}
+	global.OnReset(func() { global.Reset() })
 
 	return global, s.Setup(conf, global, blocks)
 }
@@ -432,11 +445,11 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 func (s *Server) Addr() []string {
 	addr := make([]string, len(s.servers))
 	for i, srv := range s.servers {
-		if x := srv.Listener; x != nil {
-			addr[i] = x.Addr().String()
-		}
 		if x := srv.PacketConn; x != nil {
 			addr[i] = x.LocalAddr().String()
+		}
+		if x := srv.Listener; x != nil {
+			addr[i] = x.Addr().String()
 		}
 	}
 	return addr

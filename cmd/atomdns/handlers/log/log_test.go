@@ -34,10 +34,10 @@ func TestLog(t *testing.T) {
 		exp  []string
 	}{
 		{"ipv4",
-			[]string{`hello.here="not far" hello.there=far`, "remote=198.51.100.1"},
+			[]string{`hello.here="not far" hello.there=far`, "remote=[198.51.100.1]"},
 		},
 		{"ipv6",
-			[]string{`hello.here="not far" hello.there=far`, "remote=2001:db8::1"},
+			[]string{`hello.here="not far" hello.there=far`, "remote=[2001:db8::1]"},
 		},
 	}
 
@@ -50,6 +50,7 @@ func TestLog(t *testing.T) {
 			}
 			l.HandlerFunc(atomtest.Echo).ServeDNS(ctx, tw, m)
 			s := b.String()
+			println(s)
 			for _, exp := range tc.exp {
 				if !strings.Contains(s, exp) {
 					t.Fatalf("expected %s, got none", exp)

@@ -100,14 +100,14 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
-					addrs, err := d.RemainingAddrs()
+					addrs, err := d.RemainingAddrsOrInterfaces()
 					if err != nil {
 						return d.PropErr(err)
 					}
-					if len(addrs) != 1 {
-						return d.PropErr(fmt.Errorf("need single address"))
+					if len(addrs) == 0 {
+						return d.PropErr(fmt.Errorf("no addresses found"))
 					}
-					g.Addr = addrs[0]
+					g.Addrs = addrs
 				case "limits":
 					l, err := g.SetupLimits(&d)
 					if err != nil {
@@ -122,23 +122,24 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				}
 			}
 			g.OnStartup(func() error {
-				log().Info("Startup", "dns", g.Addr, "tcp", g.Limits.MaxTCPQueries, "run", g.Limits.Servers)
+				log().Info("Startup", "dns", g.Addrs, "tcp", g.Limits.MaxTCPQueries, "run", g.Limits.Servers)
 				return nil
 			})
 
 		case "dot":
 			g.TlsLimits.Servers = 1
+			g.TlsAddrs = []string{"[::]:853"} // default
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
-					addrs, err := d.RemainingAddrs()
+					addrs, err := d.RemainingAddrsOrInterfaces()
 					if err != nil {
 						return d.PropErr(err)
 					}
-					if len(addrs) != 1 {
-						return d.PropErr(fmt.Errorf("need single address"))
+					if len(addrs) == 0 {
+						return d.PropErr(fmt.Errorf("no addresses found"))
 					}
-					g.TlsAddr = addrs[0]
+					g.TlsAddrs = addrs
 				case "limits":
 					l, err := g.SetupLimits(&d)
 					if err != nil {
@@ -160,23 +161,24 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				inf = slog.Int("inflight", g.TlsLimits.MaxInflight)
 			}
 			g.OnStartup(func() error {
-				log().Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers, inf)
+				log().Info("Startup", "dot", g.TlsAddrs, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers, inf)
 				return nil
 			})
 
 		case "doh":
 			g.HttpLimits.Servers = 1
+			g.HttpAddrs = []string{":443"} // default
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
-					addrs, err := d.RemainingAddrs()
+					addrs, err := d.RemainingAddrsOrInterfaces()
 					if err != nil {
 						return d.PropErr(err)
 					}
-					if len(addrs) != 1 {
-						return d.PropErr(fmt.Errorf("need single address"))
+					if len(addrs) == 0 {
+						return d.PropErr(fmt.Errorf("no addresses found"))
 					}
-					g.HttpAddr = addrs[0]
+					g.HttpAddrs = addrs
 				case "limits":
 					l, err := g.SetupLimits(&d)
 					if err != nil {
@@ -197,7 +199,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				inf = slog.Int("inflight", g.HttpLimits.MaxInflight)
 			}
 			g.OnStartup(func() error {
-				log().Info("Startup", "doh", g.HttpAddr, "run", g.HttpLimits.Servers, inf, "path", "/dns-query")
+				log().Info("Startup", "doh", g.HttpAddrs, "run", g.HttpLimits.Servers, inf, "path", "/dns-query")
 				return nil
 			})
 		case "dou":
@@ -206,25 +208,26 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
-					files := d.RemainingArgs()
-					if len(files) != 1 {
-						return d.PropErr(fmt.Errorf("need single socket"))
-					}
-					g.UnixAddr = conffile.Tilde(files[0])
-					if !filepath.IsAbs(g.UnixAddr) {
-						g.UnixAddr = filepath.Join(g.Root, g.UnixAddr)
+					for _, f := range d.RemainingArgs() {
+						uaddr := conffile.Tilde(f)
+						if !filepath.IsAbs(uaddr) {
+							uaddr = filepath.Join(g.Root, uaddr)
+						}
+						g.UnixAddrs = append(g.UnixAddrs, uaddr)
 					}
 				default:
 					return d.ArgErr()
 				}
 			}
 			g.OnStartup(func() error {
-				log().Info("Startup", "dou", g.UnixAddr, "tcp", "-1", "run", g.UnixLimits.Servers)
+				log().Info("Startup", "dou", g.UnixAddrs, "tcp", "-1", "run", g.UnixLimits.Servers)
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log().Info("Shutdown", "dou", g.UnixAddr)
-				os.Remove(g.UnixAddr)
+				log().Info("Shutdown", "dou", g.UnixAddrs)
+				for i := range g.UnixAddrs {
+					os.Remove(g.UnixAddrs[i])
+				}
 				return nil
 			})
 
@@ -246,9 +249,16 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			}
 			g.OnStartup(func() error {
 				log().Info("Startup", "/metrics", addr, slog.Int64("/N", int64(g.MetricsN)))
-				ln, err := net.Listen("tcp", addr)
+				network := "tcp"
+				if strings.Contains(addr, "/") {
+					network = "unix"
+				}
+				ln, err := net.Listen(network, addr)
 				if err != nil {
 					return err
+				}
+				if network == "unix" {
+					os.Chmod(addr, 0666)
 				}
 				mux := http.NewServeMux()
 				mux.Handle("/metrics", promhttp.Handler())
@@ -374,13 +384,13 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			return d.PropErr()
 		}
 	}
-	g.OnReset(func() {
-		g.onceStartup = sync.Once{}
-		g.onStartup = []func() error{}
-
-		g.onceShutdown = sync.Once{}
-		g.onShutdown = []func() error{}
-	})
-
+	g.OnReset(func() { g.Reset() })
 	return nil
+}
+
+func (g *Global) Reset() {
+	g.onceStartup = sync.Once{}
+	g.onStartup = []func() error{}
+	g.onceShutdown = sync.Once{}
+	g.onShutdown = []func() error{}
 }

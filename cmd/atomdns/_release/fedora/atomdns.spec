@@ -1,5 +1,5 @@
 Name:           atomdns
-Version:        0.74
+Version:        0.78
 Release:        1.0
 Summary:        DNS server that chains handlers
 License:        ASL-2.0
@@ -47,7 +47,7 @@ install -D -m 0644 %{_srcdir}man/*.7  %{buildroot}%{_mandir}/man7
 
 %post
 %systemd_post atomdns.service
-mkdir /var/lib/atomdns && chown atomdns:atomdns /var/lib/atomdns
+mkdir -p /var/lib/atomdns && chown atomdns:atomdns /var/lib/atomdns
 
 %preun
 %systemd_preun atomdns.service

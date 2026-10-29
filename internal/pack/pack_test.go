@@ -69,6 +69,8 @@ func TestMName(t *testing.T) {
 		{`a\.b.example.org.`, "\x03a.b\x07example\x03org\x00"},
 		// The rname of the .mil SOA, which carries four escaped dots in a single label.
 		{`DISA\.COLUMBUS\.NS\.MBX\.HOSTMASTER-DOD-NIC.MAIL.mil.`, "\x27DISA.COLUMBUS.NS.MBX.HOSTMASTER-DOD-NIC\x04MAIL\x03mil\x00"},
+		{`\\\.a.example.org.`, "\x04\\\\.a\x07example\x03org\x00"},
+		{`a\b\.c.example.org.`, "\x05a\\b.c\x07example\x03org\x00"},
 		{`a\.b\.c.`, "\x05a.b.c\x00"},
 		{`\.a.example.org.`, ""},
 		{`.example.org.`, ""},
@@ -84,6 +86,38 @@ func TestMName(t *testing.T) {
 				t.Fatalf("expected error %t for mname %q, got %v", tc.wire == "", tc.in, err)
 			}
 			if err != nil {
+				return
+			}
+			if got := string(buf[:off]); got != tc.wire {
+				t.Errorf("expected wire %q, got %q", tc.wire, got)
+			}
+		})
+	}
+}
+
+func TestStrings(t *testing.T) {
+	testcases := []struct {
+		in   []string
+		size int // length of the buffer given to Strings
+		ok   bool
+		wire string
+	}{
+		{[]string{"a", "bc"}, 5, true, "\x01a\x02bc"},
+		{[]string{""}, 1, true, "\x00"},
+		{[]string{"a", "bc"}, 4, false, ""},
+		{[]string{""}, 0, false, ""},
+		// No character-strings pack to nothing, also when there is no room left in the buffer.
+		{nil, 0, true, ""},
+		{[]string{}, 0, true, ""},
+	}
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			buf := make([]byte, tc.size)
+			off, err := Strings(tc.in, buf, 0)
+			if (err == nil) != tc.ok {
+				t.Fatalf("expected error %t for strings %q, got %v", !tc.ok, tc.in, err)
+			}
+			if !tc.ok {
 				return
 			}
 			if got := string(buf[:off]); got != tc.wire {

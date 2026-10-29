@@ -88,7 +88,7 @@ func (z *Zone) Apex() *dnszone.Node {
 	if a != nil {
 		return a
 	}
-	return &dnszone.Node{}
+	return nil
 }
 
 // Set sets the RRs in the zone. It needs to create any empty non-terminals it has. Meaning for each label

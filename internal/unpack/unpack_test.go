@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"golang.org/x/crypto/cryptobyte"
+	"github.com/lanrat/dns/pkg/dnsnet"
 )
 
 func TestName(t *testing.T) {
@@ -27,6 +27,12 @@ func TestName(t *testing.T) {
 		{[]byte{16, 's', 'u', 'p', 'p', 'o', 'r', 't', '.', 'n', 'o', 'r', 'r', 'l', 'a', 'n', 'd', 10, 'n', 'o', 'r', 'd', 'l', 'o', '.', 'c', 'o', 'm', 0}, 0, `support\.norrland.nordlo\.com.`, 29, true},
 		// Wire: 16 "support.norrland" 10 "nordlo.com" 0
 		{[]byte{16, 's', 'u', 'p', 'p', 'o', 'r', 't', '.', 'n', 'o', 'r', 'r', 'l', 'a', 'n', 'd', 10, 'n', 'o', 'r', 'd', 'l', 'o', '.', 'c', 'o', 'm', 0}, 0, `support\.norrland.nordlo\.com.`, 29, true},
+		// Wire: 2 ".a" 1 "x" 0, the dot is the first octet of the label
+		{[]byte{2, '.', 'a', 1, 'x', 0}, 0, `\.a.x.`, 6, true},
+		// Wire: 1 "x" 2 ".a" 0
+		{[]byte{1, 'x', 2, '.', 'a', 0}, 0, `x.\.a.`, 6, true},
+		// Wire: 1 "x" 4 "..a." 1 "y" 0
+		{[]byte{1, 'x', 4, '.', '.', 'a', '.', 1, 'y', 0}, 0, `x.\.\.a\..y.`, 10, true},
 	}
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
@@ -34,8 +40,9 @@ func TestName(t *testing.T) {
 				name string
 				err  error
 			)
-			s := cryptobyte.String(tc.buf[tc.start:])
-			sl := (len(s))
+			s := dnsnet.New(tc.buf)
+			s.Skip(tc.start)
+			sl := len(s.String)
 			if tc.mname {
 				name, err = MName(&s, tc.buf)
 			} else {
@@ -44,12 +51,27 @@ func TestName(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if off := tc.start + sl - len(s); off != tc.off {
+			if off := tc.start + sl - len(s.String); off != tc.off {
 				t.Errorf("expected offset %d, got %d", tc.off, off)
 			}
 			if name != tc.name {
 				t.Errorf("expected name %s, got %s", tc.name, name)
 			}
 		})
+	}
+}
+
+func TestNameFollow(t *testing.T) {
+	// "a." at 0, a pointer to it at 3.
+	buf := []byte{1, 'a', 0, 0xC0, 0}
+	s := dnsnet.New(buf)
+	s.Skip(3)
+	if _, err := Name(&s, buf); err != nil {
+		t.Fatal(err)
+	}
+	s = dnsnet.String{String: buf[3:]}
+	_, err := Name(&s, buf)
+	if err == nil || err.Error() != "dns unpack: too many compression pointers in message" {
+		t.Fatalf("got %v", err)
 	}
 }

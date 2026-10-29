@@ -19,7 +19,7 @@ var hdr = `
 package dns
 
 import (
-	"golang.org/x/crypto/cryptobyte"
+	"github.com/lanrat/dns/pkg/dnsnet"
 	"github.com/lanrat/dns/internal/pack"
 	"github.com/lanrat/dns/internal/unpack"
 	"github.com/lanrat/dns/deleg"
@@ -193,7 +193,7 @@ if rr.%s != "-" {
 		// Unpack functions
 		//
 
-		fmt.Fprintf(b, "func (rr *%s) unpack(s cryptobyte.String, msgBuf []byte) (err error) {\n", rrname)
+		fmt.Fprintf(b, "func (rr *%s) unpack(s *dnsnet.String, msgBuf []byte) (err error) {\n", rrname)
 
 		if generate.IsEmbedded(strct) {
 			fmt.Fprintf(b, "return rr.%s.unpack(s, msgBuf)\n}\n", strct.Fields.List[0].Type)
@@ -227,23 +227,23 @@ if rr.%s != "-" {
 					fmt.Fprintln(b, "if err != nil { return err }")
 				}
 				unpackField := func(unpacker string) {
-					fmt.Fprintf(b, "rr.%s, err = %s(&s)\n", fieldname, unpacker)
+					fmt.Fprintf(b, "rr.%s, err = %s(s)\n", fieldname, unpacker)
 					errCheck()
 				}
 				unpackFieldBuf := func(unpacker string) {
-					fmt.Fprintf(b, "rr.%s, err = %s(&s, msgBuf)\n", fieldname, unpacker)
+					fmt.Fprintf(b, "rr.%s, err = %s(s, msgBuf)\n", fieldname, unpacker)
 					errCheck()
 				}
 				unpackFieldRest := func(unpacker string) {
 					if fieldname == "Data" {
-						fmt.Fprintf(b, "rr.RFC3597.%s, err = %s(&s, len(s))\n", fieldname, unpacker)
+						fmt.Fprintf(b, "rr.RFC3597.%s, err = %s(s, len(s.String))\n", fieldname, unpacker)
 					} else {
-						fmt.Fprintf(b, "rr.%s, err = %s(&s, len(s))\n", fieldname, unpacker)
+						fmt.Fprintf(b, "rr.%s, err = %s(s, len(s.String))\n", fieldname, unpacker)
 					}
 					errCheck()
 				}
 				unpackFieldLength := func(unpacker, len string) {
-					fmt.Fprintf(b, "rr.%s, err = %s(&s, int(rr.%s))\n", fieldname, unpacker, len)
+					fmt.Fprintf(b, "rr.%s, err = %s(s, int(rr.%s))\n", fieldname, unpacker, len)
 					errCheck()
 				}
 				readInt := func(type_ string) {

@@ -2,6 +2,7 @@ package acl_test
 
 import (
 	"context"
+	"net/netip"
 	"testing"
 
 	"github.com/lanrat/dns"
@@ -107,6 +108,26 @@ var testcases = []struct {
 			}`,
 	},
 	{
+		name: "ctx: block client subnet address",
+		setup: func() context.Context {
+			return context.WithValue(context.TODO(), "ecs/addr", netip.MustParseAddr("192.0.2.1"))
+		},
+		config: `acl {
+                 block 192.0.2.0/24
+            }`,
+		rcode:         dns.RcodeRefused,
+		extendedError: dns.ExtendedErrorBlocked,
+	},
+	{
+		name: "ctx: client subnet address takes precedence",
+		setup: func() context.Context {
+			return context.WithValue(context.TODO(), "ecs/addr", netip.MustParseAddr("192.0.2.1"))
+		},
+		config: `acl {
+                 block 198.51.100.0/16
+           }`,
+	},
+	{
 		name: "block opcode QUERY",
 		config: `acl {
 			block QUERY
@@ -118,6 +139,27 @@ var testcases = []struct {
 		config: `acl {
 			block UPDATE
 		}`,
+	},
+	{
+		name: "two blocks: block in second block", // first block doesn't match, second must still checked
+		config: `acl {
+				drop 192.168.0.0/16
+			}
+			acl {
+				allow 127.0.0.1
+				block
+			}`,
+		rcode:         dns.RcodeRefused,
+		extendedError: dns.ExtendedErrorBlocked,
+	},
+	{
+		name: "two blocks: allow in first block", // explicit allow wins, second block is not checked
+		config: `acl {
+				allow 198.51.100.0/16
+			}
+			acl {
+				block
+			}`,
 	},
 }
 

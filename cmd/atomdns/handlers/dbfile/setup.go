@@ -37,7 +37,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			}
 		}
 	}
-	if len(co.Keys()) > 1 && len(d.From.IPs) > 0 {
+	if len(co.Keys()) > 1 && d.From != nil && len(d.From.IPs) > 0 {
 		return co.Errf("when transferring from, there can only be a single origin, got: %s", strings.Join(co.Keys(), ", "))
 	}
 

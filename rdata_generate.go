@@ -83,7 +83,7 @@ var TypeToRDATA = map[uint16]func(RR, RDATA){
 	}
 
 	b.WriteString("func parseData(r io.Reader, rrtype uint16, o string) (RDATA, error) {\n")
-	b.WriteString("c := dnslex.New(r, StringToType, StringToCode, StringToClass)\n\n")
+	b.WriteString("c := dnslex.New(r, StringToType, StringToClass)\n\n")
 	b.WriteString("switch rrtype {\n")
 	for _, spec := range specs {
 		rrname := spec.Name.Name

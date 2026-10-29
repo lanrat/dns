@@ -138,6 +138,7 @@ func TestServerMsgInvalidFunc(t *testing.T) {
 	dns.HandleFunc("example.org.", func(context.Context, dns.ResponseWriter, *dns.Msg) {
 		t.Fatal("the handler must not be called in any of these tests")
 	})
+	defer dns.HandleRemove("example.org.")
 
 	invalidErrors := make(chan error)
 	cancel, addr, _ := dnstest.TCPServer(":0", func(srv *dns.Server) {

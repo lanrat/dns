@@ -62,12 +62,11 @@ func TestZoneParser(t *testing.T) {
 		},
 		{"openescape", "example.net IN CNAME example.net.", nil, nil},
 		{"bad-openescape", "example.net IN CNAME example.org\\", nil, &Error{err: "bad owner name:"}},
-		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{err: "missing TTL with no"}},
-		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{err: "missing TTL with no"}},
-		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{err: "missing TTL with no"}},
-		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{err: "missing TTL with no"}},
-		{"nsid-truncated", " NSID :", nil, &Error{err: "bad NSID Nsid"}},
 		{"overflow-ttl", "example. 4294967296  IN A 127.0.0.1", nil, &Error{err: "not a TTL: "}},
+		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{err: "expected data"}},
+		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{err: "bad SVCB Target"}},
+		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{err: "bad MX Mx"}},
+		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{err: "bad SRV Target"}},
 		{
 			"border-fit-ttl",
 			"example. 4294967295  IN A 127.0.0.1",
@@ -83,17 +82,18 @@ func TestZoneParser(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			z := NewZoneParser(strings.NewReader(tc.input), "", "")
+			zp := NewZoneParser(strings.NewReader(tc.input), "", "")
 			i := 0
-			for rr, ok := z.Next(); ok; rr, ok = z.Next() {
+			for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 				if !Equal(rr, tc.output[i]) {
 					t.Errorf("expected %s to equal to %s", rr, tc.output[i])
 				}
 				i++
 			}
+
 			if tc.err != nil {
-				if !strings.Contains(z.Err().Error(), tc.err.Error()) {
-					t.Errorf("expected err to be %s, got %s", tc.err, z.Err())
+				if !strings.Contains(zp.Err().Error(), tc.err.Error()) {
+					t.Errorf("expected err to be %s, got %s", tc.err, zp.Err())
 				}
 			}
 		})
@@ -182,9 +182,9 @@ func TestZoneParserInclude(t *testing.T) {
 	zone := "$ORIGIN example.org.\n$INCLUDE " + tmpfile.Name() + "\nbar\tIN\tA\t127.0.0.2"
 
 	var got int
-	z := NewZoneParser(strings.NewReader(zone), "", "")
-	z.IncludeAllowFunc = func(string, string) bool { return true }
-	for rr, ok := z.Next(); ok; _, ok = z.Next() {
+	zp := NewZoneParser(strings.NewReader(zone), "", "")
+	zp.IncludeAllowFunc = func(string, string) bool { return true }
+	for rr, ok := zp.Next(); ok; _, ok = zp.Next() {
 		switch rr.Header().Name {
 		case "foo.example.org.", "bar.example.org.":
 		default:
@@ -192,7 +192,7 @@ func TestZoneParserInclude(t *testing.T) {
 		}
 		got++
 	}
-	if err := z.Err(); err != nil {
+	if err := zp.Err(); err != nil {
 		t.Fatalf("expected no error, but got %s", err)
 	}
 
@@ -202,10 +202,10 @@ func TestZoneParserInclude(t *testing.T) {
 
 	os.Remove(tmpfile.Name())
 
-	z = NewZoneParser(strings.NewReader(zone), "", "")
-	z.IncludeAllowFunc = func(string, string) bool { return true }
-	z.Next()
-	if err := z.Err(); err == nil ||
+	zp = NewZoneParser(strings.NewReader(zone), "", "")
+	zp.IncludeAllowFunc = func(string, string) bool { return true }
+	zp.Next()
+	if err := zp.Err(); err == nil ||
 		!strings.Contains(err.Error(), "failed to open") ||
 		!strings.Contains(err.Error(), tmpfile.Name()) ||
 		!strings.Contains(err.Error(), "no such file or directory") {
@@ -223,10 +223,10 @@ func TestZoneParserIncludeFS(t *testing.T) {
 	zone := "$ORIGIN example.org.\n$INCLUDE db.foo\nbar\tIN\tA\t127.0.0.2"
 
 	var got int
-	z := NewZoneParser(strings.NewReader(zone), "", "")
-	z.IncludeAllowFunc = func(string, string) bool { return true }
-	z.IncludeFS = fsys
-	for rr, ok := z.Next(); ok; _, ok = z.Next() {
+	zp := NewZoneParser(strings.NewReader(zone), "", "")
+	zp.IncludeAllowFunc = func(string, string) bool { return true }
+	zp.IncludeFS = fsys
+	for rr, ok := zp.Next(); ok; _, ok = zp.Next() {
 		switch rr.Header().Name {
 		case "foo.example.org.", "bar.example.org.":
 		default:
@@ -234,7 +234,7 @@ func TestZoneParserIncludeFS(t *testing.T) {
 		}
 		got++
 	}
-	if err := z.Err(); err != nil {
+	if err := zp.Err(); err != nil {
 		t.Fatalf("expected no error, but got %s", err)
 	}
 
@@ -242,12 +242,34 @@ func TestZoneParserIncludeFS(t *testing.T) {
 		t.Errorf("failed to parse zone after include, expected %d records, got %d", expected, got)
 	}
 
-	z = NewZoneParser(strings.NewReader(zone), "", "")
-	z.IncludeAllowFunc = func(string, string) bool { return true }
-	z.IncludeFS = fstest.MapFS{}
-	z.Next()
-	if err := z.Err(); !errors.Is(err, fs.ErrNotExist) {
+	zp = NewZoneParser(strings.NewReader(zone), "", "")
+	zp.IncludeAllowFunc = func(string, string) bool { return true }
+	zp.IncludeFS = fstest.MapFS{}
+	zp.Next()
+	if err := zp.Err(); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf(`expected fs.ErrNotExist but got: %T %v`, err, err)
+	}
+}
+
+func TestZoneParserDirectives(t *testing.T) {
+	zone := "$ORIGIN example.org.\nbar3.org.\tIN\tA\t127.0.0.3\n$GENERATE 10-12 foo${2,3,d} IN A 127.0.0.$\nbar2.org.\tIN\tA\t127.0.0.2"
+	zone += "\n$INCLUDE db.foo"
+	os.WriteFile("db.foo", []byte("www.db.foo. IN A 127.0.0.5\n"), 0640)
+	defer os.Remove("db.foo")
+
+	zp := NewZoneParser(strings.NewReader(zone), "", "")
+	zp.IncludeAllowFunc = func(string, string) bool { return true }
+	zp.Directives = false
+	i := 0
+	for range zp.All() {
+		i++
+	}
+	if err := zp.Err(); err != nil {
+		t.Fatal(err)
+	}
+	// Get 6 with zp.Directives = true
+	if i != 2 {
+		t.Fatalf("expected %d RRs, got %d", 2, i)
 	}
 }
 
@@ -264,10 +286,10 @@ func TestZoneParserIncludeFSPaths(t *testing.T) {
 	} {
 		zone := "$ORIGIN example.org.\n$INCLUDE " + p + "\nbar\tIN\tA\t127.0.0.2"
 		var got int
-		z := NewZoneParser(strings.NewReader(zone), "", "baz/quux/db.bar")
-		z.IncludeAllowFunc = func(string, string) bool { return true }
-		z.IncludeFS = fsys
-		for rr, ok := z.Next(); ok; _, ok = z.Next() {
+		zp := NewZoneParser(strings.NewReader(zone), "", "baz/quux/db.bar")
+		zp.IncludeAllowFunc = func(string, string) bool { return true }
+		zp.IncludeFS = fsys
+		for rr, ok := zp.Next(); ok; _, ok = zp.Next() {
 			switch rr.Header().Name {
 			case "foo.example.org.", "bar.example.org.":
 			default:
@@ -275,7 +297,7 @@ func TestZoneParserIncludeFSPaths(t *testing.T) {
 			}
 			got++
 		}
-		if err := z.Err(); err != nil {
+		if err := zp.Err(); err != nil {
 			t.Fatalf("$INCLUDE %q: expected no error, but got %s", p, err)
 		}
 		if expected := 2; got != expected {
@@ -379,37 +401,6 @@ func TestZoneParserEscapedStringOffset(t *testing.T) {
 				i, tc.input, tc.inputOffset, outputOK, tc.expectedOK,
 			)
 		}
-	}
-}
-
-func TestZoneParserEDNS0(t *testing.T) {
-	testcases := []struct {
-		name string
-		in   EDNS0
-		exp  string
-	}{
-		{
-			"zoneversion", &ZONEVERSION{Labels: 4, Type: 0, Version: []byte{1, 2, 3, 4}},
-			".  CLASS0 ZONEVERSION 4 SOA-SERIAL 16909060",
-		},
-		{
-			"ede-extratext", &EDE{InfoCode: 15, ExtraText: "bla"},
-			`.  CLASS0 EDE 15 "Blocked": "bla"`,
-		},
-		{
-			"ede", &EDE{InfoCode: 15},
-			`.  CLASS0 EDE 15 "Blocked": ""`,
-		},
-	}
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			ednsrr := tc.in.String()
-			parsed := dnstestNew(ednsrr)
-			s := strings.ReplaceAll(parsed.String(), "\t", " ")
-			if s != tc.exp {
-				t.Errorf("expected %s, got %s", tc.exp, s)
-			}
-		})
 	}
 }
 
